@@ -24,6 +24,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.Getter;
 import mc.client.ModelView;
 import mc.compiler.CompilationObject;
 import mc.compiler.CompilationObservable;
@@ -60,7 +61,11 @@ public class UserInterfaceController implements Initializable, FontListener {
     private javafx.stage.Popup autocompleteBox = new javafx.stage.Popup();
     private ExecutorService executor; // Runs the highlighting in separate ctx
     private TrieNode<String> completionDictionary;
+
     private SettingsController settingsController;
+    private NewProcessController newProcessController;
+    private LabelEdgeController labelEdgeController;
+
 
     @FXML
     private CodeArea userCodeInput;
@@ -101,7 +106,11 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private Button removeBtnNew;
     @FXML
-    private Circle newAutomataNode;
+    private Circle newAutomataNodeStart;
+    @FXML
+    private Circle newAutomataNodeNeutral;
+    @FXML
+    private Circle newAutomataNodeEnd;
     @FXML
     private Circle nextAutomataNode;
     @FXML
@@ -114,7 +123,10 @@ public class UserInterfaceController implements Initializable, FontListener {
     private Thread buildThread = new Thread();
 
     private ArrayDeque<String> recentFilePaths = new ArrayDeque<>();
-    private boolean isPressed;
+    private ArrayList<Circle> automataShapes = new ArrayList<Circle>();
+
+    //@Getter
+    //private static UserInterfaceController instance = this;
 
     @Override
     public void changeFontSize() {  // Lister Pattern
@@ -167,6 +179,8 @@ public class UserInterfaceController implements Initializable, FontListener {
         settingsController = new SettingsController();
         settingsController.initialize();
         settingsController.addFontListener(this);
+
+        ModelView.getInstance().setReferenceToUIC(this);
 
         ModelView.getInstance().setSettings(settingsController);
         // Have to initialise it or there is a delay between the graph becoming ready and actually displaying things
@@ -312,32 +326,75 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             });
 
+        settingsController = new SettingsController();
+        settingsController.initialize();
+
+        newProcessController = new NewProcessController();
+        labelEdgeController = new LabelEdgeController();
+        //newProcessController.initialize();
+
 
         AddProcessShapesInitial();
     }
 
-    //Problem is that in order for graph listerner to detect drop this has to already have released its mouse listiner
-    //Such that draging not possible
 
     private void AddProcessShapesInitial() {
-        newAutomataNode = new Circle(100, 75, 20);
-        newAutomataNode.setFill(Color.GREEN);
-        newAutomataNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDrag);
-        newAutomataNode.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePress);
-        newAutomataNode.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseRelease);
-        shapePane.getChildren().add(newAutomataNode);
+        newAutomataNodeStart = new Circle(60, 75, 20);
+        newAutomataNodeNeutral = new Circle(110, 75, 20);
+        newAutomataNodeEnd = new Circle(160, 75, 20);
+
+        automataShapes.add(newAutomataNodeStart);
+        automataShapes.add(newAutomataNodeNeutral);
+        automataShapes.add(newAutomataNodeEnd);
+
+        newAutomataNodeStart.setFill(Color.GREEN);
+        newAutomataNodeNeutral.setFill(Color.GRAY);
+        newAutomataNodeEnd.setFill(Color.RED);
+
+        newAutomataNodeStart.setId("AutoStart");
+        newAutomataNodeNeutral.setId("AutoNeutral");
+        newAutomataNodeEnd.setId("AutoEnd");
+
+        for(Circle c: automataShapes){
+            c.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDrag);
+            c.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePress);
+            c.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseRelease);
+            shapePane.getChildren().add(c);
+        }
+
     }
 
     public void doMouseDrag(MouseEvent mouseEvent) {
-        double xOffset = mouseEvent.getX() - newAutomataNode.getCenterX();
-        double yOffset = mouseEvent.getY() - newAutomataNode.getCenterY();
-        newAutomataNode.setCenterX(newAutomataNode.getCenterX() + xOffset);
-        newAutomataNode.setCenterY(newAutomataNode.getCenterY() + yOffset);
+        Circle c = (Circle) mouseEvent.getSource();
+        double xOffset = mouseEvent.getX() - c.getCenterX();
+        double yOffset = mouseEvent.getY() - c.getCenterY();
+        c.setCenterX(c.getCenterX() + xOffset);
+        c.setCenterY(c.getCenterY() + yOffset);
     }
 
     public void doMousePress(MouseEvent mouseEvent) {
-        nextAutomataNode = new Circle(100, 75, 20);
-        nextAutomataNode.setFill(Color.GREEN);
+
+        //todo add switch
+
+        Circle c = (Circle) mouseEvent.getSource();
+
+        System.out.println(c);
+
+        if(c.getId().equals("AutoStart")){
+            nextAutomataNode = new Circle(60, 75, 20);
+            nextAutomataNode.setFill(Color.GREEN);
+            nextAutomataNode.setId("AutoStart");
+
+        } else if(c.getId().equals("AutoNeutral")){
+            nextAutomataNode = new Circle(110, 75, 20);
+            nextAutomataNode.setFill(Color.GRAY);
+            nextAutomataNode.setId("AutoNeutral");
+        } else {
+            nextAutomataNode = new Circle(160, 75, 20);
+            nextAutomataNode.setFill(Color.RED);
+            nextAutomataNode.setId("AutoEnd");
+        }
+
         nextAutomataNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDrag);
         nextAutomataNode.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePress);
         nextAutomataNode.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseRelease);
@@ -346,14 +403,99 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
     public void doMouseRelease(MouseEvent mouseEvent) {
-        shapePane.getChildren().remove(newAutomataNode);
-        newAutomataNode = nextAutomataNode;
-        addAutomataToGraph(mouseEvent.getSceneX(), mouseEvent.getSceneY());
+        Circle c = (Circle) mouseEvent.getSource();
+        if(c.getId().equals("AutoStart")){
+            shapePane.getChildren().remove(newAutomataNodeStart);
+            newAutomataNodeStart = nextAutomataNode;
+        } else if(c.getId().equals("AutoNeutral")){
+            shapePane.getChildren().remove(newAutomataNodeNeutral);
+            newAutomataNodeNeutral = nextAutomataNode;
+        } else {
+            shapePane.getChildren().remove(newAutomataNodeEnd);
+            newAutomataNodeEnd = nextAutomataNode;
+        }
+
+        addAutomataToGraph(c.getId());
     }
 
 
-    private void addAutomataToGraph(double x, double y) {
-        ModelView.getInstance().setVisualAutomataNode();
+    private void addAutomataToGraph(String nodeType) {
+
+        ModelView.getInstance().setVisualAutomataNode(nodeType);
+
+        if(nodeType.equals("AutoStart")){
+            initiateNewProcessPopup();
+        }
+    }
+
+    private void initiateNewProcessPopup() {
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NewAutoPopup.fxml"));
+        loader.setController(newProcessController); //links to  SettingsController.java
+        try {
+            Stage newProcessStage = new Stage();
+            newProcessStage.setTitle("New Process");
+
+            Scene windowScene = new Scene(loader.load(), 402, 326);
+            newProcessStage.setScene(windowScene);
+
+            //settingsController.setWindow(newProcessStage.getScene().getWindow());
+            newProcessStage.initOwner(UserInterfaceApplication.getPrimaryStage());
+            //settingsStage.initModality(Modality.APPLICATION_MODAL);
+            newProcessStage.initModality(Modality.NONE);
+            newProcessStage.setResizable(false);
+            newProcessStage.showAndWait();
+            ModelView.getInstance().setLatestNodeName(newProcessController.getNewProcessNameValue());
+
+        } catch (IOException e) {
+            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            optionsLayoutLoadFailed.setTitle("Error encountered when loading new proccess dialogue");
+            optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
+
+            optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
+            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
+
+            optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            optionsLayoutLoadFailed.show();
+        }
+    }
+
+    public String nameEdge() {
+
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/LabelEdgePopup.fxml"));
+        loader.setController(labelEdgeController); //links to  SettingsController.java
+        String toReturn = "";
+        try {
+            Stage newProcessStage = new Stage();
+            newProcessStage.setTitle("Label Edge");
+
+            Scene windowScene = new Scene(loader.load(), 402, 326);
+            newProcessStage.setScene(windowScene);
+
+            //settingsController.setWindow(newProcessStage.getScene().getWindow());
+            newProcessStage.initOwner(UserInterfaceApplication.getPrimaryStage());
+            //settingsStage.initModality(Modality.APPLICATION_MODAL);
+            newProcessStage.initModality(Modality.NONE);
+            newProcessStage.setResizable(false);
+            newProcessStage.showAndWait();
+            toReturn = labelEdgeController.getLabelNameValue();
+
+        } catch (IOException e) {
+            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            optionsLayoutLoadFailed.setTitle("Error encountered when loading new proccess dialogue");
+            optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
+
+            optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
+            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
+
+            optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            optionsLayoutLoadFailed.show();
+        }
+
+        return toReturn;
+
+
     }
 
     /**
@@ -988,6 +1130,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     public ArrayDeque<String> getRecentFilePaths() {
         return this.recentFilePaths;
     }
+
 
 
 }
