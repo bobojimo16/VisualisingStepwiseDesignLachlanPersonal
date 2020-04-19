@@ -1321,6 +1321,8 @@ public class ModelView implements Observer, FontListener {
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
         workingLayout = Layouts.newLayoutAlgorithm();
+        workingLayout.setForce(0.1);
+        System.out.println(workingLayout.getForce());
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();
