@@ -1296,4 +1296,6 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
 
+    public void reportError(String petriEdgeNoTransition) {
+    }
 }

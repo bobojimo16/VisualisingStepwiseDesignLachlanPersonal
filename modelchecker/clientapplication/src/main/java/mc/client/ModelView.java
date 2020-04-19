@@ -582,6 +582,23 @@ public class ModelView implements Observer, FontListener {
     }
 
     private void doDrawEdge() {
+        String firstNodeType = firstNodeClicked.getAttribute("ui.class");
+        String seccondNodeType = seccondNodeClicked.getAttribute("ui.class");
+
+        //If first and seccond node are not transition reject
+
+        if(!firstNodeType.equals("PetriTransition") && !seccondNodeType.equals("PetriTransition")
+            && (!firstNodeType.contains("Auto") && !seccondNodeType.contains("Auto") ) ){
+            Platform.runLater(() ->
+                {
+                    uic.reportError("petriEdgeNoTransition");
+                });
+            return;
+        }
+
+
+
+
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
         //String labelValue;
         Platform.runLater(() -> {
