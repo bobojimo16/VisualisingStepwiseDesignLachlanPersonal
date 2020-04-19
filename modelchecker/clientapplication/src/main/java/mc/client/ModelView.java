@@ -138,6 +138,7 @@ public class ModelView implements Observer, FontListener {
     //@Setter
     //private BiConsumer<List<ImpliesResult>, List<ImpliesResult>> updateImpLog;
     //
+    //
 
 
     @Override
