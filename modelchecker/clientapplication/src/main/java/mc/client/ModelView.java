@@ -1197,7 +1197,22 @@ public class ModelView implements Observer, FontListener {
         initalise();
     }
 
+    public void clearDisplayedNew() {
+        processModelsToDisplay.clear();
+        initalise();
+    }
+
     public void addAllModels() {
+        processModelsToDisplay.clear();
+        processesChanged.addAll(compiledResult.getProcessMap().keySet());
+
+        if (modelsInList != null) {
+            processModelsToDisplay.addAll(modelsInList);
+        }
+        // canvasML. refreshtransitionColor();
+    }
+
+    public void addAllModelsNew() {
         processModelsToDisplay.clear();
         processesChanged.addAll(compiledResult.getProcessMap().keySet());
 
@@ -1419,6 +1434,7 @@ public class ModelView implements Observer, FontListener {
 
         sourceCodePro = source;
     }
+
 
 
 }

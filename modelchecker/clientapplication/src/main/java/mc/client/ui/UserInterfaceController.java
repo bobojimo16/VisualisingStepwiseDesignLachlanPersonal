@@ -1013,7 +1013,12 @@ public class UserInterfaceController implements Initializable, FontListener {
     private void handleAddallModels(ActionEvent event) {
         ModelView.getInstance().addAllModels();
         SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
-        // refreshtransitionColor();
+    }
+
+    @FXML
+    private void handleAddallModelsNew(ActionEvent event) {
+        ModelView.getInstance().addAllModelsNew();
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
     }
 
 
@@ -1021,24 +1026,16 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private void handleClearGraph(ActionEvent event) {
         ModelView.getInstance().clearDisplayed();
-        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
+        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraphNew(modelDisplay)));
     }
 
-    /* clear Selected
-        @FXML
-        private void handleClear(ActionEvent event) {
+    @FXML
+    private void handleClearGraphNew(ActionEvent event) {
+        ModelView.getInstance().clearDisplayedNew();
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplay)));
+    }
 
-            String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-            if (selecteditem != null) {
-                System.out.println("selecteditem " + selecteditem);
-                ModelView.getInstance().removeProcessModel(selecteditem);
 
-            }
-            ModelView.getInstance().removeProcessModel(selecteditem);
-            SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().removeBorder(modelDisplay)));
-
-        }
-    **/
     @FXML
     public void handleClear(ActionEvent actionEvent) {
         //  ModelView.getInstance().clearDisplayed();
