@@ -664,6 +664,27 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     }
 
+    public void reportError(String errorType) {
+        Alert a = new Alert(Alert.AlertType.NONE);
+        a.setAlertType(Alert.AlertType.WARNING);
+
+        switch (errorType){
+            case "transitionBetweenAutoAndPetri":
+                a.setContentText("Unable To Place Transitions Between Automata and Petri-Net Nodes");
+                break;
+            case "petriEdgeNoTransition":
+                a.setContentText("Unable To Connect Places Without A Transition");
+                break;
+            case "petriEdgeBothTransitions":
+                a.setContentText("Unable To Connect Transitions");
+                break;
+            default:
+                break;
+        }
+
+        a.show();
+    }
+
     /**
      * This is a helper function to add an insert
      *
@@ -1296,6 +1317,5 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
 
-    public void reportError(String petriEdgeNoTransition) {
-    }
+
 }
