@@ -82,6 +82,7 @@ public class ModelView implements Observer, FontListener {
     private Set<String> processModelsToDisplay;
     private SortedSet<String> modelsInList; // Processes that are in the modelsList combox
     private Multimap<String, GraphNode> processModelsOnScreen; //process on the screen
+    private Multimap<String, Node> processModelsOnScreenNew; //process on the screen
     private List<String> processesChanged = new ArrayList<>();
     // Play places token on current Marking
     // from PetriNetPlace find Graph visualisation
@@ -115,14 +116,14 @@ public class ModelView implements Observer, FontListener {
     private boolean addingPetriTransition;
 
 
-    public void cleanData() {
+    /*public void cleanData() {
         if (!(mappings == null)) mappings.clear();
         if (!(placeId2GraphNode == null)) placeId2GraphNode.clear();
         if (!(processModelsOnScreen == null)) processModelsOnScreen.clear();
         if (!(modelsInList == null)) modelsInList.clear();
         if (!(processModelsToDisplay == null)) processModelsToDisplay.clear();
 
-    }
+    }*/
 
     private VisualizationServer.Paintable boarder;
     private static Font sourceCodePro;
@@ -393,6 +394,8 @@ public class ModelView implements Observer, FontListener {
 
 
         Map<String, GraphNode> nodeMap = new HashMap<>();
+        Map<String, Node> nodeMapGS = new HashMap<>();
+
 
         //System.out.println(automaton);
 
@@ -427,6 +430,7 @@ public class ModelView implements Observer, FontListener {
                 cn.addAttribute("ui.class", "AutoEnd");
             }
 
+            nodeMapGS.put(n.getId(), cn);
 
         });
 
@@ -457,6 +461,8 @@ public class ModelView implements Observer, FontListener {
 
         //DK if need this yet:
         this.processModelsOnScreen.replaceValues(automaton.getId(), nodeMap.values());
+
+        this.processModelsOnScreenNew.replaceValues(automaton.getId(), nodeMapGS.values());
 
 
     }
@@ -643,6 +649,7 @@ public class ModelView implements Observer, FontListener {
 
 
         Map<String, GraphNode> nodeMap = new HashMap<>();
+        Map<String, Node> nodeMapGS = new HashMap<>();
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
@@ -679,6 +686,7 @@ public class ModelView implements Observer, FontListener {
 
 
             nodeMap.put(place.getId(), node);
+            nodeMapGS.put(place.getId(), n);
         });
 
 
@@ -691,9 +699,12 @@ public class ModelView implements Observer, FontListener {
                 GraphNode node = new GraphNode(petri.getId(), transition.getId(),
                     NodeStates.NOMINAL, NodeStates.NOMINAL, NodeType.PETRINET_TRANSITION, lab, transition);
                 nodeMap.put(transition.getId(), node);
+
                 Node n = workingCanvasArea.addNode(transition.getId());
                 n.addAttribute("ui.class", "PetriTransition");
                 n.addAttribute("ui.label", lab);
+                nodeMapGS.put(transition.getId(), n);
+
             });
 
         for (PetriNetEdge edge : petri.getEdgesNotBlocked().values()) {
@@ -753,6 +764,10 @@ public class ModelView implements Observer, FontListener {
         }
 
         this.processModelsOnScreen.replaceValues(petri.getId(), nodeMap.values());
+
+        this.processModelsOnScreenNew.replaceValues(petri.getId(), nodeMapGS.values());
+
+
     }
 
 
@@ -1229,6 +1244,7 @@ public class ModelView implements Observer, FontListener {
     }
 
     public void removeProcessModel(String automataLabel) {
+
 // fails to remove boarder Not sure wher this is
         if (layout != null && automataLabel != null && processModelsToDisplay.contains(automataLabel)) {
             processModelsToDisplay.remove(automataLabel);
@@ -1240,6 +1256,24 @@ public class ModelView implements Observer, FontListener {
             processModelsOnScreen.removeAll(automataLabel);  // hope to remove the background
             // boarder.
         }
+    }
+
+    public void removeProcessModelNew(String selectedProcess) {
+
+        if (selectedProcess != null && processModelsToDisplay.contains(selectedProcess)) {
+
+            processModelsToDisplay.remove(selectedProcess);
+            processesChanged.remove(selectedProcess);
+            modelsInList.remove(selectedProcess);
+
+            for (Node n : processModelsOnScreenNew.get(selectedProcess)) {
+                workingCanvasArea.removeNode(n);
+            }
+
+            processModelsOnScreenNew.removeAll(selectedProcess);
+        }
+
+
     }
 
     public void unfreezeProcessModel(String automataLabel) {
@@ -1325,6 +1359,7 @@ public class ModelView implements Observer, FontListener {
         vv.getRenderContext().setEdgeShapeTransformer(EdgeShape.mixedLineCurve(graph));
         // vv.getRenderContext().getEdgeLabelTransformer().;
         processModelsOnScreen = MultimapBuilder.hashKeys().hashSetValues().build();
+        processModelsOnScreenNew = MultimapBuilder.hashKeys().hashSetValues().build();
         //  settings.addFontListener(this); can NOY be done here ?!?
 
         //Graphstream:

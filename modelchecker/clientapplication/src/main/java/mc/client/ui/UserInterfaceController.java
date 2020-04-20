@@ -175,8 +175,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             //New Tab
             addBtnNew.setStyle("-fx-background-color: " + col);
-            frzBtnNew.setStyle("-fx-background-color: " + col);
-            unfrzBtnNew.setStyle("-fx-background-color: " + col);
+            /*frzBtnNew.setStyle("-fx-background-color: " + col);
+            unfrzBtnNew.setStyle("-fx-background-color: " + col);*/
             removeBtnNew.setStyle("-fx-background-color: " + col);
             modelsListNew.setStyle("-fx-background-color: " + col);
 
@@ -1045,6 +1045,17 @@ public class UserInterfaceController implements Initializable, FontListener {
         String selecteditem = modelsList.getSelectionModel().getSelectedItem();
         if (selecteditem != null) {
             ModelView.getInstance().removeProcessModel(selecteditem);
+        }
+        //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
+
+    }
+
+    @FXML
+    public void handleClearNew(ActionEvent actionEvent) {
+        //  ModelView.getInstance().clearDisplayed();
+        String selecteditem = modelsListNew.getSelectionModel().getSelectedItem();
+        if (selecteditem != null) {
+            ModelView.getInstance().removeProcessModelNew(selecteditem);
         }
         //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
 
