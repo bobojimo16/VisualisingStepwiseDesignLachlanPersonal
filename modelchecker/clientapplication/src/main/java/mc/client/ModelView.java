@@ -314,6 +314,8 @@ public class ModelView implements Observer, FontListener {
                 n.addAttribute("ui.label", cnAttributeLabel); // dk ytf cant do this directly
             }
 
+
+
             //System.out.println("edgecount: " + cn.getEdgeSet().size());
 
         }
@@ -1436,5 +1438,9 @@ public class ModelView implements Observer, FontListener {
     }
 
 
+    public ArrayList<Node> getVisualCreatedPetris() {
 
+        return createdNodes;
+
+    }
 }
