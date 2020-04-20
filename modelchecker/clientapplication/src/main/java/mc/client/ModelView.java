@@ -333,16 +333,16 @@ public class ModelView implements Observer, FontListener {
         return "node {" +
             "text-size: 20;" +
             "size: 30px; " +
-            "fill-color: green;" +
+            "fill-color: #F00;" +
             "}" +
             "node.AutoStart {" +
-            "fill-color: green;" +
+            "fill-color: #1F9F06;" +
             "}" +
             "node.AutoNeutral {" +
-            "fill-color: gray;" +
+            "fill-color: #767575;" +
             "}" +
             "node.AutoEnd {" +
-            "fill-color: red;" +
+            "fill-color: #9F1106;" +
             "}" +
             "edge {" +
             " " +
@@ -585,8 +585,17 @@ public class ModelView implements Observer, FontListener {
         String firstNodeType = firstNodeClicked.getAttribute("ui.class");
         String seccondNodeType = seccondNodeClicked.getAttribute("ui.class");
 
-        //If first and seccond node are not transition reject
+        //Reject transitions between petri and autos
+        if((firstNodeType.contains("Petri") && seccondNodeType.contains("Auto"))
+        || (firstNodeType.contains("Auto") && seccondNodeType.contains("Petri"))){
+            Platform.runLater(() ->
+            {
+                uic.reportError("transitionBetweenAutoAndPetri");
+            });
+            return;
+        }
 
+        //If first and seccond node are not transition reject
         if(!firstNodeType.equals("PetriTransition") && !seccondNodeType.equals("PetriTransition")
             && (!firstNodeType.contains("Auto") && !seccondNodeType.contains("Auto") ) ){
             Platform.runLater(() ->
@@ -596,15 +605,25 @@ public class ModelView implements Observer, FontListener {
             return;
         }
 
-
+        //If first and seccond are both transitions reject
+        if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriTransition")){
+            Platform.runLater(() ->
+            {
+                uic.reportError("petriEdgeBothTransitions");
+            });
+            return;
+        }
 
 
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
         //String labelValue;
-        Platform.runLater(() -> {
-            String labelValue = uic.nameEdge();
-            edge.addAttribute("ui.label", labelValue);
-        });
+
+        if((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
+            Platform.runLater(() -> {
+                String labelValue = uic.nameEdge();
+                edge.addAttribute("ui.label", labelValue);
+            });
+        }
 
         createdEdges.add(edge);
     }
