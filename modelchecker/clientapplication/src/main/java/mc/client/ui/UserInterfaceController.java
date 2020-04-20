@@ -175,8 +175,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             //New Tab
             addBtnNew.setStyle("-fx-background-color: " + col);
-            frzBtnNew.setStyle("-fx-background-color: " + col);
-            unfrzBtnNew.setStyle("-fx-background-color: " + col);
+            /*frzBtnNew.setStyle("-fx-background-color: " + col);
+            unfrzBtnNew.setStyle("-fx-background-color: " + col);*/
             removeBtnNew.setStyle("-fx-background-color: " + col);
             modelsListNew.setStyle("-fx-background-color: " + col);
 
@@ -1013,7 +1013,12 @@ public class UserInterfaceController implements Initializable, FontListener {
     private void handleAddallModels(ActionEvent event) {
         ModelView.getInstance().addAllModels();
         SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
-        // refreshtransitionColor();
+    }
+
+    @FXML
+    private void handleAddallModelsNew(ActionEvent event) {
+        ModelView.getInstance().addAllModelsNew();
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
     }
 
 
@@ -1021,30 +1026,33 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private void handleClearGraph(ActionEvent event) {
         ModelView.getInstance().clearDisplayed();
-        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
+        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraphNew(modelDisplay)));
     }
 
-    /* clear Selected
-        @FXML
-        private void handleClear(ActionEvent event) {
+    @FXML
+    private void handleClearGraphNew(ActionEvent event) {
+        ModelView.getInstance().clearDisplayedNew();
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplay)));
+    }
 
-            String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-            if (selecteditem != null) {
-                System.out.println("selecteditem " + selecteditem);
-                ModelView.getInstance().removeProcessModel(selecteditem);
 
-            }
-            ModelView.getInstance().removeProcessModel(selecteditem);
-            SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().removeBorder(modelDisplay)));
-
-        }
-    **/
     @FXML
     public void handleClear(ActionEvent actionEvent) {
         //  ModelView.getInstance().clearDisplayed();
         String selecteditem = modelsList.getSelectionModel().getSelectedItem();
         if (selecteditem != null) {
             ModelView.getInstance().removeProcessModel(selecteditem);
+        }
+        //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
+
+    }
+
+    @FXML
+    public void handleClearNew(ActionEvent actionEvent) {
+        //  ModelView.getInstance().clearDisplayed();
+        String selecteditem = modelsListNew.getSelectionModel().getSelectedItem();
+        if (selecteditem != null) {
+            ModelView.getInstance().removeProcessModelNew(selecteditem);
         }
         //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
 
