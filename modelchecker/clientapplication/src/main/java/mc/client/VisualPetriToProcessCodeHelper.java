@@ -7,13 +7,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class VisualPetriToProcessCodeHelper {
-    private boolean continueSearch = true;
-    private String cumulativeProcessCode = "";
+    private String cumulativeProcessCode;
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses) {
         ArrayList<Node> HeadPetriNodes = new ArrayList<>();
+        cumulativeProcessCode = "";
 
-        String nextValue = "";
 
         //Remove Nodes that arn't Petri Head Nodes
         for (Node n : visualCreatedProcesses) {
@@ -22,111 +21,63 @@ public class VisualPetriToProcessCodeHelper {
             }
         }
 
+        //For each head petri node perform dfsrecursive search
         for (Node n : HeadPetriNodes) {
             String petriID = n.getAttribute("ui.label");
             cumulativeProcessCode += petriID.toUpperCase() + " = ";
-            n.setAttribute("visited", "true");
-
-            doBFSRecursive(n);
-
-
+            doDFSRecursive(n);
         }
 
+        cumulativeProcessCode+=".";
         return cumulativeProcessCode;
-
     }
 
 
-    private void doBFSRecursive(Node n) {
-
-
-
+    private void doDFSRecursive(Node n) {
         //When Leaf
         if (n.getAttribute("ui.class").equals("PetriPlaceEnd")) {
             //leaf
             String nextValue = doValueEvaluation(n);
-
-
-
-
             return;
         }
 
-
-
-
-
-
+        //Iterate through this nodes leaving edges and store them in edges list
         Iterator<? extends Edge> k = n.getLeavingEdgeIterator();
-
         ArrayList<Edge> edges = new ArrayList<>();
         for (Iterator<? extends Edge> it = k; it.hasNext(); ) {
             edges.add(it.next());
         }
 
+        // Open bracket for each branch
         if(edges.size() > 1){
             cumulativeProcessCode += "(";
         }
 
-
-
         for(int i = 0; i < edges.size(); i++){
 
-            Node current = edges.get(i).getNode1();
-            Node outGoing = current;
+            Node outGoingNode = edges.get(i).getNode1();
+            //Node outGoing = current;
 
-
-
-            if(!current.getAttribute("ui.class").equals("PetriPlace")) {
-
-
-                String nextValue = doValueEvaluation(outGoing);
+            //if node is not a place then get its value
+            if(!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
+                String nextValue = doValueEvaluation(outGoingNode);
                 cumulativeProcessCode += nextValue;
             }
 
-            doBFSRecursive(outGoing);
+            //And repeat this process for outgoingnode
+            doDFSRecursive(outGoingNode);
 
-
-
-
+            //Place a pipe for each child node of parent that is not the final child node in order i.e dont place pipe on
+            //final child
             if(i < edges.size() - 1 ) {
                 cumulativeProcessCode += " | ";
             }
         }
 
+        // Close bracket for each branch
         if(edges.size() > 1){
             cumulativeProcessCode += ")";
         }
-
-
-
-
-
-        /*Iterator<? extends Node> k = n.getBreadthFirstIterator();
-        n.setAttribute("visited", "true");
-
-        while (k.hasNext()) {
-
-            Node current = k.next();
-
-            if (current.hasAttribute("visited")) {
-                continue;
-            }
-
-            String nextValue = doValueEvaluation(current);
-            cumulativeProcessCode += nextValue;
-
-            //doBFSRecursive(current);
-
-            *//*if (k.hasNext()) {
-                cumulativeProcessCode += " | ";
-            }*//*
-
-        }
-
-        //Leaf*/
-
-
     }
 
     private String doValueEvaluation(Node n) {
@@ -137,39 +88,7 @@ public class VisualPetriToProcessCodeHelper {
             value = "STOP";
         }
 
-        System.out.println("value:" + value);
         return value;
 
     }
 }
-
-
-/*Iterator<? extends Node> k = n.getDepthFirstIterator();
-
-            while (!nextValue.equals("STOP.")) {
-                Node dfsTraverserA = k.next();
-
-                dfsTraverserA.setAttribute("visited", "true");
-
-                Iterator<? extends Node> l = dfsTraverserA.getBreadthFirstIterator();
-                while (l.hasNext()) {
-                    Node bfsTraverserB = l.next();
-
-                    //Unsure Why dfsTraverser is a member of its own bfs ??? strange hence skip
-                    if(bfsTraverserB.hasAttribute("visited")){
-                        continue;
-                    }
-
-                    System.out.println((String) bfsTraverserB.getAttribute("ui.class"));
-
-                    if(bfsTraverserB.getAttribute("ui.class").equals("PetriPlace")){
-                        System.out.println("Skipping Place");
-                        continue;
-                    }
-                    nextValue = doValueEvaluation(bfsTraverserB);
-                    cumulativeProcessCode += nextValue;
-                    if(l.hasNext()) {
-                        cumulativeProcessCode += " | ";
-                    }
-                }
-            }*/

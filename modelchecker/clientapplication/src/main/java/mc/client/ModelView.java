@@ -622,6 +622,33 @@ public class ModelView implements Observer, FontListener {
             return;
         }
 
+        /*if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlaceEnd")){
+
+            Collection<Edge> outGoingEdges = firstNodeClicked.getLeavingEdgeSet();
+            boolean hasExistingEnd = false;
+
+            for(Edge e: outGoingEdges){
+                if(e.getNode1().getAttribute("ui.class").equals("PetriPlaceEnd")){
+                    hasExistingEnd = true;
+                }
+            }
+
+            if(hasExistingEnd) {
+                Platform.runLater(() ->
+                {
+                    uic.reportError("petriTransitionMultipleEdges");
+                });
+                return;
+            }
+
+        }
+*/
+        //convert any stop child nodes of petri transitions into places when branching
+
+
+
+
+
 
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
         //String labelValue;
@@ -634,6 +661,29 @@ public class ModelView implements Observer, FontListener {
         }
 
         createdEdges.add(edge);
+
+        doPostEdgeCorrections();
+    }
+
+    private void doPostEdgeCorrections() {
+
+        //Set the immediate places of Petri transitions that are type stop to place where branching
+        for(Node currentNode: createdNodes){
+
+            if(currentNode.getAttribute("ui.class").equals("PetriTransition")) {
+                Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
+
+                //Doing A branch
+                if (outGoingEdges.size() > 1) {
+                    for (Edge e : outGoingEdges) {
+                        if (e.getNode1().getAttribute("ui.class").equals("PetriPlaceEnd")) {
+                            e.getNode1().setAttribute("ui.class", "PetriPlace");
+                        }
+                    }
+                }
+            }
+
+        }
     }
 
 

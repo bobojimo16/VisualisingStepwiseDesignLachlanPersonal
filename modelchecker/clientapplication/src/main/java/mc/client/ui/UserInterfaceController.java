@@ -681,11 +681,13 @@ public class UserInterfaceController implements Initializable, FontListener {
                 a.setContentText("Unable To Place Transitions Between Automata and Petri-Net Nodes");
                 break;
             case "petriEdgeNoTransition":
-                a.setContentText("Unable To Connect Places Without A Transition");
+                a.setContentText("Unable To Connect Places Without A Transition - Try Using A Transition");
                 break;
             case "petriEdgeBothTransitions":
-                a.setContentText("Unable To Connect Transitions");
+                a.setContentText("Unable To Connect Transitions - Try Using A Place");
                 break;
+            case "petriTransitionMultipleEdges":
+                a.setContentText("Unable To Connect More Than One STOP Node To A Transition - Try Using More Places");
             default:
                 break;
         }
@@ -1336,7 +1338,12 @@ public class UserInterfaceController implements Initializable, FontListener {
     public void handlePetriIdentification(ActionEvent actionEvent) {
         String conversionResult = visualPetriToProcessCodeHelper.doConversion(ModelView.getInstance().getVisualCreatedPetris());
 
-        System.out.println(conversionResult);
+        Alert a = new Alert(Alert.AlertType.NONE);
+        a.setAlertType(Alert.AlertType.INFORMATION);
+
+        a.setContentText(conversionResult);
+
+        a.show();
 
     }
 }
