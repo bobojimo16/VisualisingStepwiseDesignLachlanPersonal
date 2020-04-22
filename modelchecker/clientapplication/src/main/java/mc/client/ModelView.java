@@ -724,6 +724,9 @@ public class ModelView implements Observer, FontListener {
                 startToIntValue.put(place, (petriStartsSize + 1 - petriStartSizeTracker.get()));
                 petriStartSizeTracker.getAndIncrement();
             } else {
+                System.out.println(place.getId());
+                //todo fix this crap
+                place.setId(place.getId()+Math.random());
                 n = workingCanvasArea.addNode(place.getId());
             }
 
@@ -752,6 +755,8 @@ public class ModelView implements Observer, FontListener {
                     NodeStates.NOMINAL, NodeStates.NOMINAL, NodeType.PETRINET_TRANSITION, lab, transition);
                 nodeMap.put(transition.getId(), node);
 
+                //todo fix this crap
+                transition.setId(transition.getId()+Math.random());
                 Node n = workingCanvasArea.addNode(transition.getId());
                 n.addAttribute("ui.class", "PetriTransition");
                 n.addAttribute("ui.label", lab);
@@ -1442,7 +1447,7 @@ public class ModelView implements Observer, FontListener {
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
         workingLayout = Layouts.newLayoutAlgorithm();
-        workingLayout.setForce(0.1);
+        workingLayout.setForce(0.1); // 1 by default        
         System.out.println(workingLayout.getForce());
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
