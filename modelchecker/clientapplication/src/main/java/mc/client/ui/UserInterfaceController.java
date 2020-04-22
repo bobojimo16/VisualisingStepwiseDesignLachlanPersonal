@@ -30,6 +30,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 import mc.client.ModelView;
+import mc.client.VisualPetriToProcessCodeHelper;
 import mc.compiler.CompilationObject;
 import mc.compiler.CompilationObservable;
 import mc.compiler.Compiler;
@@ -131,6 +132,9 @@ public class UserInterfaceController implements Initializable, FontListener {
     private Shape nextPetriTransition;
     @FXML
     private Pane shapePane;
+    @FXML
+    private Button identifyPetriProcesses;
+
 
     // for keep updating the file that has already been saved.
     private File currentOpenFile = null;
@@ -141,6 +145,8 @@ public class UserInterfaceController implements Initializable, FontListener {
     private ArrayDeque<String> recentFilePaths = new ArrayDeque<>();
     private ArrayList<Shape> processShapesAuto = new ArrayList<Shape>();
     private ArrayList<Shape> processShapesPetri = new ArrayList<Shape>();
+
+    private VisualPetriToProcessCodeHelper visualPetriToProcessCodeHelper;
 
     //@Getter
     //private static UserInterfaceController instance = this;
@@ -362,6 +368,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         AddProcessShapesAutoInitial();
         AddProcessShapesPetriInitial();
+
+        visualPetriToProcessCodeHelper = new VisualPetriToProcessCodeHelper();
     }
 
 
@@ -673,11 +681,13 @@ public class UserInterfaceController implements Initializable, FontListener {
                 a.setContentText("Unable To Place Transitions Between Automata and Petri-Net Nodes");
                 break;
             case "petriEdgeNoTransition":
-                a.setContentText("Unable To Connect Places Without A Transition");
+                a.setContentText("Unable To Connect Places Without A Transition - Try Using A Transition");
                 break;
             case "petriEdgeBothTransitions":
-                a.setContentText("Unable To Connect Transitions");
+                a.setContentText("Unable To Connect Transitions - Try Using A Place");
                 break;
+            case "petriTransitionMultipleEdges":
+                a.setContentText("Unable To Connect More Than One STOP Node To A Transition - Try Using More Places");
             default:
                 break;
         }
@@ -1325,5 +1335,18 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
 
+    public void handlePetriIdentification(ActionEvent actionEvent) {
 
+        String conversionResult = visualPetriToProcessCodeHelper.doConversion(ModelView.getInstance().getVisualCreatedPetris());
+
+        System.out.println(conversionResult);
+
+        Alert a = new Alert(Alert.AlertType.NONE);
+        a.setAlertType(Alert.AlertType.INFORMATION);
+
+        a.setContentText(conversionResult);
+
+        a.show();
+
+    }
 }
