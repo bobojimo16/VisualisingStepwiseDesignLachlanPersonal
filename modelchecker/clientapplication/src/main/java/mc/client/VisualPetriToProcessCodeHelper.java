@@ -4,12 +4,15 @@ import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 public class VisualPetriToProcessCodeHelper {
     private String cumulativeProcessCode;
+    private Node currentPetriHead;
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses) {
+        clearVisited(visualCreatedProcesses);
         ArrayList<Node> HeadPetriNodes = new ArrayList<>();
         cumulativeProcessCode = "";
 
@@ -23,6 +26,7 @@ public class VisualPetriToProcessCodeHelper {
 
         //For each head petri node perform dfsrecursive search
         for (Node n : HeadPetriNodes) {
+            currentPetriHead = n;
             String petriID = n.getAttribute("ui.label");
             cumulativeProcessCode += petriID.toUpperCase() + " = ";
             doDFSRecursive(n);
@@ -32,8 +36,34 @@ public class VisualPetriToProcessCodeHelper {
         return cumulativeProcessCode;
     }
 
+    private void clearVisited(ArrayList<Node> visualCreatedProcesses) {
+        for(Node n: visualCreatedProcesses){
+            n.removeAttribute("visited");
+        }
+    }
+
 
     private void doDFSRecursive(Node n) {
+        boolean isCyclic = false;
+
+        if(n.hasAttribute("visited")){
+            System.out.println("visited");
+        }
+
+        n.setAttribute("visited", "true");
+
+        if(n.getAttribute("ui.class").equals("PetriPlace")){
+            isCyclic = determinePlaceIsCyclic(n);
+        }
+
+        if(isCyclic){
+            //Inner process loop
+            String innerProcessName = currentPetriHead.getAttribute("ui.label").toString().toUpperCase() + "InnerProcess";
+            cumulativeProcessCode += innerProcessName + ",\n" + innerProcessName + " = ";
+            n.setAttribute("ui.label", innerProcessName);
+            n.setAttribute("ui.class", "PetriPlaceInnerStart");
+        }
+
         //When Leaf
         if (n.getAttribute("ui.class").equals("PetriPlaceEnd")) {
             //leaf
@@ -51,6 +81,8 @@ public class VisualPetriToProcessCodeHelper {
         // Open bracket for each branch
         if(edges.size() > 1){
             cumulativeProcessCode += "(";
+        } else {
+            System.out.println(edges.size());
         }
 
         for(int i = 0; i < edges.size(); i++){
@@ -65,11 +97,31 @@ public class VisualPetriToProcessCodeHelper {
             }
 
             //And repeat this process for outgoingnode
-            doDFSRecursive(outGoingNode);
+
+            if(!outGoingNode.hasAttribute("visited")) {
+                doDFSRecursive(outGoingNode);
+            } else {
+                //Loop detected
+                System.out.println("loopy");
+
+                if(outGoingNode == currentPetriHead) {
+                    //inner process loop
+                    cumulativeProcessCode += outGoingNode.getAttribute("ui.label").toString().toUpperCase();
+                } else {
+
+                }
+
+
+                //System.out.println(cumulativeProcessCode);
+
+            }
 
             //Place a pipe for each child node of parent that is not the final child node in order i.e dont place pipe on
             //final child
             if(i < edges.size() - 1 ) {
+                if(n.hasAttribute("ui.label") ){
+                    System.out.println((String)n.getAttribute("ui.label"));
+                }
                 cumulativeProcessCode += " | ";
             }
         }
@@ -80,12 +132,20 @@ public class VisualPetriToProcessCodeHelper {
         }
     }
 
+    private boolean determinePlaceIsCyclic(Node n) {
+        Collection<Edge> incommingEdges = n.getEnteringEdgeSet();
+        return incommingEdges.size() > 1;
+    }
+
     private String doValueEvaluation(Node n) {
         String value = "";
         if (n.getAttribute("ui.class").equals("PetriTransition")) {
             value = n.getAttribute("ui.label") + " -> ";
         } else if (n.getAttribute("ui.class").equals("PetriPlaceEnd")) {
             value = "STOP";
+        } else if (n.getAttribute("ui.class").equals("PetriPlaceInnerStart")) {
+            //Loop Place Finisher
+            value = n.getAttribute("ui.label");
         }
 
         return value;
