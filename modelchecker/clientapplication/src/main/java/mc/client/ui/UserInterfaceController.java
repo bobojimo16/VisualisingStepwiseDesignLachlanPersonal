@@ -686,8 +686,8 @@ public class UserInterfaceController implements Initializable, FontListener {
             case "petriEdgeBothTransitions":
                 a.setContentText("Unable To Connect Transitions - Try Using A Place");
                 break;
-            case "petriTransitionMultipleEdges":
-                a.setContentText("Unable To Connect More Than One STOP Node To A Transition - Try Using More Places");
+            case "petriTransitionBranching":
+                a.setContentText("Unable To Branch On A Transition - Try Branching On A Place");
             default:
                 break;
         }
