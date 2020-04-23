@@ -10,6 +10,7 @@ import java.util.Iterator;
 public class VisualPetriToProcessCodeHelper {
     private String cumulativeProcessCode;
     private Node currentPetriHead;
+    private boolean branchDetected;
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses) {
         clearVisited(visualCreatedProcesses);
@@ -39,7 +40,13 @@ public class VisualPetriToProcessCodeHelper {
     private void clearVisited(ArrayList<Node> visualCreatedProcesses) {
         for(Node n: visualCreatedProcesses){
             n.removeAttribute("visited");
+
+            if(n.getAttribute("ui.class").equals("PetriPlaceInnerStart")){
+                n.setAttribute("ui.class", "PetriPlace");
+            }
         }
+
+
     }
 
 
@@ -59,7 +66,13 @@ public class VisualPetriToProcessCodeHelper {
         if(isCyclic){
             //Inner process loop
             String innerProcessName = currentPetriHead.getAttribute("ui.label").toString().toUpperCase() + "InnerProcess";
-            cumulativeProcessCode += innerProcessName + ",\n" + innerProcessName + " = ";
+
+            if(!branchDetected) {
+                cumulativeProcessCode += innerProcessName + ",\n" + innerProcessName + " = ";
+            } else {
+                cumulativeProcessCode += innerProcessName + "),\n" + innerProcessName + " = (";
+                branchDetected = false;
+            }
             n.setAttribute("ui.label", innerProcessName);
             n.setAttribute("ui.class", "PetriPlaceInnerStart");
         }
@@ -102,7 +115,7 @@ public class VisualPetriToProcessCodeHelper {
                 doDFSRecursive(outGoingNode);
             } else {
                 //Loop detected
-                System.out.println("loopy");
+
 
                 if(outGoingNode == currentPetriHead) {
                     //inner process loop
@@ -123,6 +136,7 @@ public class VisualPetriToProcessCodeHelper {
                     System.out.println((String)n.getAttribute("ui.label"));
                 }
                 cumulativeProcessCode += " | ";
+                branchDetected = true;
             }
         }
 

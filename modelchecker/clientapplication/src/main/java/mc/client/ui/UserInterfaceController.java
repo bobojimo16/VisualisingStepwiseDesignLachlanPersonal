@@ -1337,6 +1337,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public void handlePetriIdentification(ActionEvent actionEvent) {
 
+        visualPetriToProcessCodeHelper = new VisualPetriToProcessCodeHelper();
+
         String conversionResult = visualPetriToProcessCodeHelper.doConversion(ModelView.getInstance().getVisualCreatedPetris());
 
         System.out.println(conversionResult);

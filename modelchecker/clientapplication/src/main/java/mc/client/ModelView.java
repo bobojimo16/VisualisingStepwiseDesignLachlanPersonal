@@ -683,10 +683,10 @@ public class ModelView implements Observer, FontListener {
 
         createdEdges.add(edge);
 
-        doPostEdgeCorrections();
+        doPostEdgeUpdates(edge);
     }
 
-    private void doPostEdgeCorrections() {
+    private void doPostEdgeUpdates(Edge edge) {
 
         //Set the immediate places of Petri transitions that are type stop to place where branching
         for(Node currentNode: createdNodes){
@@ -703,8 +703,34 @@ public class ModelView implements Observer, FontListener {
                     }
                 }
             }
-
         }
+
+        //Determine if new node connection is apart of an existing code process if so add it to created nodes and edges
+
+        Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
+
+        Collection<Node> tempNodes = new HashSet<>();
+        boolean toAdd = false;
+
+        while(k.hasNext()){
+            Node current = k.next();
+            tempNodes.add(current);
+            System.out.println((String)current.getAttribute("ui.class"));
+            if(current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)){
+                System.out.println("Adding code process to visual");
+                Node headToAdd = current;
+                headToAdd.setAttribute("ui.label", "A");
+                toAdd = true;
+            }
+        }
+
+        if(toAdd) {
+            createdNodes.addAll(tempNodes);
+        }
+
+
+
+
     }
 
 
