@@ -622,35 +622,56 @@ public class ModelView implements Observer, FontListener {
             return;
         }
 
-        /*if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlaceEnd")){
+        //Reject braching on a transition
+        if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace")){
 
-            Collection<Edge> outGoingEdges = firstNodeClicked.getLeavingEdgeSet();
-            boolean hasExistingEnd = false;
+            Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
 
-            for(Edge e: outGoingEdges){
-                if(e.getNode1().getAttribute("ui.class").equals("PetriPlaceEnd")){
-                    hasExistingEnd = true;
+            //Cant understand ytf getleavingedgeset contains entering edges hence this:
+            int actualLeavingEdgeCount = 0;
+            for(Edge e: firstNodeLeavingEdges){
+                Node target = e.getTargetNode();
+
+                if(target != firstNodeClicked){
+                    actualLeavingEdgeCount++;
                 }
             }
 
-            if(hasExistingEnd) {
+            if(actualLeavingEdgeCount > 0){
                 Platform.runLater(() ->
                 {
-                    uic.reportError("petriTransitionMultipleEdges");
+                    uic.reportError("petriTransitionBranching");
                 });
                 return;
             }
 
         }
-*/
+
+
         //convert any stop child nodes of petri transitions into places when branching
 
 
 
 
 
-
+        System.out.println("MakeEdge");
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
+
+        System.out.println(workingCanvasArea.getEdgeCount());
+
+        if(firstNodeClicked.hasEdgeToward(seccondNodeClicked.getId())){
+            System.out.println("Has Edge Toward");
+        }
+
+
+        if(firstNodeClicked.hasEdgeFrom(seccondNodeClicked.getId())){
+            System.out.println("Has Edge From");
+        }
+
+
+
+
+
         //String labelValue;
 
         if((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
@@ -1447,7 +1468,7 @@ public class ModelView implements Observer, FontListener {
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
         workingLayout = Layouts.newLayoutAlgorithm();
-        workingLayout.setForce(0.1); // 1 by default        
+        workingLayout.setForce(0.1); // 1 by default
         System.out.println(workingLayout.getForce());
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
