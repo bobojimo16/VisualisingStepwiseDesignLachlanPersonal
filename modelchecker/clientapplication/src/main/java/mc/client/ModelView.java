@@ -622,7 +622,7 @@ public class ModelView implements Observer, FontListener {
         }
 
         //Reject braching on a transition
-        if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace")){
+        if(firstNodeType.equals("PetriTransition") && seccondNodeType.contains("Petri")){
 
             Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
 
