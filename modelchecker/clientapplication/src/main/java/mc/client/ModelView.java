@@ -502,7 +502,6 @@ public class ModelView implements Observer, FontListener {
 
 
     public void dropNode(int xOnScreen, int yOnScreen) {
-        System.out.println("drop");
 
         if (!addingAutoNodeStart && !addingAutoNodeNeutral && !addingAutoNodeEnd
         && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
@@ -622,35 +621,46 @@ public class ModelView implements Observer, FontListener {
             return;
         }
 
-        /*if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlaceEnd")){
+        //Reject braching on a transition
+        if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace")){
 
-            Collection<Edge> outGoingEdges = firstNodeClicked.getLeavingEdgeSet();
-            boolean hasExistingEnd = false;
+            Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
 
-            for(Edge e: outGoingEdges){
-                if(e.getNode1().getAttribute("ui.class").equals("PetriPlaceEnd")){
-                    hasExistingEnd = true;
+            //Cant understand ytf getleavingedgeset contains entering edges hence this:
+            int actualLeavingEdgeCount = 0;
+            for(Edge e: firstNodeLeavingEdges){
+                Node target = e.getTargetNode();
+
+                if(target != firstNodeClicked){
+                    actualLeavingEdgeCount++;
                 }
             }
 
-            if(hasExistingEnd) {
+            if(actualLeavingEdgeCount > 0){
                 Platform.runLater(() ->
                 {
-                    uic.reportError("petriTransitionMultipleEdges");
+                    uic.reportError("petriTransitionBranching");
                 });
                 return;
             }
 
         }
-*/
+
+
         //convert any stop child nodes of petri transitions into places when branching
 
 
 
 
 
-
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
+
+
+
+
+
+
+
         //String labelValue;
 
         if((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
@@ -662,10 +672,10 @@ public class ModelView implements Observer, FontListener {
 
         createdEdges.add(edge);
 
-        doPostEdgeCorrections();
+        doPostEdgeUpdates(edge);
     }
 
-    private void doPostEdgeCorrections() {
+    private void doPostEdgeUpdates(Edge edge) {
 
         //Set the immediate places of Petri transitions that are type stop to place where branching
         for(Node currentNode: createdNodes){
@@ -682,8 +692,26 @@ public class ModelView implements Observer, FontListener {
                     }
                 }
             }
-
         }
+
+        //Determine if new node connection is apart of an existing code process if so add it to created nodes and edges
+
+        Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
+
+
+
+        while(k.hasNext()){
+            Node current = k.next();
+            System.out.println((String)current.getAttribute("ui.label"));
+            if(current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)){
+                System.out.println("Adding code process to visual");
+                Node headToAdd = current;
+                headToAdd.setAttribute("ui.label", "A");
+                createdNodes.add(headToAdd);
+            }
+        }
+
+
     }
 
 
@@ -1447,7 +1475,7 @@ public class ModelView implements Observer, FontListener {
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
         workingLayout = Layouts.newLayoutAlgorithm();
-        workingLayout.setForce(0.1); // 1 by default        
+        workingLayout.setForce(0.1); // 1 by default
         System.out.println(workingLayout.getForce());
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
