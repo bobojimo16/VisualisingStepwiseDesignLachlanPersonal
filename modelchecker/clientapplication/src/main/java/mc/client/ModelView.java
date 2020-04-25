@@ -502,7 +502,6 @@ public class ModelView implements Observer, FontListener {
 
 
     public void dropNode(int xOnScreen, int yOnScreen) {
-        System.out.println("drop");
 
         if (!addingAutoNodeStart && !addingAutoNodeNeutral && !addingAutoNodeEnd
         && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
@@ -654,19 +653,9 @@ public class ModelView implements Observer, FontListener {
 
 
 
-        System.out.println("MakeEdge");
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
-        System.out.println(workingCanvasArea.getEdgeCount());
 
-        if(firstNodeClicked.hasEdgeToward(seccondNodeClicked.getId())){
-            System.out.println("Has Edge Toward");
-        }
-
-
-        if(firstNodeClicked.hasEdgeFrom(seccondNodeClicked.getId())){
-            System.out.println("Has Edge From");
-        }
 
 
 
@@ -683,10 +672,10 @@ public class ModelView implements Observer, FontListener {
 
         createdEdges.add(edge);
 
-        doPostEdgeCorrections();
+        doPostEdgeUpdates(edge);
     }
 
-    private void doPostEdgeCorrections() {
+    private void doPostEdgeUpdates(Edge edge) {
 
         //Set the immediate places of Petri transitions that are type stop to place where branching
         for(Node currentNode: createdNodes){
@@ -703,8 +692,26 @@ public class ModelView implements Observer, FontListener {
                     }
                 }
             }
-
         }
+
+        //Determine if new node connection is apart of an existing code process if so add it to created nodes and edges
+
+        Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
+
+
+
+        while(k.hasNext()){
+            Node current = k.next();
+            System.out.println((String)current.getAttribute("ui.label"));
+            if(current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)){
+                System.out.println("Adding code process to visual");
+                Node headToAdd = current;
+                headToAdd.setAttribute("ui.label", "A");
+                createdNodes.add(headToAdd);
+            }
+        }
+
+
     }
 
 
