@@ -1,21 +1,30 @@
 package mc.client;
 
+import mc.client.ui.TrieNode;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 public class VisualPetriToProcessCodeHelper {
     private String cumulativeProcessCode;
     private Node currentPetriHead;
-    private boolean branchDetected;
+    private int innerProcessCounter = 1;
+    private ArrayList<Node> allNodes;
+    private String[] processesText = new String[100];
+    private int processesTextSize = 0;
+    private boolean innerProcessDetected;
+
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses) {
+        allNodes = visualCreatedProcesses;
         clearVisited(visualCreatedProcesses);
         ArrayList<Node> HeadPetriNodes = new ArrayList<>();
         cumulativeProcessCode = "";
+
+        for (int i = 0; i < 100; i++) {
+            processesText[i] = "";
+        }
 
 
         //Remove Nodes that arn't Petri Head Nodes
@@ -30,18 +39,26 @@ public class VisualPetriToProcessCodeHelper {
             currentPetriHead = n;
             String petriID = n.getAttribute("ui.label");
             cumulativeProcessCode += petriID.toUpperCase() + " = ";
-            doDFSRecursive(n);
+            doDFSRecursive(n, processesTextSize);
         }
 
-        cumulativeProcessCode+=".";
+        for (int i = 0; i <= processesTextSize; i++) {
+            if (i != processesTextSize) {
+                cumulativeProcessCode += processesText[i] + "," + "\n";
+            } else {
+                cumulativeProcessCode += processesText[i];
+            }
+        }
+
+        cumulativeProcessCode += ".";
         return cumulativeProcessCode;
     }
 
     private void clearVisited(ArrayList<Node> visualCreatedProcesses) {
-        for(Node n: visualCreatedProcesses){
+        for (Node n : allNodes) {
             n.removeAttribute("visited");
 
-            if(n.getAttribute("ui.class").equals("PetriPlaceInnerStart")){
+            if (n.getAttribute("ui.class").equals("PetriPlaceInnerStart")) {
                 n.setAttribute("ui.class", "PetriPlace");
             }
         }
@@ -50,29 +67,47 @@ public class VisualPetriToProcessCodeHelper {
     }
 
 
-    private void doDFSRecursive(Node n) {
+    private void doDFSRecursive(Node n, int currentLineForWriting) {
+
+        if (!allNodes.contains(n)) {
+            allNodes.add(n);
+        }
         boolean isCyclic = false;
 
-        if(n.hasAttribute("visited")){
-            System.out.println("visited");
-        }
 
         n.setAttribute("visited", "true");
 
-        if(n.getAttribute("ui.class").equals("PetriPlace")){
+        if (n.getAttribute("ui.class").equals("PetriPlace")) {
             isCyclic = determinePlaceIsCyclic(n);
         }
 
-        if(isCyclic){
+        if (isCyclic) {
             //Inner process loop
-            String innerProcessName = currentPetriHead.getAttribute("ui.label").toString().toUpperCase() + "InnerProcess";
 
-            if(!branchDetected) {
-                cumulativeProcessCode += innerProcessName + ",\n" + innerProcessName + " = ";
+
+            String innerProcessName = currentPetriHead.getAttribute("ui.label").toString().toUpperCase() + "InnerProcess"
+                + innerProcessCounter;
+
+            innerProcessCounter++;
+
+            processesText[currentLineForWriting] += (innerProcessName);
+            processesTextSize++;
+            processesText[processesTextSize] += innerProcessName + " = ";
+            currentLineForWriting = processesTextSize;
+            innerProcessDetected = true;
+
+
+           /* if(!branchDetected) {
+
+
+                //cumulativeProcessCode += innerProcessName + ",\n" + innerProcessName + " = ";
             } else {
-                cumulativeProcessCode += innerProcessName + "),\n" + innerProcessName + " = (";
+                processesText[processesTextSize] += (innerProcessName + "),");
+                processesTextSize++;
+                processesText[processesTextSize] += innerProcessName + " = (";
                 branchDetected = false;
-            }
+            }*/
+
             n.setAttribute("ui.label", innerProcessName);
             n.setAttribute("ui.class", "PetriPlaceInnerStart");
         }
@@ -92,34 +127,44 @@ public class VisualPetriToProcessCodeHelper {
         }
 
         // Open bracket for each branch
-        if(edges.size() > 1){
-            cumulativeProcessCode += "(";
-        } else {
-            System.out.println(edges.size());
+        if (edges.size() > 1) {
+            //branch detected
+            processesText[processesTextSize] += "(";
+            //cumulativeProcessCode += "(";
+            //must now order the edges to so that loop paths are traversed first after this if block
+            PriorityQueue<EdgeAndBool> edgesOrdered = reorderEdges(edges);
+            edges.clear();
+
+            while (!edgesOrdered.isEmpty()) {
+                Edge ec = edgesOrdered.poll().e;
+                edges.add(ec);
+            }
         }
 
-        for(int i = 0; i < edges.size(); i++){
+
+        for (int i = 0; i < edges.size(); i++) {
 
             Node outGoingNode = edges.get(i).getNode1();
             //Node outGoing = current;
 
             //if node is not a place then get its value
-            if(!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
+            if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
                 String nextValue = doValueEvaluation(outGoingNode);
-                cumulativeProcessCode += nextValue;
+                processesText[currentLineForWriting] += nextValue;
+                //cumulativeProcessCode += nextValue;
             }
 
             //And repeat this process for outgoingnode
 
-            if(!outGoingNode.hasAttribute("visited")) {
-                doDFSRecursive(outGoingNode);
+            if (!outGoingNode.hasAttribute("visited")) {
+                doDFSRecursive(outGoingNode, currentLineForWriting);
             } else {
                 //Loop detected
 
-
-                if(outGoingNode == currentPetriHead) {
+                if (outGoingNode == currentPetriHead) {
                     //inner process loop
-                    cumulativeProcessCode += outGoingNode.getAttribute("ui.label").toString().toUpperCase();
+                    processesText[currentLineForWriting] += outGoingNode.getAttribute("ui.label").toString().toUpperCase();
+                    //cumulativeProcessCode += outGoingNode.getAttribute("ui.label").toString().toUpperCase();
                 } else {
 
                 }
@@ -131,19 +176,56 @@ public class VisualPetriToProcessCodeHelper {
 
             //Place a pipe for each child node of parent that is not the final child node in order i.e dont place pipe on
             //final child
-            if(i < edges.size() - 1 ) {
-                if(n.hasAttribute("ui.label") ){
-                    System.out.println((String)n.getAttribute("ui.label"));
-                }
-                cumulativeProcessCode += " | ";
-                branchDetected = true;
+            if (i < edges.size() - 1) {
+
+                processesText[currentLineForWriting] += " | ";
+                //cumulativeProcessCode += " | ";
             }
         }
 
         // Close bracket for each branch
-        if(edges.size() > 1){
-            cumulativeProcessCode += ")";
+        if (edges.size() > 1) {
+            processesText[currentLineForWriting] += ")";
+            //cumulativeProcessCode += ")";
         }
+
+
+    }
+
+    private PriorityQueue<EdgeAndBool> reorderEdges(ArrayList<Edge> edges) {
+        PriorityQueue<EdgeAndBool> queue = new PriorityQueue<>(new EdgeAndBoolEvaulator());
+
+
+        for (Edge e : edges) {
+            EdgeAndBool currentEAB = determineBranchPriority(e, e);
+            queue.add(currentEAB);
+        }
+
+        return queue;
+    }
+
+    private EdgeAndBool determineBranchPriority(Edge initialEdge, Edge currentEdge) {
+
+        if (currentEdge.getNode1().hasAttribute("visited")) {
+            return new EdgeAndBool(initialEdge, "HeadLoop");
+        }
+
+        if (determinePlaceIsCyclic(currentEdge.getNode1())) {
+            return new EdgeAndBool(initialEdge, "InnerLoop");
+        }
+
+        Iterator<? extends Edge> k = currentEdge.getNode1().getLeavingEdgeIterator();
+        ArrayList<Edge> edges = new ArrayList<>();
+        for (Iterator<? extends Edge> it = k; it.hasNext(); ) {
+            edges.add(it.next());
+        }
+
+        for (Edge nextNodeEdge : edges) {
+            return determineBranchPriority(initialEdge, nextNodeEdge);
+        }
+
+        return new EdgeAndBool(initialEdge, "Normal");
+
     }
 
     private boolean determinePlaceIsCyclic(Node n) {
@@ -166,3 +248,44 @@ public class VisualPetriToProcessCodeHelper {
 
     }
 }
+
+
+class EdgeAndBool {
+
+    public Edge e;
+    public String type;
+
+    public EdgeAndBool(Edge n, String type) {
+        this.e = n;
+        this.type = type;
+
+    }
+
+}
+
+class EdgeAndBoolEvaulator implements Comparator<EdgeAndBool> {
+    @Override
+    public int compare(EdgeAndBool o1, EdgeAndBool o2) {
+        int potentialInversion = -1;
+        if (o1.type.equals("HeadLoop") && o2.type.equals("Normal")) {
+            return 1 * potentialInversion;
+        } else if (o1.type.equals("HeadLoop") && o2.type.equals("InnerLoop")) {
+            return 1 * potentialInversion;
+        } else if (o1.type.equals("HeadLoop") && o2.type.equals("HeadLoop")) {
+            return 1 * potentialInversion;
+        } else if (o1.type.equals("Normal") && o2.type.equals("HeadLoop")) {
+            return -1 * potentialInversion;
+        } else if (o1.type.equals("Normal") && o2.type.equals("InnerLoop")) {
+            return 1 * potentialInversion;
+        } else if (o1.type.equals("Normal") && o2.type.equals("Normal")) {
+            return 1 * potentialInversion;
+        } else if (o1.type.equals("InnerLoop") && o2.type.equals("HeadLoop")) {
+            return -1 * potentialInversion;
+        } else if (o1.type.equals("InnerLoop") && o2.type.equals("Normal")) {
+            return -1 * potentialInversion;
+        } else {
+            return 1 * potentialInversion;
+        }
+    }
+}
+

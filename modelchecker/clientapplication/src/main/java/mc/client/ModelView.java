@@ -502,7 +502,6 @@ public class ModelView implements Observer, FontListener {
 
 
     public void dropNode(int xOnScreen, int yOnScreen) {
-        System.out.println("drop");
 
         if (!addingAutoNodeStart && !addingAutoNodeNeutral && !addingAutoNodeEnd
         && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
@@ -654,19 +653,9 @@ public class ModelView implements Observer, FontListener {
 
 
 
-        System.out.println("MakeEdge");
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
-        System.out.println(workingCanvasArea.getEdgeCount());
 
-        if(firstNodeClicked.hasEdgeToward(seccondNodeClicked.getId())){
-            System.out.println("Has Edge Toward");
-        }
-
-
-        if(firstNodeClicked.hasEdgeFrom(seccondNodeClicked.getId())){
-            System.out.println("Has Edge From");
-        }
 
 
 
@@ -709,26 +698,18 @@ public class ModelView implements Observer, FontListener {
 
         Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
 
-        Collection<Node> tempNodes = new HashSet<>();
-        boolean toAdd = false;
+
 
         while(k.hasNext()){
             Node current = k.next();
-            tempNodes.add(current);
-            System.out.println((String)current.getAttribute("ui.class"));
+            System.out.println((String)current.getAttribute("ui.label"));
             if(current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)){
                 System.out.println("Adding code process to visual");
                 Node headToAdd = current;
                 headToAdd.setAttribute("ui.label", "A");
-                toAdd = true;
+                createdNodes.add(headToAdd);
             }
         }
-
-        if(toAdd) {
-            createdNodes.addAll(tempNodes);
-        }
-
-
 
 
     }
