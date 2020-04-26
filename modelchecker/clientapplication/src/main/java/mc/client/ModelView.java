@@ -209,8 +209,6 @@ public class ModelView implements Observer, FontListener {
 //  printing (automata) and (petrinet) names and iterates through toExpand to extract node and edge data into mapping and compiledresult ?
         mappings.clear();
         for (Map.Entry<String, MultiProcessModel> mpm : toExpand) {
-            /*System.out.println("mpmKey "+ mpm.getKey());
-            System.out.println("mpmValue "+ mpm.getValue());*/
             if (!mpm.getKey().endsWith(":*")) continue; //Only off processes in Domain * - prevents duplicates
             for (ProcessType pt : ProcessType.values()) {
                 if (mpm.getValue().hasProcess(pt)) {
@@ -266,7 +264,6 @@ public class ModelView implements Observer, FontListener {
 
 
     public JPanel updateGraphNew(SwingNode modelDisplayNew) {
-        System.out.println("updategraph");
 
         if (compiledResult == null) {
             return workingCanvasAreaContainer;
@@ -298,7 +295,6 @@ public class ModelView implements Observer, FontListener {
 
     private void drawCreatedProcesses() {
         for (Node cn : createdNodes) {
-            //System.out.println(cn.getId());
 
             if (workingCanvasArea.getNode(cn.getId()) != null) {
                 continue;
@@ -313,11 +309,6 @@ public class ModelView implements Observer, FontListener {
             if (cnAttributeLabel != null) { //Is start so label it
                 n.addAttribute("ui.label", cnAttributeLabel); // dk ytf cant do this directly
             }
-
-
-
-            //System.out.println("edgecount: " + cn.getEdgeSet().size());
-
         }
 
         for (Edge ce : createdEdges) {
@@ -357,12 +348,14 @@ public class ModelView implements Observer, FontListener {
             "}" +
             "node.PetriPlace {" +
             "fill-color: gray;" +
+            "text-visibility-mode: hidden;" +
             "}" +
             "node.PetriPlaceStart {" +
             "fill-color: green;" +
             "}" +
             "node.PetriPlaceEnd {" +
             "fill-color: red;" +
+            "text-visibility-mode: hidden;" +
             "}" +
             "node.PetriTransition {" +
             "shape: box; " +
@@ -387,9 +380,6 @@ public class ModelView implements Observer, FontListener {
 
 
     private void addAutomataNew(Automaton automaton) {
-
-        //System.out.println(automaton.getId());
-
         if (workingCanvasArea.getNode(automaton.getId()) != null) {
             return;
         }
@@ -397,10 +387,6 @@ public class ModelView implements Observer, FontListener {
 
         Map<String, GraphNode> nodeMap = new HashMap<>();
         Map<String, Node> nodeMapGS = new HashMap<>();
-
-
-        //System.out.println(automaton);
-
         //Adds grapth node to display
         automaton.getNodes().forEach(n -> {
             NodeStates nodeTermination = NodeStates.NOMINAL;
@@ -504,7 +490,7 @@ public class ModelView implements Observer, FontListener {
     public void dropNode(int xOnScreen, int yOnScreen) {
 
         if (!addingAutoNodeStart && !addingAutoNodeNeutral && !addingAutoNodeEnd
-        && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
+            && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
             return;
         }
 
@@ -514,7 +500,6 @@ public class ModelView implements Observer, FontListener {
         latestNode = workingCanvasArea.addNode(String.valueOf(Math.random()));
         latestNode.setAttribute("xyz", gu.x, gu.y, 0);
         //workingLayout.freezeNode(latestNode.getId(), true);
-
 
 
         if (addingAutoNodeStart) {
@@ -544,6 +529,7 @@ public class ModelView implements Observer, FontListener {
 
         System.out.println("node placed");
 
+
         createdNodes.add(latestNode);
 
         nodeRecentlyPlaced = true;
@@ -553,6 +539,10 @@ public class ModelView implements Observer, FontListener {
 
     public void setLatestNodeName(String newProcessNameValue) {
         latestNode.addAttribute("ui.label", newProcessNameValue);
+
+        if (latestNode.getAttribute("ui.class").equals("PetriPlaceStart")) {
+            workingCanvasArea.getNode(latestNode.getId()).addAttribute("ui.PID", newProcessNameValue);
+        }
     }
 
 
@@ -563,6 +553,7 @@ public class ModelView implements Observer, FontListener {
             nodeRecentlyPlaced = false;
             return;
         }
+
 
         GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
 
@@ -593,8 +584,8 @@ public class ModelView implements Observer, FontListener {
         String seccondNodeType = seccondNodeClicked.getAttribute("ui.class");
 
         //Reject transitions between petri and autos
-        if((firstNodeType.contains("Petri") && seccondNodeType.contains("Auto"))
-        || (firstNodeType.contains("Auto") && seccondNodeType.contains("Petri"))){
+        if ((firstNodeType.contains("Petri") && seccondNodeType.contains("Auto"))
+            || (firstNodeType.contains("Auto") && seccondNodeType.contains("Petri"))) {
             Platform.runLater(() ->
             {
                 uic.reportError("transitionBetweenAutoAndPetri");
@@ -603,17 +594,17 @@ public class ModelView implements Observer, FontListener {
         }
 
         //If first and seccond node are not transition reject
-        if(!firstNodeType.equals("PetriTransition") && !seccondNodeType.equals("PetriTransition")
-            && (!firstNodeType.contains("Auto") && !seccondNodeType.contains("Auto") ) ){
+        if (!firstNodeType.equals("PetriTransition") && !seccondNodeType.equals("PetriTransition")
+            && (!firstNodeType.contains("Auto") && !seccondNodeType.contains("Auto"))) {
             Platform.runLater(() ->
-                {
-                    uic.reportError("petriEdgeNoTransition");
-                });
+            {
+                uic.reportError("petriEdgeNoTransition");
+            });
             return;
         }
 
         //If first and seccond are both transitions reject
-        if(firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriTransition")){
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriTransition")) {
             Platform.runLater(() ->
             {
                 uic.reportError("petriEdgeBothTransitions");
@@ -621,49 +612,74 @@ public class ModelView implements Observer, FontListener {
             return;
         }
 
-        //Reject braching on a transition
-        if(firstNodeType.equals("PetriTransition") && seccondNodeType.contains("Petri")){
+        //Reject connections to a transisition if petri node is of the same process and transition already has entering connection
+        if (firstNodeType.contains("Petri") && seccondNodeType.equals("PetriTransition")) {
+            if (seccondNodeClicked.hasAttribute("ui.PID")) {
+                if (firstNodeClicked.getAttribute("ui.PID").toString() == seccondNodeClicked.getAttribute("ui.PID").toString()) {
+                    if (seccondNodeClicked.getEnteringEdgeSet().size() > 0) {
+                        Platform.runLater(() ->
+                        {
+                            uic.reportError("petriSingleProcessTransitionMultipleEntries");
+                        });
+                        return;
+                    }
 
-            Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
-
-            //Cant understand ytf getleavingedgeset contains entering edges hence this:
-            int actualLeavingEdgeCount = 0;
-            for(Edge e: firstNodeLeavingEdges){
-                Node target = e.getTargetNode();
-
-                if(target != firstNodeClicked){
-                    actualLeavingEdgeCount++;
                 }
             }
 
-            if(actualLeavingEdgeCount > 0){
-                Platform.runLater(() ->
-                {
-                    uic.reportError("petriTransitionBranching");
-                });
-                return;
-            }
 
         }
 
+        //Reject braching on a transition for a single petri
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.contains("Petri")) {
 
-        //convert any stop child nodes of petri transitions into places when branching
+            if (!firstNodeClicked.hasAttribute("ui.PIDS")) {
+
+                Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
+
+                //Cant understand ytf getleavingedgeset contains entering edges hence this:
+                int actualLeavingEdgeCount = 0;
+                for (Edge e : firstNodeLeavingEdges) {
+                    Node target = e.getTargetNode();
+
+                    if (target != firstNodeClicked) {
+                        actualLeavingEdgeCount++;
+                    }
+                }
+
+                if (actualLeavingEdgeCount > 0) {
+                    Platform.runLater(() ->
+                    {
+                        uic.reportError("petriTransitionBranching");
+                    });
+                    return;
+                }
+            }
 
 
-
-
+        }
 
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
+        //todo put in post
+
+        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
+
+        if (seccondNodeClicked.getAttribute("ui.class").equals("PetriTransition") && seccondNodeClicked.getEnteringEdgeSet().size() > 1) {
+            ArrayList<String> pids = new ArrayList<>();
+            pids.add(firstNodeClicked.getAttribute("ui.PID"));
+            if (workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PIDS")) {
+                System.out.println("here1");
+                pids.addAll(seccondNodeClicked.getAttribute("ui.PIDS"));
+                workingCanvasArea.getNode(seccondNodeClicked.getId()).setAttribute("ui.PIDS", pids);
+            } else {
+                ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
+                workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
+            }
+        }
 
 
-
-
-
-
-        //String labelValue;
-
-        if((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
+        if ((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
             Platform.runLater(() -> {
                 String labelValue = uic.nameEdge();
                 edge.addAttribute("ui.label", labelValue);
@@ -675,35 +691,72 @@ public class ModelView implements Observer, FontListener {
         doPostEdgeUpdates(edge);
     }
 
+    private ArrayList<String> getConnectedPIDS(Node tNode) {
+        ArrayList<String> pids = new ArrayList<>();
+        Collection<Edge> inGoingEdges = tNode.getEnteringEdgeSet();
+
+        for(Edge e: inGoingEdges){
+            pids.add(e.getNode0().getAttribute("ui.PID"));
+        }
+
+        return pids;
+
+
+
+
+    }
+
     private void doPostEdgeUpdates(Edge edge) {
 
+
         //Set the immediate places of Petri transitions that are type stop to place where branching
-        for(Node currentNode: createdNodes){
+        for (Node currentNode : createdNodes) {
 
-            if(currentNode.getAttribute("ui.class").equals("PetriTransition")) {
+            if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
                 Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
+                Collection<Edge> inGoingEdges = currentNode.getEnteringEdgeSet();
+                if (currentNode.hasAttribute("ui.PIDS")) {
+                    ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
+                    ArrayList<String> selectedPIDS = new ArrayList<>();
+                    int pidsSize = allPIDS.size();
+                    int eCounter = 0;
 
-                //Doing A branch
-                if (outGoingEdges.size() > 1) {
                     for (Edge e : outGoingEdges) {
-                        if (e.getNode1().getAttribute("ui.class").equals("PetriPlaceEnd")) {
-                            e.getNode1().setAttribute("ui.class", "PetriPlace");
+                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet")) {
+
+                            //Available Pids
+                            if (eCounter < pidsSize - 1) {
+                                Platform.runLater(() -> {
+                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
+                                    selectedPIDS.add(selectedPID);
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
+                                });
+
+                            } else {
+                                //Must choose remaining one
+                                for (String s : allPIDS) {
+                                    if (!selectedPIDS.contains(s)) {
+                                        selectedPIDS.add(s);
+                                    }
+                                }
+                            }
                         }
+                        eCounter++;
                     }
                 }
             }
         }
+
 
         //Determine if new node connection is apart of an existing code process if so add it to created nodes and edges
 
         Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
 
 
-
-        while(k.hasNext()){
+        while (k.hasNext()) {
             Node current = k.next();
-            System.out.println((String)current.getAttribute("ui.label"));
-            if(current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)){
+            if (current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)) {
                 System.out.println("Adding code process to visual");
                 Node headToAdd = current;
                 headToAdd.setAttribute("ui.label", "A");
@@ -752,9 +805,8 @@ public class ModelView implements Observer, FontListener {
                 startToIntValue.put(place, (petriStartsSize + 1 - petriStartSizeTracker.get()));
                 petriStartSizeTracker.getAndIncrement();
             } else {
-                System.out.println(place.getId());
                 //todo fix this crap
-                place.setId(place.getId()+Math.random());
+                place.setId(place.getId() + Math.random());
                 n = workingCanvasArea.addNode(place.getId());
             }
 
@@ -784,7 +836,7 @@ public class ModelView implements Observer, FontListener {
                 nodeMap.put(transition.getId(), node);
 
                 //todo fix this crap
-                transition.setId(transition.getId()+Math.random());
+                transition.setId(transition.getId() + Math.random());
                 Node n = workingCanvasArea.addNode(transition.getId());
                 n.addAttribute("ui.class", "PetriTransition");
                 n.addAttribute("ui.label", lab);

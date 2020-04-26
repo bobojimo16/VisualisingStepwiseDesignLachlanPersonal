@@ -3,6 +3,7 @@ package mc.client.ui;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
@@ -13,11 +14,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.TilePane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Box;
@@ -147,6 +150,8 @@ public class UserInterfaceController implements Initializable, FontListener {
     private ArrayList<Shape> processShapesPetri = new ArrayList<Shape>();
 
     private VisualPetriToProcessCodeHelper visualPetriToProcessCodeHelper;
+
+    private ChooseProcessController chooseProcessController;
 
     //@Getter
     //private static UserInterfaceController instance = this;
@@ -362,6 +367,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         settingsController.initialize();
 
         nameNewGraphElementController = new NewProcessController();
+        chooseProcessController = new ChooseProcessController();
         labelEdgeController = new LabelEdgeController();
         //newProcessController.initialize();
 
@@ -688,6 +694,10 @@ public class UserInterfaceController implements Initializable, FontListener {
                 break;
             case "petriTransitionBranching":
                 a.setContentText("Unable To Branch On A Transition - Try Branching On A Place");
+                break;
+            case "petriSingleProcessTransitionMultipleEntries":
+                a.setContentText("Transition unable to have multiple entries from petri elements of the same process");
+                break;
             default:
                 break;
         }
@@ -1351,4 +1361,42 @@ public class UserInterfaceController implements Initializable, FontListener {
         a.show();
 
     }
+
+    public String doParelelProcessSpecifying(ArrayList<String> processes) {
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/ChooseProcess.fxml"));
+        loader.setController(chooseProcessController); //links to  SettingsController.java
+        String toReturn = "";
+        try {
+            Stage newProcessChooseStage = new Stage();
+            newProcessChooseStage.setTitle("Choose Process");
+
+            Scene windowScene = new Scene(loader.load(), 402, 326);
+            newProcessChooseStage.setScene(windowScene);
+
+            //settingsController.setWindow(newProcessStage.getScene().getWindow());
+            newProcessChooseStage.initOwner(UserInterfaceApplication.getPrimaryStage());
+            //settingsStage.initModality(Modality.APPLICATION_MODAL);
+            newProcessChooseStage.initModality(Modality.NONE);
+            newProcessChooseStage.setResizable(false);
+            chooseProcessController.setCombo(processes);
+            newProcessChooseStage.showAndWait();
+            toReturn = chooseProcessController.getProcessValue();
+
+        } catch (IOException e) {
+            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            optionsLayoutLoadFailed.setTitle("Error encountered when loading new proccess dialogue");
+            optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
+
+            optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
+            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
+
+            optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            optionsLayoutLoadFailed.show();
+        }
+
+        System.out.println(toReturn);
+        return toReturn;
+    }
+
 }
