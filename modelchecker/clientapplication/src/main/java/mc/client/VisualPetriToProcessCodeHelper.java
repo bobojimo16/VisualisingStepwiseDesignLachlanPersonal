@@ -11,20 +11,21 @@ public class VisualPetriToProcessCodeHelper {
     private Node currentPetriHead;
     private int innerProcessCounter = 1;
     private ArrayList<Node> allNodes;
+    private ArrayList<String[]> processes = new ArrayList<>();
+    private ArrayList<Integer> processesTextFinalSize = new ArrayList<>();
     private String[] processesText = new String[100];
     private int processesTextSize = 0;
     private boolean innerProcessDetected;
+    private Set<String> processesInParelel = new HashSet<>();
 
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses) {
         allNodes = visualCreatedProcesses;
-        clearVisited(visualCreatedProcesses);
+
+        //performParelelSplitting(allNodes);
+
         ArrayList<Node> HeadPetriNodes = new ArrayList<>();
         cumulativeProcessCode = "";
-
-        for (int i = 0; i < 100; i++) {
-            processesText[i] = "";
-        }
 
 
         //Remove Nodes that arn't Petri Head Nodes
@@ -37,24 +38,56 @@ public class VisualPetriToProcessCodeHelper {
         //For each head petri node perform dfsrecursive search
         for (Node n : HeadPetriNodes) {
             currentPetriHead = n;
+            innerProcessCounter = 1;
+            doClearingJobs(visualCreatedProcesses);
             String petriID = n.getAttribute("ui.label");
-            cumulativeProcessCode += petriID.toUpperCase() + " = ";
+            processesText[0] += petriID.toUpperCase() + " = ";
             doDFSRecursive(n, processesTextSize);
+            processes.add(processesText);
+            processesTextFinalSize.add(processesTextSize);
+            processesTextSize = 0;
+            processesText = new String[100];
         }
 
-        for (int i = 0; i <= processesTextSize; i++) {
-            if (i != processesTextSize) {
-                cumulativeProcessCode += processesText[i] + "," + "\n";
-            } else {
-                cumulativeProcessCode += processesText[i];
+        int c = 0;
+        for (String[] process : processes) {
+            for (int i = 0; i <= processesTextFinalSize.get(c); i++) {
+                if (i != process.length) {
+                    if(i != processesTextFinalSize.get(c)) {
+                        cumulativeProcessCode += process[i] + "," + "\n";
+                    } else {
+                        cumulativeProcessCode += process[i] + "." + "\n";
+                    }
+                } else {
+                    cumulativeProcessCode += process[i];
+                }
+
             }
+            cumulativeProcessCode += "\n";
+
+            c++;
+        }
+
+        cumulativeProcessCode += "ParrelelProcesses = ";
+
+        int i = 0;
+        for(String s: processesInParelel){
+            if(i == 0) {
+                cumulativeProcessCode += s.toUpperCase();
+            } else {
+                cumulativeProcessCode += " || " + s.toUpperCase();
+            }
+
+            i++;
         }
 
         cumulativeProcessCode += ".";
+
+        //cumulativeProcessCode += ".";
         return cumulativeProcessCode;
     }
 
-    private void clearVisited(ArrayList<Node> visualCreatedProcesses) {
+    private void doClearingJobs(ArrayList<Node> visualCreatedProcesses) {
         for (Node n : allNodes) {
             n.removeAttribute("visited");
 
@@ -62,6 +95,21 @@ public class VisualPetriToProcessCodeHelper {
                 n.setAttribute("ui.class", "PetriPlace");
             }
         }
+
+        for (int i = 0; i < 100; i++) {
+            processesText[i] = "";
+        }
+
+
+    }
+
+    private void identifyProcessesInParelel(Node n) {
+        Collection<Edge> pidsEnteringEdges = n.getEnteringEdgeSet();
+
+        for(Edge e: pidsEnteringEdges){
+            processesInParelel.add(e.getNode0().getAttribute("ui.PID"));
+        }
+
 
 
     }
@@ -73,6 +121,15 @@ public class VisualPetriToProcessCodeHelper {
             allNodes.add(n);
         }
         boolean isCyclic = false;
+
+        if(!n.hasAttribute("ui.PIDS")) {
+
+            if (n.getAttribute("ui.PID").toString() != currentPetriHead.getAttribute("ui.PID").toString()) {
+                return;
+            }
+        } else {
+            identifyProcessesInParelel(n);
+        }
 
 
         n.setAttribute("visited", "true");
@@ -126,12 +183,18 @@ public class VisualPetriToProcessCodeHelper {
             edges.add(it.next());
         }
 
+        if (n.hasAttribute("ui.PIDS")) {
+
+        }
+
         // Open bracket for each branch
-        if (edges.size() > 1) {
+        if (edges.size() > 1 && !n.hasAttribute("ui.PIDS")) {
             //branch detected
             processesText[processesTextSize] += "(";
-            //cumulativeProcessCode += "(";
+
             //must now order the edges to so that loop paths are traversed first after this if block
+            //Correction: ended up over engineering this as I found better way of handling this with tracking currentLine
+            //in recursion will leave it in as slightly cleaner
             PriorityQueue<EdgeAndBool> edgesOrdered = reorderEdges(edges);
             edges.clear();
 
@@ -170,13 +233,11 @@ public class VisualPetriToProcessCodeHelper {
                 }
 
 
-                //System.out.println(cumulativeProcessCode);
-
             }
 
             //Place a pipe for each child node of parent that is not the final child node in order i.e dont place pipe on
             //final child
-            if (i < edges.size() - 1) {
+            if (i < edges.size() - 1 && !n.hasAttribute("ui.PIDS")) {
 
                 processesText[currentLineForWriting] += " | ";
                 //cumulativeProcessCode += " | ";
@@ -184,13 +245,15 @@ public class VisualPetriToProcessCodeHelper {
         }
 
         // Close bracket for each branch
-        if (edges.size() > 1) {
+        if (edges.size() > 1 && !n.hasAttribute("ui.PIDS")) {
             processesText[currentLineForWriting] += ")";
             //cumulativeProcessCode += ")";
         }
 
 
     }
+
+
 
     private PriorityQueue<EdgeAndBool> reorderEdges(ArrayList<Edge> edges) {
         PriorityQueue<EdgeAndBool> queue = new PriorityQueue<>(new EdgeAndBoolEvaulator());
