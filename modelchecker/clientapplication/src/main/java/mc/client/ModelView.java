@@ -115,16 +115,6 @@ public class ModelView implements Observer, FontListener {
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
 
-
-    /*public void cleanData() {
-        if (!(mappings == null)) mappings.clear();
-        if (!(placeId2GraphNode == null)) placeId2GraphNode.clear();
-        if (!(processModelsOnScreen == null)) processModelsOnScreen.clear();
-        if (!(modelsInList == null)) modelsInList.clear();
-        if (!(processModelsToDisplay == null)) processModelsToDisplay.clear();
-
-    }*/
-
     private VisualizationServer.Paintable boarder;
     private static Font sourceCodePro;
     private boolean fontListening = false;
@@ -136,6 +126,7 @@ public class ModelView implements Observer, FontListener {
     private Consumer<Collection<String>> listOfAutomataUpdater;
     @Setter
     private BiConsumer<List<OperationResult>, List<OperationResult>> updateLog;
+    private int PetriCount = 0;
     //@Setter
     //private BiConsumer<List<ImpliesResult>, List<ImpliesResult>> updateImpLog;
     //
@@ -360,10 +351,20 @@ public class ModelView implements Observer, FontListener {
             "node.PetriTransition {" +
             "shape: box; " +
             "fill-color: gray;" +
+            "}" +
+            "node.highlight {" +
+            "fill-color: red;" +
+            "}" +
+            "edge.EdgeBlue {" +
+            "fill-color: blue;" +
+            "}" +
+            "edge.EdgeRed {" +
+            "fill-color: red;" +
             "}"
 
 
             ;
+
 
     }
 
@@ -633,58 +634,50 @@ public class ModelView implements Observer, FontListener {
         //Reject braching on a transition for a single petri
         if (firstNodeType.equals("PetriTransition") && seccondNodeType.contains("Petri")) {
 
-            if (!firstNodeClicked.hasAttribute("ui.PIDS")) {
+            if (!firstNodeClicked.hasAttribute("ui.PIDS") && !seccondNodeType.equals("PetriPlaceStart")) {
 
-                Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
 
-                //Cant understand ytf getleavingedgeset contains entering edges hence this:
-                int actualLeavingEdgeCount = 0;
-                for (Edge e : firstNodeLeavingEdges) {
-                    Node target = e.getTargetNode();
-
-                    if (target != firstNodeClicked) {
-                        actualLeavingEdgeCount++;
+                    if(firstNodeClicked == null){
+                        System.out.println("fnull");
                     }
-                }
+                    Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
 
-                if (actualLeavingEdgeCount > 0) {
-                    Platform.runLater(() ->
-                    {
-                        uic.reportError("petriTransitionBranching");
-                    });
-                    return;
-                }
+                    //Cant understand ytf getleavingedgeset contains entering edges hence this:
+                    int actualLeavingEdgeCount = 0;
+                    for (Edge e : firstNodeLeavingEdges) {
+                        Node target = e.getTargetNode();
+
+                        if (target != firstNodeClicked) {
+                            actualLeavingEdgeCount++;
+                        }
+                    }
+
+                    if (actualLeavingEdgeCount > 0) {
+                        Platform.runLater(() ->
+                        {
+                            uic.reportError("petriTransitionBranching");
+                        });
+                        return;
+                    }
+
             }
+
 
 
         }
 
         Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
-        //todo put in post
-
-        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
-
-        if (seccondNodeClicked.getAttribute("ui.class").equals("PetriTransition") && seccondNodeClicked.getEnteringEdgeSet().size() > 1) {
-            ArrayList<String> pids = new ArrayList<>();
-            pids.add(firstNodeClicked.getAttribute("ui.PID"));
-            if (workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PIDS")) {
-                System.out.println("here1");
-                pids.addAll(seccondNodeClicked.getAttribute("ui.PIDS"));
-                workingCanvasArea.getNode(seccondNodeClicked.getId()).setAttribute("ui.PIDS", pids);
-            } else {
-                ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
-                workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
-            }
-        }
 
 
+        //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)
         if ((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
             Platform.runLater(() -> {
                 String labelValue = uic.nameEdge();
                 edge.addAttribute("ui.label", labelValue);
             });
         }
+
 
         createdEdges.add(edge);
 
@@ -708,13 +701,32 @@ public class ModelView implements Observer, FontListener {
 
     private void doPostEdgeUpdates(Edge edge) {
 
+        //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS"
+        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
 
-        //Set the immediate places of Petri transitions that are type stop to place where branching
+
+        //When a transition has multiple entering edges it means it is a parrelel transition denoted as PIDS (PID Plural)
+        //So if a transition is not yet a PIDS ie when a seccond incomming edge recently added, then give it a PIDS attribute
+        //Containing the PID of all incoming edges or if PIDS is already set then just re add existing edge PID with the new one
+        if (seccondNodeClicked.getAttribute("ui.class").equals("PetriTransition") && seccondNodeClicked.getEnteringEdgeSet().size() > 1) {
+            System.out.println("doingpids");
+            ArrayList<String> pids = new ArrayList<>();
+            pids.add(firstNodeClicked.getAttribute("ui.PID"));
+            if (workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PIDS")) {
+                pids.addAll(seccondNodeClicked.getAttribute("ui.PIDS"));
+                workingCanvasArea.getNode(seccondNodeClicked.getId()).setAttribute("ui.PIDS", pids);
+            } else {
+                ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
+                workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
+            }
+        }
+
+        //The subsequent places of a PIDS transisition need specifying, because which process should they belong to?
+        //Answer: let the user decide
         for (Node currentNode : createdNodes) {
 
             if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
                 Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
-                Collection<Edge> inGoingEdges = currentNode.getEnteringEdgeSet();
                 if (currentNode.hasAttribute("ui.PIDS")) {
                     ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
                     ArrayList<String> selectedPIDS = new ArrayList<>();
@@ -722,12 +734,18 @@ public class ModelView implements Observer, FontListener {
                     int eCounter = 0;
 
                     for (Edge e : outGoingEdges) {
-                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet")) {
+                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0 ) {
+
+                            //Boolean res = deterimineIfPlaceIsInLoop(workingCanvasArea.getNode(e.getNode1()));
 
                             //Available Pids
                             if (eCounter < pidsSize - 1) {
                                 Platform.runLater(() -> {
+                                    String petriType = e.getNode1().getAttribute("ui.class");
+                                    workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
                                     String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
                                     selectedPIDS.add(selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
@@ -761,9 +779,28 @@ public class ModelView implements Observer, FontListener {
                 Node headToAdd = current;
                 headToAdd.setAttribute("ui.label", "A");
                 createdNodes.add(headToAdd);
+                doPIDPropogationOfExistingProcess(headToAdd); //will fail for parrelel
+                break;
             }
         }
 
+
+    }
+
+
+    private void doPIDPropogationOfExistingProcess(Node headToAdd) {
+        Iterator<Node> k = headToAdd.getBreadthFirstIterator(false);
+        //headToAdd.addAttribute("ui.PID", headToAdd.getAttribute("ui.label").toString());
+
+        while (k.hasNext()){
+            Node current = k.next();
+            if(!current.hasAttribute("ui.PID")) { //Dont Contaminate new parrelel processes PID into existing process
+                workingCanvasArea.getNode(current.getId()).addAttribute("ui.PID", headToAdd.getAttribute("ui.PID").toString());
+            }
+
+            System.out.println(current.getAttribute("ui.PID").toString());
+
+        }
 
     }
 
@@ -813,13 +850,14 @@ public class ModelView implements Observer, FontListener {
             if (place.isStart()) {
                 n.addAttribute("ui.label", petri.getId() + startToIntValue.get(place));
                 n.addAttribute("ui.class", "PetriPlaceStart");
+
             } else if (!place.isStart() && !place.isSTOP()) {
                 n.addAttribute("ui.class", "PetriPlace");
             } else {
                 n.addAttribute("ui.class", "PetriPlaceEnd");
             }
 
-
+            n.addAttribute("ui.PID", petri.getId() );
             nodeMap.put(place.getId(), node);
             nodeMapGS.put(place.getId(), n);
         });
@@ -880,23 +918,29 @@ public class ModelView implements Observer, FontListener {
 
             DirectedEdge nodeEdge = new DirectedEdge(b, lab, a, UUID.randomUUID().toString());
 
+            System.out.println(edge.toString());
+
+            Edge e;
+
             if (edge.getFrom().getType().equals("PetriNetPlace")) {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getFrom();
                 if (pnp.isStart()) {
                     int startValue = startToIntValue.get(pnp);
-                    Edge e = workingCanvasArea.addEdge("test" + Math.random(), petri.getId() + startValue, edge.getTo().getId(), true);
+                    e = workingCanvasArea.addEdge("test" + Math.random(), petri.getId() + startValue, edge.getTo().getId(), true);
                 } else {
-                    Edge e = workingCanvasArea.addEdge("test" + Math.random(), edge.getFrom().getId(), edge.getTo().getId(), true);
+                    e = workingCanvasArea.addEdge("test" + Math.random(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
             } else {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getTo();
                 if (pnp.isStart()) {
                     int startValue = startToIntValue.get(pnp);
-                    Edge e = workingCanvasArea.addEdge("test" + Math.random(), edge.getFrom().getId(), petri.getId() + startValue, true);
+                    e = workingCanvasArea.addEdge("test" + Math.random(), edge.getFrom().getId(), petri.getId() + startValue, true);
                 } else {
-                    Edge e = workingCanvasArea.addEdge("test" + Math.random(), edge.getFrom().getId(), edge.getTo().getId(), true);
+                    e = workingCanvasArea.addEdge("test" + Math.random(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
             }
+
+
 
         }
 
