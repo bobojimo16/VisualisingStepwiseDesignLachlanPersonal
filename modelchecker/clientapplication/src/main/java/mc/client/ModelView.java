@@ -735,7 +735,9 @@ public class ModelView implements Observer, FontListener {
                     int eCounter = 0;
 
                     for (Edge e : outGoingEdges) {
-                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet")) {
+                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0 ) {
+
+                            //Boolean res = deterimineIfPlaceIsInLoop(workingCanvasArea.getNode(e.getNode1()));
 
                             //Available Pids
                             if (eCounter < pidsSize - 1) {
@@ -784,6 +786,15 @@ public class ModelView implements Observer, FontListener {
         }
 
 
+    }
+
+    private boolean deterimineIfPlaceIsInLoop(Node node) {
+        Collection<Edge> leavingEdges = node.getLeavingEdgeSet();
+
+
+
+
+        return false;
     }
 
     private void doPIDPropogationOfExistingProcess(Node headToAdd) {
