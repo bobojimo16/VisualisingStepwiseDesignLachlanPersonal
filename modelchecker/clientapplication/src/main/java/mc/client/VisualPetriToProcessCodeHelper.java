@@ -169,12 +169,12 @@ public class VisualPetriToProcessCodeHelper {
             n.setAttribute("ui.class", "PetriPlaceInnerStart");
         }
 
-        //When Leaf
+        /*//When Leaf
         if (n.getAttribute("ui.class").equals("PetriPlaceEnd")) {
             //leaf
             String nextValue = doValueEvaluation(n);
             return;
-        }
+        }*/
 
         //Iterate through this nodes leaving edges and store them in edges list
         Iterator<? extends Edge> k = n.getLeavingEdgeIterator();
