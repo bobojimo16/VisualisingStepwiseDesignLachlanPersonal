@@ -375,7 +375,6 @@ public class ModelView implements Observer, FontListener {
                 break;
             case PETRINET:
                 addPetrinetNew((Petrinet) p);
-                PetriCount++;
                 break;
         }
     }
@@ -788,24 +787,19 @@ public class ModelView implements Observer, FontListener {
 
     }
 
-    private boolean deterimineIfPlaceIsInLoop(Node node) {
-        Collection<Edge> leavingEdges = node.getLeavingEdgeSet();
-
-
-
-
-        return false;
-    }
 
     private void doPIDPropogationOfExistingProcess(Node headToAdd) {
         Iterator<Node> k = headToAdd.getBreadthFirstIterator(false);
-        headToAdd.addAttribute("ui.PID", headToAdd.getAttribute("ui.label").toString());
+        //headToAdd.addAttribute("ui.PID", headToAdd.getAttribute("ui.label").toString());
 
         while (k.hasNext()){
             Node current = k.next();
             if(!current.hasAttribute("ui.PID")) { //Dont Contaminate new parrelel processes PID into existing process
                 workingCanvasArea.getNode(current.getId()).addAttribute("ui.PID", headToAdd.getAttribute("ui.PID").toString());
             }
+
+            System.out.println(current.getAttribute("ui.PID").toString());
+
         }
 
     }
@@ -856,13 +850,14 @@ public class ModelView implements Observer, FontListener {
             if (place.isStart()) {
                 n.addAttribute("ui.label", petri.getId() + startToIntValue.get(place));
                 n.addAttribute("ui.class", "PetriPlaceStart");
+
             } else if (!place.isStart() && !place.isSTOP()) {
                 n.addAttribute("ui.class", "PetriPlace");
             } else {
                 n.addAttribute("ui.class", "PetriPlaceEnd");
             }
 
-
+            n.addAttribute("ui.PID", petri.getId() );
             nodeMap.put(place.getId(), node);
             nodeMapGS.put(place.getId(), n);
         });
@@ -945,11 +940,7 @@ public class ModelView implements Observer, FontListener {
                 }
             }
 
-            if(PetriCount == 0) {
-                e.addAttribute("ui.class", "EdgeBlue");
-            } else {
-                e.addAttribute("ui.class", "EdgeRed");
-            }
+
 
         }
 
