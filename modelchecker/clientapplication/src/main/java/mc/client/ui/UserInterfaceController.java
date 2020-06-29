@@ -698,9 +698,13 @@ public class UserInterfaceController implements Initializable, FontListener {
             case "petriSingleProcessTransitionMultipleEntries":
                 a.setContentText("Transition unable to have multiple entries from petri elements of the same process");
                 break;
+            case "backwardsPetriBuilding":
+                a.setContentText("Unable to build Petri-Nets backwards, make sure the process contains a start place");
+                break;
             default:
                 break;
         }
+
 
         a.show();
     }
