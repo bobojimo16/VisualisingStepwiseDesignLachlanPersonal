@@ -6,19 +6,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.sun.org.apache.xpath.internal.operations.Bool;
-import edu.uci.ics.jung.algorithms.layout.DAGLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.DirectedSparseGraph;
-import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.visualization.MultiLayerTransformer;
-import edu.uci.ics.jung.visualization.VisualizationServer;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
-import edu.uci.ics.jung.visualization.control.PluggableGraphMouse;
-import edu.uci.ics.jung.visualization.control.ScalingGraphMousePlugin;
-import edu.uci.ics.jung.visualization.control.TranslatingGraphMousePlugin;
-import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -58,6 +45,7 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.graphicGraph.GraphicElement;
+import org.graphstream.ui.layout.Layout;
 import org.graphstream.ui.layout.Layouts;
 import org.graphstream.ui.view.Camera;
 import org.graphstream.ui.view.View;
@@ -81,12 +69,8 @@ import org.omg.Messaging.SYNC_WITH_TRANSPORT;
  */
 public class ModelView implements Observer, FontListener {
 
-    private Graph<GraphNode, DirectedEdge> graph;  //Used by graph layout algorithm
-    private Layout<GraphNode, DirectedEdge> layout;
-    private SeededRandomizedLayout layoutInitalizer;
-    private VisualizationViewer<GraphNode, DirectedEdge> vv;
+
     private Bounds windowSize;
-    private CanvasMouseListener canvasML;
     private Keylisten keyl;
     private Set<String> processModelsToDisplay;
     private SortedSet<String> modelsInList; // Processes that are in the modelsList combox
@@ -110,7 +94,7 @@ public class ModelView implements Observer, FontListener {
     private Node latestNode;
     private Node firstNodeClicked;
     private Node seccondNodeClicked;
-    private org.graphstream.ui.layout.Layout workingLayout; //Do proper import when removing jung
+    private Layout workingLayout;
     private int nodeCount = 0;
     private ProcessMouseManager PMM;
     private boolean nodeRecentlyPlaced;
@@ -124,7 +108,6 @@ public class ModelView implements Observer, FontListener {
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
 
-    private VisualizationServer.Paintable boarder;
     private static Font sourceCodePro;
     private boolean fontListening = false;
     private boolean isCreateMode = true;
@@ -256,14 +239,7 @@ public class ModelView implements Observer, FontListener {
 
     }
 
-    /* removes all backgrounds */
-    public VisualizationViewer<GraphNode, DirectedEdge> removeBorder(SwingNode s) {
-        if (boarder != null) { // must remove old background
-            vv.removePreRenderPaintable(boarder);
 
-        }
-        return vv;
-    }
 
 
     public JPanel updateGraphNew(SwingNode modelDisplayNew) {
@@ -696,6 +672,7 @@ public class ModelView implements Observer, FontListener {
                     workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriPlaceToken");
 
 
+
                 }
             }
         });
@@ -1116,399 +1093,6 @@ public class ModelView implements Observer, FontListener {
     }
 
 
-    /**
-     * A method to update the graph that is displayed
-     *
-     * @return the graph component that is displayed
-     */
-
-    public VisualizationViewer<GraphNode, DirectedEdge> updateGraph(SwingNode s) {
-        //Called from UIC: initialise, addselected, addall, cleargraph
-        //Nothing to display
-        System.out.println("updategraphold");
-        if (compiledResult == null) {
-            return new VisualizationViewer<>(new DAGLayout<>(new DirectedSparseGraph<>()));
-        }
-
-        //Not needed:
-        layoutInitalizer.setDimensions(new Dimension((int) s.getBoundsInParent().getWidth(),
-            (int) s.getBoundsInParent().getHeight()));
-
-        //From compiled result filter for processModelstoDisplay and processeschanged
-        //Then maps these keys for their values and for values that arnt null are sent to addProcess method
-        //Copied into new working fine
-
-        System.out.println("Old");
-        System.out.println("Start pmd ");
-        for (String q : processModelsToDisplay) {
-            System.out.println(q);
-        }
-        System.out.println("end pmd ");
-        System.out.println("Start pc ");
-
-        for (String q : processesChanged) {
-            System.out.println(q);
-        }
-        System.out.println("end pc ");
-
-        compiledResult.getProcessMap().keySet().stream()
-            .filter(processModelsToDisplay::contains)
-            .filter(processesChanged::contains)
-            .map(compiledResult.getProcessMap()::get)
-            .filter(Objects::nonNull)
-            .forEach(this::addProcess);
-
-        //Not needed yet
-        canvasML.updateProcessModelList(processModelsOnScreen);
-
-        //Not Needed
-        if (windowSize == null || !windowSize.equals(s.getBoundsInParent())) {
-            windowSize = s.getBoundsInParent();
-            layout.setSize(new Dimension((int) windowSize.getWidth(), (int) windowSize.getHeight()));
-        }
-
-        //Def not needed
-        // if the font was imported successfully, set the font
-        // (the standard font does not display greek symbols)
-        // (i.e. tau and delta events)
-        if (sourceCodePro != null) {
-            vv.getRenderContext().setEdgeFontTransformer(e -> sourceCodePro);
-            vv.getRenderContext().setVertexFontTransformer(e -> sourceCodePro);
-
-        }
-
-        //set the colour of the nodes
-        vv.getRenderContext().setVertexFillPaintTransformer(n -> n.getNodeColor().getColorNodes());
-
-        //Not needed:
-        //autoscale the graph to fit in the display port
-        vv.setPreferredSize(new Dimension((int) windowSize.getWidth(), (int) windowSize.getHeight()));
-
-        //Not needed:
-        if (boarder != null) { // must remove old background
-            vv.removePreRenderPaintable(boarder);
-        }
-        /* looks like one paintable added for all graphs But vv has a list of preRender paintables
-         *  So could add a one for each automata and then delete one at a time
-         * not needed:
-         *  */
-        boarder = new AutomataBorderPaintable(vv, this.processModelsOnScreen, compiledResult);
-        //This draws the boxes around the automata in the compiledResult
-        vv.addPreRenderPaintable(boarder);
-        vv.addPostRenderPaintable(new PetriMarkingPaintable(vv, this.processModelsOnScreen));
-        processesChanged.clear();
-        if (!fontListening) {
-            settings.addFontListener(this);
-            fontListening = true;
-        }
-        return vv;
-    }
-
-    private void addProcess(ProcessModel p) {
-        switch (p.getProcessType()) {
-            case AUTOMATA:
-                addAutomata((Automaton) p);
-                break;
-            case PETRINET:
-                addPetrinet((Petrinet) p);
-                break;
-        }
-    }
-
-    /**
-     * Add an individual automata to the graph
-     *
-     * @param automaton the automata object
-     */
-    private void addAutomata(Automaton automaton) {
-
-
-
-        /*System.out.println("ModelView addAutomata");
-        System.out.println(automaton.toString());*/
-        //make a new "parent" object for the children to be parents of
-        if (processModelsOnScreen.containsKey(automaton.getId())) {
-            // If the automaton is already displayed, but modified.
-            // Remove all vertexes that are part of it
-            for (GraphNode n : processModelsOnScreen.get(automaton.getId())) {
-                graph.removeVertex(n);
-            }
-            processModelsOnScreen.removeAll(automaton.getId());
-        }
-
-        Map<String, GraphNode> nodeMap = new HashMap<>();
-
-        //add all the nodes to the graph
-
-
-        /*Creates graph nodes objects from automaton object with evaulated termination type and stores them in nodeMap
-        Unsure how rootList works, although rootlist size is determined by automaton being instantiated with "construct-
-        root bool*/
-
-        automaton.getNodes().forEach(n -> {
-
-            NodeStates nodeTermination = NodeStates.NOMINAL;
-
-            if (n.isStartNode()) {
-                if (!n.isSTOP()) {
-                    nodeTermination = NodeStates.START;
-                    if (automaton.getRootList().size() > 1 && n.getId().equals(automaton.getRootList().get(1).getId()))
-                        nodeTermination = NodeStates.START1;
-                    else if (automaton.getRootList().size() > 2 && n.getId().equals(automaton.getRootList().get(2).getId()))
-                        nodeTermination = NodeStates.START2;
-                    else if (automaton.getRootList().size() > 3 && n.getId().equals(automaton.getRootList().get(3).getId()))
-                        nodeTermination = NodeStates.START3;
-                    else if (automaton.getRootList().size() > 4 && n.getId().equals(automaton.getRootList().get(4).getId()))
-                        nodeTermination = NodeStates.START4;
-                    else if (automaton.getRootList().size() > 5 && n.getId().equals(automaton.getRootList().get(5).getId()))
-                        nodeTermination = NodeStates.START5;
-                } else {
-                    nodeTermination = NodeStates.STOPSTART;
-                    if (automaton.getRootList().size() > 1 && n.getId().equals(automaton.getRootList().get(1).getId()))
-                        nodeTermination = NodeStates.STOPSTART1;
-                    else if (automaton.getRootList().size() > 2 && n.getId().equals(automaton.getRootList().get(2).getId()))
-                        nodeTermination = NodeStates.STOPSTART2;
-                    else if (automaton.getRootList().size() > 3 && n.getId().equals(automaton.getRootList().get(3).getId()))
-                        nodeTermination = NodeStates.STOPSTART3;
-                    else if (automaton.getRootList().size() > 4 && n.getId().equals(automaton.getRootList().get(4).getId()))
-                        nodeTermination = NodeStates.STOPSTART4;
-                    else if (automaton.getRootList().size() > 5 && n.getId().equals(automaton.getRootList().get(5).getId()))
-                        nodeTermination = NodeStates.STOPSTART5;
-                }
-            } else {
-                if (n.isERROR()) {
-                    nodeTermination = NodeStates.ERROR;
-                } else {
-                    if (n.isSTOP()) {
-                        nodeTermination = NodeStates.STOP;
-                        if (automaton.getEndList().size() > 1 && n.getId().equals(automaton.getEndList().get(1)))
-                            nodeTermination = NodeStates.STOP1;
-                        else if (automaton.getEndList().size() > 2 && n.getId().equals(automaton.getEndList().get(2)))
-                            nodeTermination = NodeStates.STOP2;
-                        else if (automaton.getEndList().size() > 3 && n.getId().equals(automaton.getEndList().get(3)))
-                            nodeTermination = NodeStates.STOP3;
-                        else if (automaton.getEndList().size() > 4 && n.getId().equals(automaton.getEndList().get(4)))
-                            nodeTermination = NodeStates.STOP4;
-                        else if (automaton.getEndList().size() > 5 && n.getId().equals(automaton.getEndList().get(5)))
-                            nodeTermination = NodeStates.STOP5;
-                    }
-                }
-            }
-
-
-            GraphNode node = new GraphNode(automaton.getId(), n.getId(), nodeTermination, nodeTermination,
-                NodeType.AUTOMATA_NODE, "" + n.getLabelNumber(), n);
-            nodeMap.put(n.getId(), node);
-
-            //Adds grapth node to display
-            graph.addVertex(node);
-        });
-
-        //Connects the node via edges on screen
-        automaton.getEdges().forEach(e -> {
-            GraphNode to = nodeMap.get(e.getTo().getId());
-            GraphNode from = nodeMap.get(e.getFrom().getId());
-            String label = e.getLabel();
-            String bool;
-            String ass;
-            if (e.getGuard() != null) {
-                bool = e.getGuard().getGuardStr();
-                ass = e.getGuard().getAssStr();
-            } else {
-                bool = "";
-                ass = "";
-            }
-            if (settings.isShowOwners()) {
-                label += e.getEdgeOwners();
-            }
-            if (settings.isShowOptional()) {
-                if (e.getMarkedOwners() != null && e.getMarkedOwners().size() > 0 &&
-                    !e.getMarkedOwners().equals(e.getEdgeOwners())) bool += (" mk" + e.getMarkedOwners());
-
-            }
-
-            graph.addEdge(new DirectedEdge(bool, label + "", ass, UUID.randomUUID().toString()), from, to);
-        });
-
-        this.processModelsOnScreen.replaceValues(automaton.getId(), nodeMap.values());
-    }
-
-
-    /**
-     * Adding a PetriNet to the observed Graph
-     *
-     * @param petri
-     */
-    private void addPetrinet(Petrinet petri) {
-
-        //Method seems similiar in approach to "addAutomata"
-
-        //make a new "parent" object for the children to be parents of
-        if (processModelsOnScreen.containsKey(petri.getId())) {
-            // If the automaton is already displayed, but modified.
-            // Remove all vertexes that are part of it
-            for (GraphNode n : processModelsOnScreen.get(petri.getId())) {
-                placeId2GraphNode.remove(n.getNodeId()); //not sure what this dose
-                graph.removeVertex(n);
-            }
-
-            processModelsOnScreen.removeAll(petri.getId());
-        }
-
-        Map<String, GraphNode> nodeMap = new HashMap<>();
-
-        Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
-        petri.getPlaces().values().forEach(place -> {
-            NodeStates nodeTermination = NodeStates.NOMINAL;
-            if (place.isTerminal()) {
-                nodeTermination = NodeStates.valueOf(place.getTerminal().toUpperCase());
-            }
-            if (place.isStart()) {
-                rts.add(place);
-                //System.out.println("Root "+ place.getId());
-                if (!place.isSTOP()) {
-
-                    nodeTermination = NodeStates.START;
-                    if (place.getMaxStartNo() == 2)
-                        nodeTermination = NodeStates.START1;
-                    else if (place.getMaxStartNo() == 3)
-                        nodeTermination = NodeStates.START2;
-                    else if (place.getMaxStartNo() == 4)
-                        nodeTermination = NodeStates.START3;
-                    else if (place.getMaxStartNo() == 5)
-                        nodeTermination = NodeStates.START4;
-                    else if (place.getMaxStartNo() == 6)
-                        nodeTermination = NodeStates.START5;
-                } else {
-                    nodeTermination = NodeStates.STOPSTART;
-                    if (place.getMaxStartNo() == 2)
-                        nodeTermination = NodeStates.STOPSTART1;
-                    else if (place.getMaxStartNo() == 3)
-                        nodeTermination = NodeStates.STOPSTART2;
-                    else if (place.getMaxStartNo() == 4)
-                        nodeTermination = NodeStates.STOPSTART3;
-                    else if (place.getMaxStartNo() == 5)
-                        nodeTermination = NodeStates.STOPSTART4;
-                    else if (place.getMaxStartNo() == 6)
-                        nodeTermination = NodeStates.STOPSTART5;
-                }
-            } else if (place.isSTOP()) {
-                nodeTermination = NodeStates.STOP;
-                if (place.getMaxEndNo() == 2)
-                    nodeTermination = NodeStates.STOP1;
-                else if (place.getMaxEndNo() == 3)
-                    nodeTermination = NodeStates.STOP2;
-                else if (place.getMaxEndNo() == 4)
-                    nodeTermination = NodeStates.STOP3;
-                else if (place.getMaxEndNo() == 5)
-                    nodeTermination = NodeStates.STOP4;
-                else if (place.getMaxEndNo() == 6)
-                    nodeTermination = NodeStates.STOP5;
-            } else if (place.isERROR()) {
-                nodeTermination = NodeStates.ERROR;
-            }
-
-            //System.out.println("Owners setting "+ settings.isShowOwners());
-            String lab = "";
-            if (settings.isShowIds()) lab = place.getId();
-            // changing the label on the nodes forces the Petri Net to be relayed out.
-            GraphNode node = new GraphNode(petri.getId(), place.getId(),
-                nodeTermination, nodeTermination, NodeType.PETRINET_PLACE, lab, place);
-            placeId2GraphNode.put(place.getId(), node);
-            graph.addVertex(node);
-            nodeMap.put(place.getId(), node);
-        });
-        CurrentMarkingsSeen.
-            currentMarkingsSeen.put(petri.getId(), rts);
-        CurrentMarkingsSeen.addRootMarking(petri.getId(), rts);
-
-        petri.getTransitions().values().stream().filter(x -> !x.isBlocked())
-            .forEach(transition -> {
-                String lab = "";
-                if (settings.isShowIds()) lab += transition.getId() + "-";
-                lab += transition.getLabel() + "";
-    /*  if (settings.isShowOwners()) {
-        for(String o:transition.getOwners()){lab+=o;}
-      } else {
-        lab = transition.getLabel();
-      }
-
-     */
-                GraphNode node = new GraphNode(petri.getId(), transition.getId(),
-                    NodeStates.NOMINAL, NodeStates.NOMINAL, NodeType.PETRINET_TRANSITION, lab, transition);
-                nodeMap.put(transition.getId(), node);
-                graph.addVertex(node);  //dstr seem to be forgotten ?
-            });
-
-
-        float dash[] = {10.0f};
-        for (PetriNetEdge edge : petri.getEdgesNotBlocked().values()) {
-            //System.out.println(edge.myString());
-            // dstr commented out below 13/7/19
-            //   vv.getRenderContext().setEdgeStrokeTransformer(e -> new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
-            //           BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
-            // EdgeType et = EdgeType.DIRECTED;
-            String lab = "";
-            if (settings.isShowIds()) lab += edge.getId() + "-";
-            if (edge.getOptional()) {
-
-                // et = EdgeType.UNDIRECTED;//NICE try but fails
-                lab = "Opt";
-                int i = edge.getOptionNum();
-                if (i > 0) {
-                    lab = lab + i;
-                }
-            }
-            if (settings.isShowOwners()) {
-                PetriNetPlace place;
-                if (edge.getTo() instanceof PetriNetPlace) {
-                    place = (PetriNetPlace) edge.getTo();
-                } else {
-                    place = (PetriNetPlace) edge.getFrom();
-                }
-                //System.out.println("Owners added");
-                for (String o : (place).getOwners()) {
-                    lab += ("." + o);
-                }
-            }
-
-            String b;
-            String a;
-            if (edge.getGuard() != null) {
-                b = edge.getGuard().getGuardStr();
-                a = edge.getGuard().getAssStr();
-                //System.out.println("ModelView "+edge.getGuard().myString());
-                //System.out.println("ModelView b "+b+" a "+a);
-            } else {
-                b = "";
-                a = "";
-            }
-            DirectedEdge nodeEdge = new DirectedEdge(b,
-                lab,
-                a,
-                UUID.randomUUID().toString());
-            //System.out.println("Nodes in Map "+ nodeMap.keySet());
-            //System.out.println("  toId "+edge.getTo().getId());
-            //System.out.println("fromId "+edge.getFrom().getId());
-            //System.out.println("Before addEdge" +nodeEdge.getAll());
-            //System.out.println("from "+nodeMap.get(edge.getFrom().getId()));
-            //System.out.println("to   "+nodeMap.get(edge.getTo().getId()));
-            graph.addEdge(nodeEdge, nodeMap.get(edge.getFrom().getId()),
-                nodeMap.get(edge.getTo().getId()));
-        }
-   /* petri.getEdges().values().forEach(edge -> {
-        vv.getRenderContext().setEdgeStrokeTransformer(e -> new BasicStroke(4.0f, BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_MITER, 10.0f, dash, 1.0f));
-
-      DirectedEdge nodeEdge = new DirectedEdge("", UUID.randomUUID().toString());
-      graph.addEdge(nodeEdge, nodeMap.get(edge.getFrom().getId()),
-          nodeMap.get(edge.getTo().getId()));
-
-    }); */
-
-        this.processModelsOnScreen.replaceValues(petri.getId(), nodeMap.values());
-
-    }
 
     /**
      * @param modelLabel The name of the model process to be displayed / added to display.
@@ -1567,20 +1151,7 @@ public class ModelView implements Observer, FontListener {
         // canvasML. refreshtransitionColor();
     }
 
-    /**
-     * All functions below deal with "freezing" vertexes, to disallow the layout algorithm
-     * to act upon the vertexes.
-     */
-    public void freezeAllCurrentlyDisplayed() {
-        if (layout != null) {
-            for (String processModeName : processModelsOnScreen.keySet()) {
-                for (GraphNode vertexToLock : processModelsOnScreen.get(processModeName)) {
-                    layout.lock(vertexToLock, true);
 
-                }
-            }
-        }
-    }
 
     public void freezeAllCurrentlyDisplayedNew() {
         workingCanvasAreaViewer.disableAutoLayout();
@@ -1593,16 +1164,7 @@ public class ModelView implements Observer, FontListener {
         );
     }
 
-    public void unfreezeAllCurrentlyDisplayed() {
-        if (layout != null) {
-            for (String processModeName : processModelsOnScreen.keySet()) {
-                for (GraphNode vertexToLock : processModelsOnScreen.get(processModeName)) {
-                    layout.lock(vertexToLock, false);
 
-                }
-            }
-        }
-    }
 
     public void unfreezeAllCurrentlyDisplayedNew() {
         workingCanvasAreaViewer.enableAutoLayout();
@@ -1616,30 +1178,9 @@ public class ModelView implements Observer, FontListener {
 
     }
 
-    public void freezeProcessModel(String automataLabel) {
 
-        if (layout != null && automataLabel != null && processModelsToDisplay.contains(automataLabel)) {
 
-            for (GraphNode vertexToLock : processModelsOnScreen.get(automataLabel)) {
-                layout.lock(vertexToLock, true);
-            }
-        }
-    }
 
-    public void removeProcessModel(String automataLabel) {
-
-// fails to remove boarder Not sure wher this is
-        if (layout != null && automataLabel != null && processModelsToDisplay.contains(automataLabel)) {
-            processModelsToDisplay.remove(automataLabel);
-            processesChanged.remove(automataLabel);
-            modelsInList.remove(automataLabel);
-            for (GraphNode vertex : processModelsOnScreen.get(automataLabel)) {
-                graph.removeVertex(vertex);
-            }
-            processModelsOnScreen.removeAll(automataLabel);  // hope to remove the background
-            // boarder.
-        }
-    }
 
     public void removeProcessModelNew(String selectedProcess) {
 
@@ -1659,13 +1200,7 @@ public class ModelView implements Observer, FontListener {
 
     }
 
-    public void unfreezeProcessModel(String automataLabel) {
-        if (layout != null && automataLabel != null && processModelsToDisplay.contains(automataLabel)) {
-            for (GraphNode vertexToLock : processModelsOnScreen.get(automataLabel)) {
-                layout.lock(vertexToLock, false);
-            }
-        }
-    }
+
 
     private Map<String, ProcessModel> getProcessMap() {
         return compiledResult.getProcessMap();
@@ -1679,50 +1214,8 @@ public class ModelView implements Observer, FontListener {
 
         processModelsToDisplay = new HashSet<>();
 
-        layoutInitalizer = new SeededRandomizedLayout();
-
-        graph = new DirectedSparseMultigraph<>();
-
-        //apply a layout to the graph Note the linkageLength changes the layout in real time
-
-        layout = new SpringlayoutBase<>(graph,
-            x -> settings.getMaxNodes(),
-            x -> settings.getSpring(),
-            x -> settings.getRepulse(),
-            x -> settings.getStep(),
-            x -> settings.getDelay(),
-            x -> settings.isShowOwners(),
-            x -> settings.isShowColor()
-
-        );
-
-        //  settings.addFontListener(this);
-        ((SpringlayoutBase) layout).setStretch(0.8);
-        ((SpringlayoutBase) layout).setRepulsionRange(1000);
-
-        layout.setInitializer(layoutInitalizer);
-
-        vv = new VisualizationViewer<>(layout);
-
-        vv.getRenderingHints().remove( //As this seems to be very expensive in jung
-            RenderingHints.KEY_ANTIALIASING);
-
-        //create a custom mouse controller (both movable, scalable and manipulatable)
-        PluggableGraphMouse gm = new PluggableGraphMouse();
-        gm.add(new TranslatingGraphMousePlugin(MouseEvent.BUTTON2_MASK));
-        gm.add(new TranslatingGraphMousePlugin(MouseEvent.BUTTON3_MASK));
-        gm.add(new ScalingGraphMousePlugin(new CrossoverScalingControl(), 0, 1.1f, 0.9f));
-        gm.add(new MyPickingGraphMousePlugin<>());
-
-        vv.setGraphMouse(gm);
-
-
         Boolean keyX = false;
         keyl = new Keylisten(keyX);
-        vv.addKeyListener(keyl);
-        canvasML = new CanvasMouseListener(processModelsOnScreen, vv, mappings, keyX);
-        // cml = new CanvasMouseMotionListener(vv);
-        vv.addMouseListener(canvasML);
 
         // vv.addMouseMotionListener(cml);
         //System.out.println();
@@ -1730,16 +1223,7 @@ public class ModelView implements Observer, FontListener {
 
         //label the nodes
 
-        vv.getRenderContext().setVertexLabelTransformer(GraphNode::getLabel);
-        vv.getRenderContext().setEdgeLabelTransformer(DirectedEdge::getAll);
-        //vv.getRenderContext().setEdgeArrowStrokeTransformer(edgeStroke);
-        //vv.getRenderContext().setEdgeStrokeTransformer(e->edgeStroke);
-        //set the shape
-        vv.getRenderContext().setVertexShapeTransformer(n -> n.getType().getNodeShape());
-        vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
 
-        // Sets edges as lines
-        vv.getRenderContext().setEdgeShapeTransformer(EdgeShape.mixedLineCurve(graph));
         // vv.getRenderContext().getEdgeLabelTransformer().;
         processModelsOnScreen = MultimapBuilder.hashKeys().hashSetValues().build();
         processModelsOnScreenNew = MultimapBuilder.hashKeys().hashSetValues().build();

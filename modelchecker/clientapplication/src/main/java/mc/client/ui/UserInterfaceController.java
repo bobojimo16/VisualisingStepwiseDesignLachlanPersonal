@@ -60,9 +60,7 @@ import java.util.function.Supplier;
 
 import static mc.client.ui.SyntaxHighlighting.computeHighlighting;
 
-/*
- *   No referance to jung  look in the ModelView
- */
+
 public class UserInterfaceController implements Initializable, FontListener {
 
     private boolean holdHighlighting = false; // If there is an compiler issue, highlight the area. Dont keep applying highlighting it wipes it out
@@ -79,12 +77,10 @@ public class UserInterfaceController implements Initializable, FontListener {
     private CodeArea userCodeInput;
     @FXML
     private TextArea compilerOutputDisplay;
-    @FXML
-    private SwingNode modelDisplay;
+
     @FXML
     private SwingNode modelDisplayNew;
-    @FXML
-    private ComboBox<String> modelsList;
+
     @FXML
     private ComboBox<String> modelsListNew;
     @FXML
@@ -97,20 +93,16 @@ public class UserInterfaceController implements Initializable, FontListener {
     private Menu openRecentTab;
     @FXML
     private Button compileButton;
-    @FXML
-    private Button addBtn;
+
     @FXML
     private Button addBtnNew;
-    @FXML
-    private Button frzBtn;
+
     @FXML
     private Button frzBtnNew;
-    @FXML
-    private Button unfrzBtn;
+
     @FXML
     private Button unfrzBtnNew;
-    @FXML
-    private Button removeBtn;
+
     @FXML
     private Button removeBtnNew;
     @FXML
@@ -178,11 +170,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     public void initialize(URL location, ResourceBundle resources) {
         String col = "rgba(153, 255, 204, 1.0)";
         try {
-            addBtn.setStyle("-fx-background-color: " + col);
-            frzBtn.setStyle("-fx-background-color: " + col);
-            unfrzBtn.setStyle("-fx-background-color: " + col);
-            removeBtn.setStyle("-fx-background-color: " + col);
-            modelsList.setStyle("-fx-background-color: " + col);
+
 
             //New Tab
             addBtnNew.setStyle("-fx-background-color: " + col);
@@ -212,7 +200,6 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         ModelView.getInstance().setSettings(settingsController);
         // Have to initialise it or there is a delay between the graph becoming ready and actually displaying things
-        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
         SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
         // SO the Swing node can be used as a canvas  HOW?
 
@@ -633,7 +620,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
 
             optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
-            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
+            optionsLayoutLoadFailed.initOwner(modelDisplayNew.getScene().getWindow());
 
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
             optionsLayoutLoadFailed.show();
@@ -667,7 +654,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
 
             optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
-            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
+            optionsLayoutLoadFailed.initOwner(modelDisplayNew.getScene().getWindow());
 
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
             optionsLayoutLoadFailed.show();
@@ -816,7 +803,6 @@ public class UserInterfaceController implements Initializable, FontListener {
             ButtonType cancelOperation = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
             save.getButtonTypes().setAll(confirmSave, dismissSave, cancelOperation);
             save.initModality(Modality.APPLICATION_MODAL); /* *** */
-            save.initOwner(modelDisplay.getScene().getWindow());
 
             save.showAndWait();
 
@@ -828,7 +814,6 @@ public class UserInterfaceController implements Initializable, FontListener {
 
                     FileChooser chooser = new FileChooser();
                     chooser.setTitle("Save file");
-                    selectedFile = chooser.showSaveDialog(modelDisplay.getScene().getWindow());
                 }
 
                 if (selectedFile != null) { // Can still be null if they dont select anything in the saveDialog
@@ -844,7 +829,6 @@ public class UserInterfaceController implements Initializable, FontListener {
 
                         saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
                         saveFailed.initModality(Modality.APPLICATION_MODAL);
-                        saveFailed.initOwner(modelDisplay.getScene().getWindow());
                         saveFailed.show();
                     }
                 }
@@ -874,14 +858,13 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         if (saveUserChanges()) {
             try {
-                File selectedFile;
+                File selectedFile = null;
 
                 if (filePath != null) {
                     selectedFile = new File(filePath);
                 } else {
                     FileChooser openDialog = new FileChooser();
                     openDialog.setTitle("Open file");
-                    selectedFile = openDialog.showOpenDialog(modelDisplay.getScene().getWindow());
                 }
 
                 if (selectedFile != null) {
@@ -902,7 +885,6 @@ public class UserInterfaceController implements Initializable, FontListener {
 
                 saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
                 saveFailed.initModality(Modality.APPLICATION_MODAL);
-                saveFailed.initOwner(modelDisplay.getScene().getWindow());
                 saveFailed.show();
             }
         }
@@ -932,7 +914,6 @@ public class UserInterfaceController implements Initializable, FontListener {
         if (selectedFile == null) {
             FileChooser chooser = new FileChooser();
             chooser.setTitle("Save file");
-            selectedFile = chooser.showSaveDialog(modelDisplay.getScene().getWindow());
         }
 
         if (selectedFile != null) {
@@ -949,7 +930,6 @@ public class UserInterfaceController implements Initializable, FontListener {
                 saveFailed.setContentText("Error: " + e.getMessage());
 
                 saveFailed.initModality(Modality.APPLICATION_MODAL);
-                saveFailed.initOwner(modelDisplay.getScene().getWindow());
 
                 saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
                 saveFailed.show();
@@ -962,7 +942,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     private void handleSaveAs(ActionEvent event) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save as");
-        File selectedFile = chooser.showSaveDialog(modelDisplay.getScene().getWindow());
+        File selectedFile = chooser.showSaveDialog(null);
 
         if (selectedFile != null) {
             try {
@@ -979,7 +959,6 @@ public class UserInterfaceController implements Initializable, FontListener {
                 saveFailed.setContentText("Error: " + e.getMessage());
 
                 saveFailed.initModality(Modality.APPLICATION_MODAL);
-                saveFailed.initOwner(modelDisplay.getScene().getWindow());
 
                 saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
                 saveFailed.show();
@@ -999,22 +978,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     /*
        This is the Add button
      */
-    @FXML
-    private void handleAddSelectedModel(ActionEvent event) {
-        System.out.println("here1");
-        if (modelsList.getSelectionModel().getSelectedItem() != null && modelsList.getSelectionModel().getSelectedItem() instanceof String) {
 
-
-            ModelView.getInstance().addDisplayedModel(modelsList.getSelectionModel().getSelectedItem());
-            SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
-
-            //dstr ProcessModel pm = ModelView.getInstance().getProcess(modelsList.getSelectionModel().getSelectedItem());
-
-            //  GraphView gv = new GraphView(pm);
-            // SwingUtilities.invokeLater(() -> newDisplay.setContent(gv.display(newDisplay)));
-        }
-
-    }
 
     @FXML
     private void handleAddSelectedModelNew(ActionEvent event) {
@@ -1033,11 +997,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         }
     }
 
-    @FXML
-    private void handleAddallModels(ActionEvent event) {
-        ModelView.getInstance().addAllModels();
-        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
-    }
+
 
     @FXML
     private void handleAddallModelsNew(ActionEvent event) {
@@ -1046,30 +1006,9 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
 
-    /* clear ALL*/
-    @FXML
-    private void handleClearGraph(ActionEvent event) {
-        ModelView.getInstance().clearDisplayed();
-        SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraphNew(modelDisplay)));
-    }
-
-    @FXML
-    private void handleClearGraphNew(ActionEvent event) {
-        ModelView.getInstance().clearDisplayedNew();
-        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplay)));
-    }
 
 
-    @FXML
-    public void handleClear(ActionEvent actionEvent) {
-        //  ModelView.getInstance().clearDisplayed();
-        String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-        if (selecteditem != null) {
-            ModelView.getInstance().removeProcessModel(selecteditem);
-        }
-        //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
 
-    }
 
     @FXML
     public void handleClearNew(ActionEvent actionEvent) {
@@ -1082,38 +1021,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     }
 
-    @FXML
-    private void handleFreeze(ActionEvent event) {
-        String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-        if (selecteditem != null) {
-            ModelView.getInstance().freezeProcessModel(selecteditem);
-            //   ModelView.getInstance().removeProcessModel(selecteditem);
-        }
-    }
 
-    @FXML
-    private void handleUnfreeze(ActionEvent event) {
-        String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-        if (selecteditem != null) {
-            ModelView.getInstance().unfreezeProcessModel(selecteditem);
-        }
-    }
-
-    @FXML
-    private void handleFreezeAll(ActionEvent event) {
-        String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-        if (selecteditem != null) {
-            ModelView.getInstance().freezeAllCurrentlyDisplayed();
-        }
-    }
-
-    @FXML
-    private void handleUnfreezeAll(ActionEvent event) {
-        String selecteditem = modelsList.getSelectionModel().getSelectedItem();
-        if (selecteditem != null) {
-            ModelView.getInstance().unfreezeAllCurrentlyDisplayed();
-        }
-    }
 
     @FXML
     private void handleFreezeAllNew(ActionEvent event) {
@@ -1124,6 +1032,13 @@ public class UserInterfaceController implements Initializable, FontListener {
     private void handleUnfreezeAllNew(ActionEvent event) {
         ModelView.getInstance().unfreezeAllCurrentlyDisplayedNew();
     }
+
+    @FXML
+    private void handleClearGraphNew(ActionEvent event) {
+        ModelView.getInstance().clearDisplayedNew();
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
+    }
+
 
 
     @FXML
@@ -1152,7 +1067,6 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
 
             optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
-            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
 
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
             optionsLayoutLoadFailed.show();
@@ -1183,7 +1097,6 @@ public class UserInterfaceController implements Initializable, FontListener {
                 compilerOutputDisplay.clear();
                 compilerOutputDisplay.appendText("Starting build..." + "\n");
 
-                modelsList.getItems().clear();
                 modelsListNew.getItems().clear();
 
 /*
@@ -1287,9 +1200,6 @@ public class UserInterfaceController implements Initializable, FontListener {
      * @param models a collection of the processIDs of all valid models
      */
     private void updateModelsList(Collection<String> models) {
-        modelsList.getItems().clear();
-        models.forEach(modelsList.getItems()::add);
-        modelsList.getSelectionModel().selectFirst();
 
         //New Tab
         modelsListNew.getItems().clear();
@@ -1403,7 +1313,6 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
 
             optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
-            optionsLayoutLoadFailed.initOwner(modelDisplay.getScene().getWindow());
 
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
             optionsLayoutLoadFailed.show();
