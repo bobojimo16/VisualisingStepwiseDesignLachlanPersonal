@@ -1413,4 +1413,11 @@ public class UserInterfaceController implements Initializable, FontListener {
         return toReturn;
     }
 
+    public void handleCreateToggle(ActionEvent actionEvent) {
+        ModelView.getInstance().switchToCreateMode();
+    }
+
+    public void handleTokenToggle(ActionEvent actionEvent) {
+        ModelView.getInstance().switchToTokenMode();
+    }
 }

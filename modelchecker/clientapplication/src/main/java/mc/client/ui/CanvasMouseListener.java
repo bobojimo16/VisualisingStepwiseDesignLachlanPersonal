@@ -109,6 +109,7 @@ public class CanvasMouseListener implements MouseListener {
             MappingNdMarking thisMapping;
             if (currentNodeClicked != null) {
                 String processId = currentNodeClicked.getProcessModelId();
+                System.out.println("Old pid: " + processId);
                 automataIDofNet = processId.substring(0, processId.indexOf('(')) + "(automata)";
                 //System.out.println("CLICKED " + currentNodeClicked.toString());
                 ProcessModelObject clk = currentNodeClicked.getRepresentedFeature();
@@ -157,10 +158,6 @@ public class CanvasMouseListener implements MouseListener {
                             } else if (clk instanceof PetriNetPlace) {
                                 //Place
                                 Map<Multiset<PetriNetPlace>, AutomatonNode> mapping = thisMapping.getMarkingToNode();
-                                String out =
-                                    mapping.keySet().stream().map(x -> "{" + x.stream().map(y -> y.getId()).
-                                        collect(Collectors.joining(", ")) + "} ->" +
-                                        mapping.get(x).getId()).collect(Collectors.joining("\n"));
                                 //System.out.println("P->A \n" + out);
                                 for (Multiset<PetriNetPlace> marking : mapping.keySet()) {
                                     Set<String> markingId = marking.stream().map(x -> x.getId()).collect(Collectors.toSet());
