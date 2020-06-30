@@ -508,7 +508,6 @@ public class ModelView implements Observer, FontListener {
         latestNode.setAttribute("xyz", gu.x, gu.y, 0);
         //workingLayout.freezeNode(latestNode.getId(), true);
 
-
         if (addingAutoNodeStart) {
             latestNode.addAttribute("ui.class", "AutoStart");
             addingAutoNodeStart = false;
@@ -1434,6 +1433,17 @@ public class ModelView implements Observer, FontListener {
         }
     }
 
+    public void freezeAllCurrentlyDisplayedNew() {
+        workingCanvasAreaViewer.disableAutoLayout();
+        Iterable<? extends Node> k = workingCanvasArea.getEachNode();
+
+        k.forEach(node -> {
+                workingLayout.freezeNode(node.getId(), true);
+            }
+
+        );
+    }
+
     public void unfreezeAllCurrentlyDisplayed() {
         if (layout != null) {
             for (String processModeName : processModelsOnScreen.keySet()) {
@@ -1443,6 +1453,18 @@ public class ModelView implements Observer, FontListener {
                 }
             }
         }
+    }
+
+    public void unfreezeAllCurrentlyDisplayedNew() {
+        workingCanvasAreaViewer.enableAutoLayout();
+        Iterable<? extends Node> k = workingCanvasArea.getEachNode();
+
+        k.forEach(node -> {
+                workingLayout.freezeNode(node.getId(), false);
+            }
+
+        );
+
     }
 
     public void freezeProcessModel(String automataLabel) {
@@ -1588,7 +1610,6 @@ public class ModelView implements Observer, FontListener {
 
         workingLayout = Layouts.newLayoutAlgorithm();
         workingLayout.setForce(0.1); // 1 by default
-        System.out.println(workingLayout.getForce());
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();
@@ -1614,7 +1635,7 @@ public class ModelView implements Observer, FontListener {
                 if(zoom < 1){
                     zoom = 1;
                 }
-                
+
                 cam.setViewPercent(zoom);
                 System.out.println(zoom);
             }

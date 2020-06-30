@@ -682,7 +682,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         Alert a = new Alert(Alert.AlertType.NONE);
         a.setAlertType(Alert.AlertType.WARNING);
 
-        switch (errorType){
+        switch (errorType) {
             case "transitionBetweenAutoAndPetri":
                 a.setContentText("Unable To Place Transitions Between Automata and Petri-Net Nodes");
                 break;
@@ -1113,6 +1113,16 @@ public class UserInterfaceController implements Initializable, FontListener {
         if (selecteditem != null) {
             ModelView.getInstance().unfreezeAllCurrentlyDisplayed();
         }
+    }
+
+    @FXML
+    private void handleFreezeAllNew(ActionEvent event) {
+        ModelView.getInstance().freezeAllCurrentlyDisplayedNew();
+    }
+
+    @FXML
+    private void handleUnfreezeAllNew(ActionEvent event) {
+        ModelView.getInstance().unfreezeAllCurrentlyDisplayedNew();
     }
 
 

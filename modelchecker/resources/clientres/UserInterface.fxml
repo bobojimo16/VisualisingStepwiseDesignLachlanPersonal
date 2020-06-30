@@ -104,8 +104,8 @@
                                                 <!--<Button fx:id="unfrzBtnNew" layoutX="395.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreeze" text="Unfreeze" />-->
                                                 <Button fx:id="removeBtnNew" layoutX="475.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleClearNew" text="Clear" />
                                                 <Button layoutX="600.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleAddallModelsNew" text="Add all" />
-                                                <Button layoutX="665.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleFreezeAll" text="Freeze all" />
-                                                <Button layoutX="750.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreezeAll" text="Unfreeze all" />
+                                                <Button layoutX="665.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleFreezeAllNew" text="Freeze all" />
+                                                <Button layoutX="750.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreezeAllNew" text="Unfreeze all" />
                                                 <Button layoutX="860.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
 
                                             </children>
