@@ -67,22 +67,15 @@ import org.omg.Messaging.SYNC_WITH_TRANSPORT;
  * Refractoring work commenced by Lachlan on 1/04/20 for his 489 supervised by David
  * Main intension therin is to replace Jung with new GraphStream framework plus implement new UX features
  */
-public class ModelView implements Observer, FontListener {
+public class ModelView implements Observer {
 
-
-    private Bounds windowSize;
-    private Keylisten keyl;
     private Set<String> processModelsToDisplay;
     private SortedSet<String> modelsInList; // Processes that are in the modelsList combox
-    private Multimap<String, GraphNode> processModelsOnScreen; //process on the screen
-    private Multimap<String, Node> processModelsOnScreenNew; //process on the screen
+    private Multimap<String, GraphNode> processModelsOnScreenGraphNodeType; //process on the screen
+    private Multimap<String, Node> processModelsOnScreenGSType; //process on the screen
     private List<String> processesChanged = new ArrayList<>();
-    // Play places token on current Marking
-    // from PetriNetPlace find Graph visualisation
     private Map<String, GraphNode> placeId2GraphNode = new TreeMap<>();
     private CompilationObject compiledResult;
-
-    //map from Id to TokenMapping
     private Map<String, MappingNdMarking> mappings = new HashMap<>();
     private MultiGraph workingCanvasArea; //For GraphStream
     private Viewer workingCanvasAreaViewer;
@@ -90,15 +83,12 @@ public class ModelView implements Observer, FontListener {
     private boolean addingAutoNodeStart;
     private boolean addingAutoNodeNeutral;
     private boolean addingAutoNodeEnd;
-    private String newProcessNameValue;
     private Node latestNode;
     private Node firstNodeClicked;
     private Node seccondNodeClicked;
     private Layout workingLayout;
-    private int nodeCount = 0;
     private ProcessMouseManager PMM;
     private boolean nodeRecentlyPlaced;
-
     private UserInterfaceController uic;
     private ArrayList<Node> createdNodes = new ArrayList<>();
     private JPanel workingCanvasAreaContainer;
@@ -107,46 +97,25 @@ public class ModelView implements Observer, FontListener {
     private boolean addingPetriPlaceNeutral;
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
-
-    private static Font sourceCodePro;
-    private boolean fontListening = false;
     private boolean isCreateMode = true;
-
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
 
-    //Consumer is a Function with void Return type set by the UserInterfaceController
     @Setter
     private Consumer<Collection<String>> listOfAutomataUpdater;
     @Setter
     private BiConsumer<List<OperationResult>, List<OperationResult>> updateLog;
-    private int PetriCount = 0;
-    //@Setter
-    //private BiConsumer<List<ImpliesResult>, List<ImpliesResult>> updateImpLog;
-    //
-    //
-
-
-    @Override
-    public void changeFontSize() {
-        float fs = settings.getFont();
-        ModelView.sourceCodePro = ModelView.sourceCodePro.deriveFont(fs);
-
-    }
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
     }
-
     public void removeProcess(String id) {
         compiledResult.getProcessMap().remove(id);
     }
 
     public void setReferenceToUIC(UserInterfaceController userInterfaceController) {
         uic = userInterfaceController;
-
-
     }
 
     /**
@@ -253,9 +222,6 @@ public class ModelView implements Observer, FontListener {
         workingCanvasArea.addAttribute("ui.quality");
         workingCanvasArea.addAttribute("ui.antialias");
 
-        //workingCanvasAreaViewer.enableAutoLayout(workingLayout);
-
-
         //Do Drawing Work On Canvas
         compiledResult.getProcessMap().keySet().stream()
             .filter(processModelsToDisplay::contains)
@@ -302,68 +268,7 @@ public class ModelView implements Observer, FontListener {
         }
     }
 
-    private String getStyleSheet() {
-        return "node {" +
-            "text-size: 20;" +
-            "size: 30px; " +
-            "fill-color: #F00;" +
-            "}" +
-            "node.AutoStart {" +
-            "fill-color: #1F9F06;" +
-            "}" +
-            "node.AutoNeutral {" +
-            "fill-color: #767575;" +
-            "}" +
-            "node.AutoEnd {" +
-            "fill-color: #9F1106;" +
-            "}" +
-            "edge {" +
-            " " +
-            "text-size: 20;" +
-            "arrow-shape: arrow;" +
-            "}" +
-            "graph {" +
-            "fill-color: white;" +
-            "}" +
-            "node.PetriPlace {" +
-            "fill-color: gray;" +
-            "text-visibility-mode: hidden;" +
-            "}" +
-            "node.PetriPlaceStart {" +
-            "fill-color: green;" +
-            "}" +
-            "node.PetriPlaceEnd {" +
-            "fill-color: red;" +
-            "text-visibility-mode: hidden;" +
-            "}" +
-            "node.PetriTransition {" +
-            "shape: box; " +
-            "fill-color: gray;" +
-            "}" +
-            "node.highlight {" +
-            "fill-color: red;" +
-            "}" +
-            "edge.EdgeBlue {" +
-            "fill-color: blue;" +
-            "}" +
-            "edge.EdgeRed {" +
-            "fill-color: red;" +
-            "}" +
-            "node.PetriPlaceToken {" +
-            "fill-color: black;" +
-            "size: 10px; " +
-            "shadow-mode: plain;" +
-            "shadow-offset: 0;" +
-            "shadow-width: 10;" +
-            "shadow-color: gray; " +
-            "}"
 
-
-
-            ;
-
-
-    }
 
     private void addProcessNew(ProcessModel p) {
         switch (p.getProcessType()) {
@@ -378,10 +283,11 @@ public class ModelView implements Observer, FontListener {
 
 
     private void addAutomataNew(Automaton automaton) {
+
         if (workingCanvasArea.getNode(automaton.getId()) != null) {
+            System.out.println("Auto On screen");
             return;
         }
-
 
         Map<String, GraphNode> nodeMap = new HashMap<>();
         Map<String, Node> nodeMapGS = new HashMap<>();
@@ -445,500 +351,15 @@ public class ModelView implements Observer, FontListener {
 
         });
 
-        //DK if need this yet:
-        this.processModelsOnScreen.replaceValues(automaton.getId(), nodeMap.values());
 
-        this.processModelsOnScreenNew.replaceValues(automaton.getId(), nodeMapGS.values());
-
-
+        this.processModelsOnScreenGraphNodeType.replaceValues(automaton.getId(), nodeMap.values());
+        this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
     }
-
-    public void setNewVisualNodeType(String nodeType) {
-        // todo switch
-
-        if (nodeType.equals("AutoStart")) {
-            addingAutoNodeStart = true;
-        } else if (nodeType.equals("AutoNeutral")) {
-            addingAutoNodeNeutral = true;
-        } else if (nodeType.equals("AutoEnd")) {
-            addingAutoNodeEnd = true;
-        } else if (nodeType.equals("PetriPlaceStart")) {
-            addingPetriPlaceStart = true;
-        } else if (nodeType.equals("PetriPlaceNeutral")) {
-            addingPetriPlaceNeutral = true;
-        } else if (nodeType.equals("PetriPlaceEnd")) {
-            addingPetriPlaceEnd = true;
-        } else {
-            addingPetriTransition = true;
-        }
-
-
-        //Not proud of this hack to force graph mouse listener to respond to mouse release from shape mouse listener:
-        Robot robot = null;
-        try {
-            robot = new Robot();
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-        robot.mousePress(InputEvent.BUTTON1_MASK);
-        robot.mouseRelease(InputEvent.BUTTON1_MASK);
-    }
-
-
-    public void dropNode(int xOnScreen, int yOnScreen) {
-
-        if (!addingAutoNodeStart && !addingAutoNodeNeutral && !addingAutoNodeEnd
-            && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
-            return;
-        }
-
-
-        Point3 gu = workingCanvasAreaView.getCamera().transformPxToGu(xOnScreen, yOnScreen);
-        //workingCanvasAreaViewer.disableAutoLayout();
-        latestNode = workingCanvasArea.addNode(String.valueOf(Math.random()));
-        latestNode.setAttribute("xyz", gu.x, gu.y, 0);
-        //workingLayout.freezeNode(latestNode.getId(), true);
-
-        if (addingAutoNodeStart) {
-            latestNode.addAttribute("ui.class", "AutoStart");
-            addingAutoNodeStart = false;
-        } else if (addingAutoNodeNeutral) {
-            latestNode.addAttribute("ui.class", "AutoNeutral");
-            addingAutoNodeNeutral = false;
-        } else if (addingAutoNodeEnd) {
-            latestNode.addAttribute("ui.class", "AutoEnd");
-            addingAutoNodeEnd = false;
-        } else if (addingPetriPlaceStart) {
-            latestNode.addAttribute("ui.class", "PetriPlaceStart");
-            addingPetriPlaceStart = false;
-        } else if (addingPetriPlaceNeutral) {
-            latestNode.addAttribute("ui.class", "PetriPlace");
-            addingPetriPlaceNeutral = false;
-        } else if (addingPetriPlaceEnd) {
-            latestNode.addAttribute("ui.class", "PetriPlaceEnd");
-            addingPetriPlaceEnd = false;
-        } else if (addingPetriTransition) {
-            latestNode.addAttribute("ui.class", "PetriTransition");
-            addingPetriTransition = false;
-        } else {
-            System.out.println("doing nothing");
-        }
-
-        System.out.println("node placed");
-
-
-        createdNodes.add(latestNode);
-
-        nodeRecentlyPlaced = true;
-
-
-    }
-
-    public void setLatestNodeName(String newProcessNameValue) {
-        latestNode.addAttribute("ui.label", newProcessNameValue);
-
-        if (latestNode.getAttribute("ui.class").equals("PetriPlaceStart")) {
-            workingCanvasArea.getNode(latestNode.getId()).addAttribute("ui.PID", newProcessNameValue);
-        }
-    }
-
-
-    public void determineIfNodeClicked(int x, int y) {
-
-        //To handle the extra redundant "click" from the bot prevents unwanted node linking kinda shit implementation though
-        if (nodeRecentlyPlaced) {
-            nodeRecentlyPlaced = false;
-            return;
-        }
-
-        if (isCreateMode) {
-            GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
-
-            if (ge != null) {
-                if (firstNodeClicked == null) {
-                    firstNodeClicked = (Node) ge;
-                    System.out.println("Selecting First Node: " + firstNodeClicked.getId());
-                } else {
-                    seccondNodeClicked = (Node) ge;
-                    System.out.println("Selecting Seccond Node: " + seccondNodeClicked.getId());
-                }
-
-            } else {
-                System.out.println("Node not Clicked");
-            }
-
-            if (firstNodeClicked != null && seccondNodeClicked != null) {
-                doDrawEdge();
-                firstNodeClicked = null;
-                seccondNodeClicked = null;
-
-            }
-        } else {
-            handleTokenGame(x, y);
-        }
-    }
-
-    private void handleTokenGame(int x, int y) {
-        //Do Token Game
-        GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
-        Node nodeSelected = (Node) ge;
-        MappingNdMarking thisMapping;
-
-        if (nodeSelected != null) {
-            String pid = nodeSelected.getAttribute("ui.PID");
-            String automataIDofNet = pid.substring(0, pid.indexOf('(')) + "(automata)";
-            GraphNode gn = nodeSelected.getAttribute("ui.GraphNode");
-            ProcessModelObject clk = gn.getRepresentedFeature();
-
-
-            if (mappings != null && mappings.containsKey(pid)) {
-                thisMapping = mappings.get(pid);
-                if ((clk instanceof PetriNetTransition)) {
-                    PetriNetTransition pntClicked = ((PetriNetTransition) clk);
-                    if (!pntClicked.getLabel().equals(Constant.DEADLOCK)) {
-                        Multiset<PetriNetPlace> cm = CurrentMarkingsSeen.currentMarkingsSeen.get(pid);
-                        Multiset<PetriNetPlace> newMarking;
-                        List<Multiset<PetriNetPlace>> newMarkings;
-
-                        if (TokenRule.isSatisfied(cm, pntClicked)) {
-                            newMarkings = TokenRulePureFunctions.newMarking(cm, pntClicked);
-                            newMarking = newMarkings.get(0);
-                            CurrentMarkingsSeen.currentMarkingsSeen.put(pid, newMarking);
-
-                            if (thisMapping.contains(newMarking)) {
-                                for (GraphNode autG : processModelsOnScreen.get(automataIDofNet)) {
-                                    if (autG.getNodeId().equals(thisMapping.get(newMarking).getId())) {
-                                        autG.setNodeColor(NodeStates.ERROR);
-                                    } else {
-                                        autG.setNodeColor(autG.getOriginalColor());
-                                    }
-
-                                }
-                            }
-                        }
-                    }
-
-                    refreshTransitionColour();
-
-
-                }
-            }
-        } else {
-            CurrentMarkingsSeen.setCurrentMarkingsSeen(CurrentMarkingsSeen.getRootMarkings());
-            refreshTransitionColour();
-        }
-
-
-        //Move Token
-
-        Map<String, Set<String>> pnidToSetPlaceId = new TreeMap<>();
-        for (String pid : CurrentMarkingsSeen.currentMarkingsSeen.keySet()) {
-            Set<String> mk = CurrentMarkingsSeen.getIds(pid);
-            pnidToSetPlaceId.put(pid, mk);
-        }
-
-        processModelsOnScreenNew.asMap().forEach((key, value) -> {
-
-            Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
-
-            currentNodes.forEach(node -> {
-                if(node.hasAttribute("ui.token")){
-                    node.removeAttribute("ui.token");
-                    node.removeAttribute("ui.class");
-                    node.addAttribute("ui.class", "PetriPlace");
-                }
-            });
-
-
-            for (Node vertex : value) {
-                GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
-                double diam = VertexGN.getType().getNodeShape().getBounds().getHeight() / 3;
-                double rad = diam / 2;
-
-
-
-                if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
-                    pnidToSetPlaceId.get(VertexGN.getProcessModelId())
-                        .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
-                    && workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) != null) {
-
-                    //Remove Last Tokens:
-
-
-
-                    //Add New Tokens
-                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.token");
-                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).removeAttribute("ui.class");
-                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriPlaceToken");
-
-
-
-                }
-            }
-        });
-
-
-    }
-
-    private void refreshTransitionColour() {
-        for (GraphNode gnt : processModelsOnScreen.values()) {
-            if (gnt.getRepresentedFeature() instanceof PetriNetTransition) {
-                if (((PetriNetTransition) gnt.getRepresentedFeature()).getLabel().equals(Constant.DEADLOCK)) {
-                    //workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
-                    //gnt.setNodeColor(NodeStates.NOMINAL);
-                } else {
-                    if (TokenRule.isSatisfied(CurrentMarkingsSeen.currentMarkingsSeen.get(gnt.getProcessModelId()),
-                        ((PetriNetTransition) gnt.getRepresentedFeature()))) {
-                        workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).removeAttribute("ui.class");
-                        workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.style", "fill-color: rgb(0,255,255); shape: box;");
-                    } else {
-                        workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriTransition");
-                    }
-                }
-            }
-
-        }
-    }
-
-    private void doDrawEdge() {
-        String firstNodeType = firstNodeClicked.getAttribute("ui.class");
-        String seccondNodeType = seccondNodeClicked.getAttribute("ui.class");
-
-        //Reject Building Processes Backwards
-
-        if (!firstNodeType.equals("PetriPlaceStart") && firstNodeClicked.getInDegree() == 0) {
-            System.out.println("backwards building");
-            Platform.runLater(() ->
-            {
-                uic.reportError("backwardsPetriBuilding");
-            });
-
-            return;
-        }
-
-
-        //Reject transitions between petri and autos
-        if ((firstNodeType.contains("Petri") && seccondNodeType.contains("Auto"))
-            || (firstNodeType.contains("Auto") && seccondNodeType.contains("Petri"))) {
-            Platform.runLater(() ->
-            {
-                uic.reportError("transitionBetweenAutoAndPetri");
-            });
-            return;
-        }
-
-        //If first and seccond node are not transition reject
-        if (!firstNodeType.equals("PetriTransition") && !seccondNodeType.equals("PetriTransition")
-            && (!firstNodeType.contains("Auto") && !seccondNodeType.contains("Auto"))) {
-            Platform.runLater(() ->
-            {
-                uic.reportError("petriEdgeNoTransition");
-            });
-            return;
-        }
-
-        //If first and seccond are both transitions reject
-        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriTransition")) {
-            Platform.runLater(() ->
-            {
-                uic.reportError("petriEdgeBothTransitions");
-            });
-            return;
-        }
-
-        //Reject connections to a transisition if petri node is of the same process and transition already has entering connection
-        if (firstNodeType.contains("Petri") && seccondNodeType.equals("PetriTransition")) {
-            if (seccondNodeClicked.hasAttribute("ui.PID")) {
-                if (firstNodeClicked.getAttribute("ui.PID").toString() == seccondNodeClicked.getAttribute("ui.PID").toString()) {
-                    if (seccondNodeClicked.getEnteringEdgeSet().size() > 0) {
-                        Platform.runLater(() ->
-                        {
-                            uic.reportError("petriSingleProcessTransitionMultipleEntries");
-                        });
-                        return;
-                    }
-
-                }
-            }
-
-
-        }
-
-        //Reject braching on a transition for a single petri
-        if (firstNodeType.equals("PetriTransition") && seccondNodeType.contains("Petri")) {
-
-            if (!firstNodeClicked.hasAttribute("ui.PIDS") && !seccondNodeType.equals("PetriPlaceStart")) {
-
-
-                if (firstNodeClicked == null) {
-                    System.out.println("fnull");
-                }
-                Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
-
-                //Cant understand ytf getleavingedgeset contains entering edges hence this:
-                int actualLeavingEdgeCount = 0;
-                for (Edge e : firstNodeLeavingEdges) {
-                    Node target = e.getTargetNode();
-
-                    if (target != firstNodeClicked) {
-                        actualLeavingEdgeCount++;
-                    }
-                }
-
-                if (actualLeavingEdgeCount > 0) {
-                    Platform.runLater(() ->
-                    {
-                        uic.reportError("petriTransitionBranching");
-                    });
-                    return;
-                }
-
-            }
-
-
-        }
-
-
-        Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
-
-
-        //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)
-        if ((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
-            Platform.runLater(() -> {
-                String labelValue = uic.nameEdge();
-                edge.addAttribute("ui.label", labelValue);
-            });
-        }
-
-
-        createdEdges.add(edge);
-
-        doPostEdgeUpdates(edge);
-    }
-
-
-    private ArrayList<String> getConnectedPIDS(Node tNode) {
-        ArrayList<String> pids = new ArrayList<>();
-        Collection<Edge> inGoingEdges = tNode.getEnteringEdgeSet();
-
-        for (Edge e : inGoingEdges) {
-            pids.add(e.getNode0().getAttribute("ui.PID"));
-        }
-
-        return pids;
-
-
-    }
-
-    private void doPostEdgeUpdates(Edge edge) {
-
-        //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS"
-        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
-
-
-        //When a transition has multiple entering edges it means it is a parrelel transition denoted as PIDS (PID Plural)
-        //So if a transition is not yet a PIDS ie when a seccond incomming edge recently added, then give it a PIDS attribute
-        //Containing the PID of all incoming edges or if PIDS is already set then just re add existing edge PID with the new one
-        if (seccondNodeClicked.getAttribute("ui.class").equals("PetriTransition") && seccondNodeClicked.getEnteringEdgeSet().size() > 1) {
-            System.out.println("doingpids");
-            ArrayList<String> pids = new ArrayList<>();
-            pids.add(firstNodeClicked.getAttribute("ui.PID"));
-            if (workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PIDS")) {
-                pids.addAll(seccondNodeClicked.getAttribute("ui.PIDS"));
-                workingCanvasArea.getNode(seccondNodeClicked.getId()).setAttribute("ui.PIDS", pids);
-            } else {
-                ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
-                workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
-            }
-        }
-
-        //The subsequent places of a PIDS transisition need specifying, because which process should they belong to?
-        //Answer: let the user decide
-        for (Node currentNode : createdNodes) {
-
-            if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
-                Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
-                if (currentNode.hasAttribute("ui.PIDS")) {
-                    ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
-                    ArrayList<String> selectedPIDS = new ArrayList<>();
-                    int pidsSize = allPIDS.size();
-                    int eCounter = 0;
-
-                    for (Edge e : outGoingEdges) {
-                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0) {
-
-                            //Boolean res = deterimineIfPlaceIsInLoop(workingCanvasArea.getNode(e.getNode1()));
-
-                            //Available Pids
-                            if (eCounter < pidsSize - 1) {
-                                Platform.runLater(() -> {
-                                    String petriType = e.getNode1().getAttribute("ui.class");
-                                    workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
-                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
-                                    selectedPIDS.add(selectedPID);
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
-                                });
-
-                            } else {
-                                //Must choose remaining one
-                                for (String s : allPIDS) {
-                                    if (!selectedPIDS.contains(s)) {
-                                        selectedPIDS.add(s);
-                                    }
-                                }
-                            }
-                        }
-                        eCounter++;
-                    }
-                }
-            }
-        }
-
-
-        //Determine if new node connection is apart of an existing code process if so add it to created nodes and edges
-
-        Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
-
-
-        while (k.hasNext()) {
-            Node current = k.next();
-            if (current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)) {
-                System.out.println("Adding code process to visual");
-                Node headToAdd = current;
-                headToAdd.setAttribute("ui.label", "A");
-                createdNodes.add(headToAdd);
-                doPIDPropogationOfExistingProcess(headToAdd); //will fail for parrelel
-                break;
-            }
-        }
-
-
-    }
-
-
-    private void doPIDPropogationOfExistingProcess(Node headToAdd) {
-        Iterator<Node> k = headToAdd.getBreadthFirstIterator(false);
-        //headToAdd.addAttribute("ui.PID", headToAdd.getAttribute("ui.label").toString());
-
-        while (k.hasNext()) {
-            Node current = k.next();
-            if (!current.hasAttribute("ui.PID")) { //Dont Contaminate new parrelel processes PID into existing process
-                workingCanvasArea.getNode(current.getId()).addAttribute("ui.PID", headToAdd.getAttribute("ui.PID").toString());
-            }
-
-            System.out.println(current.getAttribute("ui.PID").toString());
-
-        }
-
-    }
-
 
     private void addPetrinetNew(Petrinet petri) {
 
-        if (workingCanvasArea.getNode(petri.getId()) != null) {
+        if(processModelsOnScreenGSType.containsKey(petri.getId())){
+            System.out.println("petri On screen");
             return;
         }
 
@@ -1060,7 +481,7 @@ public class ModelView implements Observer, FontListener {
 
             DirectedEdge nodeEdge = new DirectedEdge(b, lab, a, UUID.randomUUID().toString());
 
-            System.out.println(edge.toString());
+
 
             Edge e;
 
@@ -1085,40 +506,464 @@ public class ModelView implements Observer, FontListener {
 
         }
 
-        this.processModelsOnScreen.replaceValues(petri.getId(), nodeMap.values());
-
-        this.processModelsOnScreenNew.replaceValues(petri.getId(), nodeMapGS.values());
+        this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
+        this.processModelsOnScreenGSType.replaceValues(petri.getId(), nodeMapGS.values());
 
 
     }
 
+    public void setNewVisualNodeType(String nodeType) {
+        // todo switch
 
+        if (nodeType.equals("AutoStart")) {
+            addingAutoNodeStart = true;
+        } else if (nodeType.equals("AutoNeutral")) {
+            addingAutoNodeNeutral = true;
+        } else if (nodeType.equals("AutoEnd")) {
+            addingAutoNodeEnd = true;
+        } else if (nodeType.equals("PetriPlaceStart")) {
+            addingPetriPlaceStart = true;
+        } else if (nodeType.equals("PetriPlaceNeutral")) {
+            addingPetriPlaceNeutral = true;
+        } else if (nodeType.equals("PetriPlaceEnd")) {
+            addingPetriPlaceEnd = true;
+        } else {
+            addingPetriTransition = true;
+        }
+
+
+        //Not proud of this hack to force graph mouse listener to respond to mouse release from shape mouse listener:
+        Robot robot = null;
+        try {
+            robot = new Robot();
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+        robot.mousePress(InputEvent.BUTTON1_MASK);
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+    }
+
+
+    public void dropNode(int xOnScreen, int yOnScreen) {
+
+        if (!addingAutoNodeStart && !addingAutoNodeNeutral && !addingAutoNodeEnd
+            && !addingPetriPlaceStart && !addingPetriPlaceNeutral && !addingPetriPlaceEnd && !addingPetriTransition) {
+            return;
+        }
+
+
+        Point3 gu = workingCanvasAreaView.getCamera().transformPxToGu(xOnScreen, yOnScreen);
+        //workingCanvasAreaViewer.disableAutoLayout();
+        latestNode = workingCanvasArea.addNode(String.valueOf(Math.random()));
+        latestNode.setAttribute("xyz", gu.x, gu.y, 0);
+        //workingLayout.freezeNode(latestNode.getId(), true);
+
+        if (addingAutoNodeStart) {
+            latestNode.addAttribute("ui.class", "AutoStart");
+            addingAutoNodeStart = false;
+        } else if (addingAutoNodeNeutral) {
+            latestNode.addAttribute("ui.class", "AutoNeutral");
+            addingAutoNodeNeutral = false;
+        } else if (addingAutoNodeEnd) {
+            latestNode.addAttribute("ui.class", "AutoEnd");
+            addingAutoNodeEnd = false;
+        } else if (addingPetriPlaceStart) {
+            latestNode.addAttribute("ui.class", "PetriPlaceStart");
+            addingPetriPlaceStart = false;
+        } else if (addingPetriPlaceNeutral) {
+            latestNode.addAttribute("ui.class", "PetriPlace");
+            addingPetriPlaceNeutral = false;
+        } else if (addingPetriPlaceEnd) {
+            latestNode.addAttribute("ui.class", "PetriPlaceEnd");
+            addingPetriPlaceEnd = false;
+        } else if (addingPetriTransition) {
+            latestNode.addAttribute("ui.class", "PetriTransition");
+            addingPetriTransition = false;
+        } else {
+            System.out.println("doing nothing");
+        }
+
+        createdNodes.add(latestNode);
+        nodeRecentlyPlaced = true;
+
+    }
+
+    public void setLatestNodeName(String newProcessNameValue) {
+        latestNode.addAttribute("ui.label", newProcessNameValue);
+
+        if (latestNode.getAttribute("ui.class").equals("PetriPlaceStart")) {
+            workingCanvasArea.getNode(latestNode.getId()).addAttribute("ui.PID", newProcessNameValue);
+        }
+    }
+
+
+    public void determineIfNodeClicked(int x, int y) {
+
+        //To handle the extra redundant "click" from the bot prevents unwanted node linking kinda shit implementation though
+        if (nodeRecentlyPlaced) {
+            nodeRecentlyPlaced = false;
+            return;
+        }
+
+        if (isCreateMode) {
+            GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
+
+            if (ge != null) {
+                if (firstNodeClicked == null) {
+                    firstNodeClicked = (Node) ge;
+                    System.out.println("Selecting First Node: " + firstNodeClicked.getId());
+                } else {
+                    seccondNodeClicked = (Node) ge;
+                    System.out.println("Selecting Seccond Node: " + seccondNodeClicked.getId());
+                }
+
+            } else {
+                System.out.println("Node not Clicked");
+            }
+
+            if (firstNodeClicked != null && seccondNodeClicked != null) {
+                doDrawEdge();
+                firstNodeClicked = null;
+                seccondNodeClicked = null;
+
+            }
+        } else {
+            handleTokenGame(x, y);
+        }
+    }
+
+    private void handleTokenGame(int x, int y) {
+        //Do Token Game
+        GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
+        Node nodeSelected = (Node) ge;
+        MappingNdMarking thisMapping;
+
+        if (nodeSelected != null) {
+            String pid = nodeSelected.getAttribute("ui.PID");
+            String automataIDofNet = pid.substring(0, pid.indexOf('(')) + "(automata)";
+            GraphNode gn = nodeSelected.getAttribute("ui.GraphNode");
+            ProcessModelObject clk = gn.getRepresentedFeature();
+
+
+            if (mappings != null && mappings.containsKey(pid)) {
+                thisMapping = mappings.get(pid);
+                if ((clk instanceof PetriNetTransition)) {
+                    PetriNetTransition pntClicked = ((PetriNetTransition) clk);
+                    if (!pntClicked.getLabel().equals(Constant.DEADLOCK)) {
+                        Multiset<PetriNetPlace> cm = CurrentMarkingsSeen.currentMarkingsSeen.get(pid);
+                        Multiset<PetriNetPlace> newMarking;
+                        List<Multiset<PetriNetPlace>> newMarkings;
+
+                        if (TokenRule.isSatisfied(cm, pntClicked)) {
+                            newMarkings = TokenRulePureFunctions.newMarking(cm, pntClicked);
+                            newMarking = newMarkings.get(0);
+                            CurrentMarkingsSeen.currentMarkingsSeen.put(pid, newMarking);
+
+                            if (thisMapping.contains(newMarking)) {
+                                for (GraphNode autG : processModelsOnScreenGraphNodeType.get(automataIDofNet)) {
+                                    if (autG.getNodeId().equals(thisMapping.get(newMarking).getId())) {
+                                        autG.setNodeColor(NodeStates.ERROR);
+                                    } else {
+                                        autG.setNodeColor(autG.getOriginalColor());
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    refreshTransitionColour();
+
+                }
+            }
+        } else {
+            CurrentMarkingsSeen.setCurrentMarkingsSeen(CurrentMarkingsSeen.getRootMarkings());
+            refreshTransitionColour();
+        }
+
+        //Move Token
+
+        Map<String, Set<String>> pnidToSetPlaceId = new TreeMap<>();
+        for (String pid : CurrentMarkingsSeen.currentMarkingsSeen.keySet()) {
+            Set<String> mk = CurrentMarkingsSeen.getIds(pid);
+            pnidToSetPlaceId.put(pid, mk);
+        }
+
+        processModelsOnScreenGSType.asMap().forEach((key, value) -> {
+            //Remove Last Tokens:
+
+            Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
+
+            currentNodes.forEach(node -> {
+                if(node.hasAttribute("ui.token")){
+                    node.removeAttribute("ui.token");
+                    node.removeAttribute("ui.class");
+                    node.addAttribute("ui.class", "PetriPlace");
+                }
+            });
+
+
+            for (Node vertex : value) {
+                GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
+                double diam = VertexGN.getType().getNodeShape().getBounds().getHeight() / 3;
+                if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
+                    pnidToSetPlaceId.get(VertexGN.getProcessModelId())
+                        .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
+                    && workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) != null) {
+
+                    //Add New Tokens
+                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.token");
+                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).removeAttribute("ui.class");
+                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriPlaceToken");
+                }
+            }
+        });
+
+
+    }
+
+    private void refreshTransitionColour() {
+        for (GraphNode gnt : processModelsOnScreenGraphNodeType.values()) {
+            if (gnt.getRepresentedFeature() instanceof PetriNetTransition) {
+                if (((PetriNetTransition) gnt.getRepresentedFeature()).getLabel().equals(Constant.DEADLOCK)) {
+                    //workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                    //gnt.setNodeColor(NodeStates.NOMINAL);
+                } else {
+                    if (TokenRule.isSatisfied(CurrentMarkingsSeen.currentMarkingsSeen.get(gnt.getProcessModelId()),
+                        ((PetriNetTransition) gnt.getRepresentedFeature()))) {
+                        workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).removeAttribute("ui.class");
+                        workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.style", "fill-color: rgb(0,255,255); shape: box;");
+                    } else {
+                        workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriTransition");
+                    }
+                }
+            }
+
+        }
+    }
+
+    private void doDrawEdge() {
+        String firstNodeType = firstNodeClicked.getAttribute("ui.class");
+        String seccondNodeType = seccondNodeClicked.getAttribute("ui.class");
+
+        //Reject Building Processes Backwards
+
+        if (!firstNodeType.equals("PetriPlaceStart") && firstNodeClicked.getInDegree() == 0) {
+            Platform.runLater(() ->
+            {
+                uic.reportError("backwardsPetriBuilding");
+            });
+
+            return;
+        }
+
+
+        //Reject transitions between petri and autos
+        if ((firstNodeType.contains("Petri") && seccondNodeType.contains("Auto"))
+            || (firstNodeType.contains("Auto") && seccondNodeType.contains("Petri"))) {
+            Platform.runLater(() ->
+            {
+                uic.reportError("transitionBetweenAutoAndPetri");
+            });
+            return;
+        }
+
+        //If first and seccond node are not transition reject
+        if (!firstNodeType.equals("PetriTransition") && !seccondNodeType.equals("PetriTransition")
+            && (!firstNodeType.contains("Auto") && !seccondNodeType.contains("Auto"))) {
+            Platform.runLater(() ->
+            {
+                uic.reportError("petriEdgeNoTransition");
+            });
+            return;
+        }
+
+        //If first and seccond are both transitions reject
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriTransition")) {
+            Platform.runLater(() ->
+            {
+                uic.reportError("petriEdgeBothTransitions");
+            });
+            return;
+        }
+
+        //Reject connections to a transisition if petri node is of the same process and transition already has entering connection
+        if (firstNodeType.contains("Petri") && seccondNodeType.equals("PetriTransition")) {
+            if (seccondNodeClicked.hasAttribute("ui.PID")) {
+                if (firstNodeClicked.getAttribute("ui.PID").toString() == seccondNodeClicked.getAttribute("ui.PID").toString()) {
+                    if (seccondNodeClicked.getEnteringEdgeSet().size() > 0) {
+                        Platform.runLater(() ->
+                        {
+                            uic.reportError("petriSingleProcessTransitionMultipleEntries");
+                        });
+                        return;
+                    }
+
+                }
+            }
+        }
+
+        //Reject braching on a transition for a single petri
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.contains("Petri")) {
+
+            if (!firstNodeClicked.hasAttribute("ui.PIDS") && !seccondNodeType.equals("PetriPlaceStart")) {
+
+                Collection<Edge> firstNodeLeavingEdges = firstNodeClicked.getLeavingEdgeSet();
+
+                //Cant understand ytf getleavingedgeset contains entering edges hence this:
+                int actualLeavingEdgeCount = 0;
+                for (Edge e : firstNodeLeavingEdges) {
+                    Node target = e.getTargetNode();
+
+                    if (target != firstNodeClicked) {
+                        actualLeavingEdgeCount++;
+                    }
+                }
+
+                if (actualLeavingEdgeCount > 0) {
+                    Platform.runLater(() ->
+                    {
+                        uic.reportError("petriTransitionBranching");
+                    });
+                    return;
+                }
+
+            }
+        }
+
+        Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
+
+        //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)
+        if ((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
+            Platform.runLater(() -> {
+                String labelValue = uic.nameEdge();
+                edge.addAttribute("ui.label", labelValue);
+            });
+        }
+        createdEdges.add(edge);
+        doPostEdgeUpdates(edge);
+    }
+
+
+    private ArrayList<String> getConnectedPIDS(Node tNode) {
+        ArrayList<String> pids = new ArrayList<>();
+        Collection<Edge> inGoingEdges = tNode.getEnteringEdgeSet();
+
+        for (Edge e : inGoingEdges) {
+            pids.add(e.getNode0().getAttribute("ui.PID"));
+        }
+
+        return pids;
+
+    }
+
+    private void doPostEdgeUpdates(Edge edge) {
+
+        //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS"
+        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
+
+
+        //When a transition has multiple entering edges it means it is a parrelel transition denoted as PIDS (PID Plural)
+        //So if a transition is not yet a PIDS ie when a seccond incomming edge recently added, then give it a PIDS attribute
+        //Containing the PID of all incoming edges or if PIDS is already set then just re add existing edge PID with the new one
+        if (seccondNodeClicked.getAttribute("ui.class").equals("PetriTransition") && seccondNodeClicked.getEnteringEdgeSet().size() > 1) {
+            ArrayList<String> pids = new ArrayList<>();
+            pids.add(firstNodeClicked.getAttribute("ui.PID"));
+            if (workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PIDS")) {
+                pids.addAll(seccondNodeClicked.getAttribute("ui.PIDS"));
+                workingCanvasArea.getNode(seccondNodeClicked.getId()).setAttribute("ui.PIDS", pids);
+            } else {
+                ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
+                workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
+            }
+        }
+
+        //The subsequent places of a PIDS transisition need specifying, because which process should they belong to?
+        //Answer: let the user decide
+        for (Node currentNode : createdNodes) {
+
+            if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
+                Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
+                if (currentNode.hasAttribute("ui.PIDS")) {
+                    ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
+                    ArrayList<String> selectedPIDS = new ArrayList<>();
+                    int pidsSize = allPIDS.size();
+                    int eCounter = 0;
+
+                    for (Edge e : outGoingEdges) {
+                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0) {
+
+                            //Boolean res = deterimineIfPlaceIsInLoop(workingCanvasArea.getNode(e.getNode1()));
+
+                            //Available Pids
+                            if (eCounter < pidsSize - 1) {
+                                Platform.runLater(() -> {
+                                    String petriType = e.getNode1().getAttribute("ui.class");
+                                    workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
+                                    selectedPIDS.add(selectedPID);
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
+                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
+                                });
+
+                            } else {
+                                //Must choose remaining one
+                                for (String s : allPIDS) {
+                                    if (!selectedPIDS.contains(s)) {
+                                        selectedPIDS.add(s);
+                                    }
+                                }
+                            }
+                        }
+                        eCounter++;
+                    }
+                }
+            }
+        }
+
+        Iterator<Node> k = edge.getNode1().getBreadthFirstIterator(false); //false means disregard edge direction
+
+        while (k.hasNext()) {
+            Node current = k.next();
+            if (current.getAttribute("ui.class").equals("PetriPlaceStart") && !createdNodes.contains(current)) {
+                Node headToAdd = current;
+                headToAdd.setAttribute("ui.label", "A");
+                createdNodes.add(headToAdd);
+                doPIDPropogationOfExistingProcess(headToAdd); //will fail for parrelel
+                break;
+            }
+        }
+    }
+
+
+    private void doPIDPropogationOfExistingProcess(Node headToAdd) {
+        Iterator<Node> k = headToAdd.getBreadthFirstIterator(false);
+
+        while (k.hasNext()) {
+            Node current = k.next();
+            if (!current.hasAttribute("ui.PID")) { //Dont Contaminate new parrelel processes PID into existing process
+                workingCanvasArea.getNode(current.getId()).addAttribute("ui.PID", headToAdd.getAttribute("ui.PID").toString());
+            }
+        }
+    }
 
     /**
      * @param modelLabel The name of the model process to be displayed / added to display.
      */
     public void addDisplayedModel(String modelLabel) {
-        //Called when model added to display, Previous methods implicitly invoked due to observering, and ie update
-        //Graph will use processchanged/modelstodisplay in filtering through compilation object
         assert compiledResult.getProcessMap().containsKey(modelLabel);
         assert modelsInList.contains(modelLabel);
-
         processesChanged.add(modelLabel);
-
-        //if(!processModelsToDisplay.contains(modelLabel)) {
         processModelsToDisplay.add(modelLabel);
-        //}
-        //  canvasML. refreshtransitionColor();
     }
 
     /* Guesing  dstr */
     public void removeDisplayedModel(String modelLabel) {
         assert compiledResult.getProcessMap().containsKey(modelLabel);
         assert modelsInList.contains(modelLabel);
-
         processesChanged.add(modelLabel);
         processModelsToDisplay.remove(modelLabel);
-        //  canvasML. refreshtransitionColor();
     }
 
     public void clearDisplayed() {
@@ -1138,7 +983,6 @@ public class ModelView implements Observer, FontListener {
         if (modelsInList != null) {
             processModelsToDisplay.addAll(modelsInList);
         }
-        // canvasML. refreshtransitionColor();
     }
 
     public void addAllModelsNew() {
@@ -1148,10 +992,7 @@ public class ModelView implements Observer, FontListener {
         if (modelsInList != null) {
             processModelsToDisplay.addAll(modelsInList);
         }
-        // canvasML. refreshtransitionColor();
     }
-
-
 
     public void freezeAllCurrentlyDisplayedNew() {
         workingCanvasAreaViewer.disableAutoLayout();
@@ -1160,11 +1001,8 @@ public class ModelView implements Observer, FontListener {
         k.forEach(node -> {
                 workingLayout.freezeNode(node.getId(), true);
             }
-
         );
     }
-
-
 
     public void unfreezeAllCurrentlyDisplayedNew() {
         workingCanvasAreaViewer.enableAutoLayout();
@@ -1173,14 +1011,8 @@ public class ModelView implements Observer, FontListener {
         k.forEach(node -> {
                 workingLayout.freezeNode(node.getId(), false);
             }
-
         );
-
     }
-
-
-
-
 
     public void removeProcessModelNew(String selectedProcess) {
 
@@ -1190,14 +1022,11 @@ public class ModelView implements Observer, FontListener {
             processesChanged.remove(selectedProcess);
             modelsInList.remove(selectedProcess);
 
-            for (Node n : processModelsOnScreenNew.get(selectedProcess)) {
+            for (Node n : processModelsOnScreenGSType.get(selectedProcess)) {
                 workingCanvasArea.removeNode(n);
             }
-
-            processModelsOnScreenNew.removeAll(selectedProcess);
+            processModelsOnScreenGSType.removeAll(selectedProcess);
         }
-
-
     }
 
 
@@ -1210,26 +1039,12 @@ public class ModelView implements Observer, FontListener {
      * Resets all graph varaibles and re-adds default blank state.
      */
     private void initalise() {
-
-
         processModelsToDisplay = new HashSet<>();
-
         Boolean keyX = false;
-        keyl = new Keylisten(keyX);
-
-        // vv.addMouseMotionListener(cml);
-        //System.out.println();
-
-
-        //label the nodes
-
-
         // vv.getRenderContext().getEdgeLabelTransformer().;
-        processModelsOnScreen = MultimapBuilder.hashKeys().hashSetValues().build();
-        processModelsOnScreenNew = MultimapBuilder.hashKeys().hashSetValues().build();
-        //  settings.addFontListener(this); can NOY be done here ?!?
+        processModelsOnScreenGSType = MultimapBuilder.hashKeys().hashSetValues().build();
+        processModelsOnScreenGraphNodeType = MultimapBuilder.hashKeys().hashSetValues().build();
 
-        //Graphstream:
 
         //Reinitialise The Working Canvas area
         workingCanvasAreaContainer = new JPanel();
@@ -1270,20 +1085,13 @@ public class ModelView implements Observer, FontListener {
                 }
 
                 cam.setViewPercent(zoom);
-                System.out.println(zoom);
             }
         });
 
-
         workingCanvasAreaContainer.add((Component) workingCanvasAreaView, BorderLayout.CENTER);
-
-
     }
 
-    /*
-         This seems to work - methods are not static and the constructor is private
-         To call foo() you have to call ModelView.getInstance.foo()
-     */
+
     @Getter
     private static ModelView instance = new ModelView();
 
@@ -1292,42 +1100,85 @@ public class ModelView implements Observer, FontListener {
      */
     private ModelView() {
         CompilationObservable.getInstance().addObserver(this);
-
         initalise();
-        // settings.addFontListener(this);  can NOT be done here
     }
-
-    //register font
-    static {
-        Font source;
-        try {
-            source = Font.createFont(Font.TRUETYPE_FONT,
-                ModelView.class.getResourceAsStream("/clientres/SourceCodePro-Bold.ttf"))
-                .deriveFont(15f);
-        } catch (FontFormatException | IOException e) {
-            source = null;
-        }
-        // System.out.println("New Font size "+source.getSize());
-
-        sourceCodePro = source;
-    }
-
-
     public ArrayList<Node> getVisualCreatedPetris() {
-
         return createdNodes;
-
     }
 
     public void switchToCreateMode() {
         isCreateMode = true;
-        System.out.println("create mode");
-
     }
 
     public void switchToTokenMode() {
         isCreateMode = false;
-        System.out.println("token mode");
         determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+
+    private String getStyleSheet() {
+        return "node {" +
+            "text-size: 20;" +
+            "text-color: white; " +
+            "text-background-color: black;" +
+            "text-background-mode: plain;" +
+            "text-alignment: above;" +
+            "text-style: normal;" +
+            "size: 30px; " +
+            "fill-mode: gradient-horizontal;" +
+            "shadow-color: #000000, #ffffff;" +
+            "}" +
+            "node.AutoStart {" +
+            "fill-color: #1F9F06;" +
+            "}" +
+            "node.AutoNeutral {" +
+            "fill-color: #b8b4b4;" +
+            "}" +
+            "node.AutoEnd {" +
+            "fill-color: #5c0a04;" +
+            "}" +
+            "edge {" +
+            " " +
+            "text-size: 20;" +
+            "arrow-shape: arrow;" +
+            "}" +
+            "graph {" +
+            "fill-color: white;" +
+            "}" +
+            "node.PetriPlace {" +
+            "fill-color: gray;" +
+            "text-visibility-mode: hidden;" +
+            "}" +
+            "node.PetriPlaceStart {" +
+            "fill-color: #0d4503;" +
+            "}" +
+            "node.PetriPlaceEnd {" +
+            "fill-color: red;" +
+            "text-visibility-mode: hidden;" +
+            "}" +
+            "node.PetriTransition {" +
+            "shape: box; " +
+            "fill-color: gray;" +
+            "}" +
+            "node.highlight {" +
+            "fill-color: red;" +
+            "}" +
+            "edge {" +
+            "text-alignment: under;" +
+            "}" +
+            "edge.EdgeBlue {" +
+            "fill-color: blue;" +
+            "}" +
+            "edge.EdgeRed {" +
+            "fill-color: red;" +
+            "}" +
+            "node.PetriPlaceToken {" +
+            "fill-color: black;" +
+            "size: 10px; " +
+            "shadow-mode: plain;" +
+            "shadow-offset: 0;" +
+            "shadow-width: 10;" +
+            "shadow-color: gray; " +
+            "}";
+
     }
 }

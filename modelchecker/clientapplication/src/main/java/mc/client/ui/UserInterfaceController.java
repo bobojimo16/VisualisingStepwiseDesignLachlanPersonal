@@ -341,6 +341,23 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             });
 
+        userCodeInput.richChanges()
+            .filter(ch -> ch.getInserted().getText().length() == 1)
+            .subscribe((startedTyping) -> {
+                System.out.println("typing");
+                compilerOutputDisplay.appendText("Compiling..." + "\n");
+
+        });
+
+        userCodeInput.richChanges().successionEnds(Duration.ofMillis(5000))
+
+            .subscribe((finishedTyping) -> {
+                compilerOutputDisplay.appendText("Compiling Completed" + "\n");
+                System.out.println("Recompile");
+                handleCompileRequest();
+
+        });
+
         String userCode = "processes{\n" +
             "\n" +
             "A = a -> b -> STOP.\n" +
@@ -1075,14 +1092,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     //TODO: make this a better concurrent process
     @FXML
-    private void handleCompileRequest(ActionEvent event) {
+    private void handleCompileRequest() {
         String userCode = userCodeInput.getText();
-        /*userCode += "processes{\n" +
-            "\n" +
-            "A = a -> b -> STOP.\n" +
-            "\n" +
-            "\n" +
-            "}";*/
 
 
         if (!userCode.isEmpty()) {
