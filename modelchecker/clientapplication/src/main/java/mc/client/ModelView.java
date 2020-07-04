@@ -106,6 +106,7 @@ public class ModelView implements Observer {
     private Consumer<Collection<String>> listOfAutomataUpdater;
     @Setter
     private BiConsumer<List<OperationResult>, List<OperationResult>> updateLog;
+    private String firstNodeClass;
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -605,6 +606,8 @@ public class ModelView implements Observer {
             return;
         }
 
+
+
         if (isCreateMode) {
             GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
 
@@ -612,6 +615,16 @@ public class ModelView implements Observer {
                 if (firstNodeClicked == null) {
                     firstNodeClicked = (Node) ge;
                     System.out.println("Selecting First Node: " + firstNodeClicked.getId());
+                    firstNodeClass = firstNodeClicked.getAttribute("ui.class");
+
+                    firstNodeClicked.removeAttribute("ui.class");
+
+                    if(firstNodeClass.equals("PetriTransition")) {
+                        firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00; shape: box;");
+                    } else {
+                        firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00;");
+                    }
+
                 } else {
                     seccondNodeClicked = (Node) ge;
                     System.out.println("Selecting Seccond Node: " + seccondNodeClicked.getId());
@@ -622,7 +635,13 @@ public class ModelView implements Observer {
             }
 
             if (firstNodeClicked != null && seccondNodeClicked != null) {
+                firstNodeClicked.addAttribute("ui.class", firstNodeClass);
                 doDrawEdge();
+
+
+               /* firstNodeClicked.addAttribute("ui.class", firstNodeClass);
+                seccondNodeClicked.addAttribute("ui.class", seccondNodeClass);*/
+
                 firstNodeClicked = null;
                 seccondNodeClicked = null;
 
@@ -744,6 +763,9 @@ public class ModelView implements Observer {
     private void doDrawEdge() {
         String firstNodeType = firstNodeClicked.getAttribute("ui.class");
         String seccondNodeType = seccondNodeClicked.getAttribute("ui.class");
+
+        System.out.println(firstNodeType);
+        System.out.println(seccondNodeType);
 
         //Reject Building Processes Backwards
 
@@ -1178,7 +1200,16 @@ public class ModelView implements Observer {
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
             "shadow-color: gray; " +
-            "}";
+            "}" +
+            "node.HighlightedTransition {" +
+            "shape: box; " +
+            "fill-color: #ccff00;"+
+            "}" +
+            "node.HighlightedNonTransition {" +
+            "fill-color: #ccff00;"+
+            "}"
+
+            ;
 
     }
 }
