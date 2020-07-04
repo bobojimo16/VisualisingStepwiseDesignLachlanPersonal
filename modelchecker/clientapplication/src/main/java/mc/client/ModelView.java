@@ -98,6 +98,7 @@ public class ModelView implements Observer {
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
     private boolean isCreateMode = true;
+    private HashMap graphNodeToHeadPetri = new HashMap();
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -107,10 +108,12 @@ public class ModelView implements Observer {
     @Setter
     private BiConsumer<List<OperationResult>, List<OperationResult>> updateLog;
     private String firstNodeClass;
+    private double zoom;
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
     }
+
     public void removeProcess(String id) {
         compiledResult.getProcessMap().remove(id);
     }
@@ -210,8 +213,6 @@ public class ModelView implements Observer {
     }
 
 
-
-
     public JPanel updateGraphNew(SwingNode modelDisplayNew) {
 
         if (compiledResult == null) {
@@ -268,7 +269,6 @@ public class ModelView implements Observer {
             e.addAttribute("ui.label", cnEAttributeLabel);
         }
     }
-
 
 
     private void addProcessNew(ProcessModel p) {
@@ -359,7 +359,7 @@ public class ModelView implements Observer {
 
     private void addPetrinetNew(Petrinet petri) {
 
-        if(processModelsOnScreenGSType.containsKey(petri.getId())){
+        if (processModelsOnScreenGSType.containsKey(petri.getId())) {
             System.out.println("petri On screen");
             return;
         }
@@ -396,13 +396,14 @@ public class ModelView implements Observer {
 
             if (place.isStart()) {
                 n = workingCanvasArea.addNode(petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
+                graphNodeToHeadPetri.put(place.getId(), petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
                 startToIntValue.put(place, (petriStartsSize + 1 - petriStartSizeTracker.get()));
                 petriStartSizeTracker.getAndIncrement();
             } else {
-                //todo fix this crap
                 place.setId(place.getId());
                 n = workingCanvasArea.addNode(place.getId());
             }
+
 
             if (place.isStart()) {
                 n.addAttribute("ui.label", petri.getId() + startToIntValue.get(place));
@@ -483,7 +484,6 @@ public class ModelView implements Observer {
             DirectedEdge nodeEdge = new DirectedEdge(b, lab, a, UUID.randomUUID().toString());
 
 
-
             Edge e;
 
             if (edge.getFrom().getType().equals("PetriNetPlace")) {
@@ -498,7 +498,7 @@ public class ModelView implements Observer {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getTo();
                 if (pnp.isStart()) {
                     int startValue = startToIntValue.get(pnp);
-                    e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + petri.getId() + startValue , edge.getFrom().getId(), petri.getId() + startValue, true);
+                    e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + petri.getId() + startValue, edge.getFrom().getId(), petri.getId() + startValue, true);
                 } else {
                     e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + edge.getTo().getId(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
@@ -607,7 +607,6 @@ public class ModelView implements Observer {
         }
 
 
-
         if (isCreateMode) {
             GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
 
@@ -619,7 +618,7 @@ public class ModelView implements Observer {
 
                     firstNodeClicked.removeAttribute("ui.class");
 
-                    if(firstNodeClass.equals("PetriTransition")) {
+                    if (firstNodeClass.equals("PetriTransition")) {
                         firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00; shape: box;");
                     } else {
                         firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00;");
@@ -713,26 +712,47 @@ public class ModelView implements Observer {
             Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
 
             currentNodes.forEach(node -> {
-                if(node.hasAttribute("ui.token")){
+                if (node.hasAttribute("ui.token")) {
                     node.removeAttribute("ui.token");
                     node.removeAttribute("ui.class");
-                    node.addAttribute("ui.class", "PetriPlace");
+                    if (node.hasAttribute("ui.petristart")) {
+                        node.addAttribute("ui.class", "PetriPlaceStart");
+                    } else {
+                        node.addAttribute("ui.class", "PetriPlace");
+                    }
                 }
             });
 
 
             for (Node vertex : value) {
                 GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
-                double diam = VertexGN.getType().getNodeShape().getBounds().getHeight() / 3;
                 if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
                     pnidToSetPlaceId.get(VertexGN.getProcessModelId())
-                        .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
-                    && workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) != null) {
+                        .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())) {
+
+                    //&& workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) != null)
+
+                    System.out.println(VertexGN.getRepresentedFeature().getId());
+
+                    String petriHeadConversion;
+
+                    if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
+                        petriHeadConversion = (String) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature().getId());
+                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
+                    } else {
+                        petriHeadConversion = VertexGN.getRepresentedFeature().getId();
+                    }
 
                     //Add New Tokens
-                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.token");
-                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).removeAttribute("ui.class");
-                    workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriPlaceToken");
+                    workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
+                    workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+
+                    if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
+                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
+                    } else {
+                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
+                    }
+
                 }
             }
         });
@@ -1052,7 +1072,6 @@ public class ModelView implements Observer {
     }
 
 
-
     private Map<String, ProcessModel> getProcessMap() {
         return compiledResult.getProcessMap();
     }
@@ -1094,7 +1113,7 @@ public class ModelView implements Observer {
                 int i = e.getWheelRotation();
                 double factor = Math.pow(1.25, i);
                 Camera cam = workingCanvasAreaView.getCamera();
-                double zoom = cam.getViewPercent() * factor;
+                zoom = cam.getViewPercent() * factor;
                 Point2 pxCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
                 Point3 guClicked = cam.transformPxToGu(e.getX(), e.getY());
                 double newRatioPx2Gu = cam.getMetrics().ratioPx2Gu / factor;
@@ -1124,6 +1143,7 @@ public class ModelView implements Observer {
         CompilationObservable.getInstance().addObserver(this);
         initalise();
     }
+
     public ArrayList<Node> getVisualCreatedPetris() {
         return createdNodes;
     }
@@ -1145,7 +1165,7 @@ public class ModelView implements Observer {
             "text-background-mode: plain;" +
             "text-alignment: above;" +
             "text-style: normal;" +
-            "size: 30px; " +
+            "size: 20px; " +
             "fill-mode: gradient-horizontal;" +
             "shadow-color: #000000, #ffffff;" +
             "}" +
@@ -1203,13 +1223,23 @@ public class ModelView implements Observer {
             "}" +
             "node.HighlightedTransition {" +
             "shape: box; " +
-            "fill-color: #ccff00;"+
+            "fill-color: #ccff00;" +
             "}" +
             "node.HighlightedNonTransition {" +
-            "fill-color: #ccff00;"+
+            "fill-color: #ccff00;" +
+            "}" +
+            "node.PetriPlaceTokenStart {" +
+            "fill-color: black;" +
+            "size: 10px; " +
+            "shadow-mode: plain;" +
+            "shadow-offset: 0;" +
+            "shadow-width: 10;" +
+            "shadow-color: #0d4503; " +
             "}"
 
             ;
 
     }
 }
+
+
