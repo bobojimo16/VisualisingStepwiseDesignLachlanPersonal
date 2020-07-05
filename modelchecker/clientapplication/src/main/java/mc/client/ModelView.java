@@ -99,6 +99,7 @@ public class ModelView implements Observer {
     private boolean addingPetriTransition;
     private boolean isCreateMode = true;
     private HashMap graphNodeToHeadPetri = new HashMap();
+    private ArrayList pathColours = new ArrayList();
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -329,6 +330,7 @@ public class ModelView implements Observer {
 
         //Connects the node via edges on screen
         automaton.getEdges().forEach(e -> {
+
             GraphNode to = nodeMap.get(e.getTo().getId());
 
             GraphNode from = nodeMap.get(e.getFrom().getId());
@@ -345,6 +347,8 @@ public class ModelView implements Observer {
             if (settings.isShowOwners()) {
                 label += e.getEdgeOwners();
             }
+
+
 
 
             Edge edge = workingCanvasArea.addEdge("test" + Math.random(), from.getNodeId(), to.getNodeId(), true);
@@ -364,6 +368,22 @@ public class ModelView implements Observer {
             return;
         }
 
+        TreeSet<String> petriOwners = petri.getOwners();
+        HashMap<String, String> ownerColours = new HashMap<>();
+
+        int colourTracker = 0;
+        String colour = "";
+        for(String o: petriOwners){
+
+            if(colourTracker > pathColours.size()){
+                colourTracker = 0;
+            }
+
+            colour = (String) pathColours.get(colourTracker);
+            ownerColours.put(o, colour);
+            colourTracker++;
+        }
+
         Set<PetriNetPlace> petriStarts = petri.getAllRoots();
         int petriStartsSize = petriStarts.size();
         AtomicInteger petriStartSizeTracker = new AtomicInteger();
@@ -376,6 +396,7 @@ public class ModelView implements Observer {
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
+
             NodeStates nodeTermination = NodeStates.NOMINAL;
             if (place.isTerminal()) {
                 nodeTermination = NodeStates.valueOf(place.getTerminal().toUpperCase());
@@ -485,6 +506,7 @@ public class ModelView implements Observer {
 
 
             Edge e;
+            String pColour = "";
 
             if (edge.getFrom().getType().equals("PetriNetPlace")) {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getFrom();
@@ -494,6 +516,10 @@ public class ModelView implements Observer {
                 } else {
                     e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + edge.getTo().getId(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
+
+                String placeOwner = pnp.getOwners().first();
+                pColour = ownerColours.get(placeOwner);
+
             } else {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getTo();
                 if (pnp.isStart()) {
@@ -502,7 +528,19 @@ public class ModelView implements Observer {
                 } else {
                     e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + edge.getTo().getId(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
+
+                PetriNetTransition pnt = (PetriNetTransition) edge.getFrom();
+
+                if(pnt.getOwners().size() == 1){
+                    String placeOwner = pnt.getOwners().first();
+                    pColour = ownerColours.get(placeOwner);
+                } else {
+                    String placeOwner = pnp.getOwners().first();
+                    pColour = ownerColours.get(placeOwner);
+                }
             }
+
+            e.addAttribute("ui.style", "fill-color: " + pColour + ";");
 
 
         }
@@ -1086,6 +1124,8 @@ public class ModelView implements Observer {
         processModelsOnScreenGSType = MultimapBuilder.hashKeys().hashSetValues().build();
         processModelsOnScreenGraphNodeType = MultimapBuilder.hashKeys().hashSetValues().build();
 
+        String[] strings = {"black", "red", "yellow", "orange", "purple", "green"};
+        pathColours.addAll(Arrays.asList(strings));
 
         //Reinitialise The Working Canvas area
         workingCanvasAreaContainer = new JPanel();
@@ -1206,6 +1246,7 @@ public class ModelView implements Observer {
             "}" +
             "edge {" +
             "text-alignment: under;" +
+            "fill-color: blue;" +
             "}" +
             "edge.EdgeBlue {" +
             "fill-color: blue;" +
