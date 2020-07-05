@@ -349,8 +349,6 @@ public class ModelView implements Observer {
             }
 
 
-
-
             Edge edge = workingCanvasArea.addEdge("test" + Math.random(), from.getNodeId(), to.getNodeId(), true);
             edge.addAttribute("ui.label", label);
 
@@ -373,9 +371,9 @@ public class ModelView implements Observer {
 
         int colourTracker = 0;
         String colour = "";
-        for(String o: petriOwners){
+        for (String o : petriOwners) {
 
-            if(colourTracker > pathColours.size()){
+            if (colourTracker > pathColours.size()) {
                 colourTracker = 0;
             }
 
@@ -531,7 +529,7 @@ public class ModelView implements Observer {
 
                 PetriNetTransition pnt = (PetriNetTransition) edge.getFrom();
 
-                if(pnt.getOwners().size() == 1){
+                if (pnt.getOwners().size() == 1) {
                     String placeOwner = pnt.getOwners().first();
                     pColour = ownerColours.get(placeOwner);
                 } else {
@@ -747,19 +745,7 @@ public class ModelView implements Observer {
         processModelsOnScreenGSType.asMap().forEach((key, value) -> {
             //Remove Last Tokens:
 
-            Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
-
-            currentNodes.forEach(node -> {
-                if (node.hasAttribute("ui.token")) {
-                    node.removeAttribute("ui.token");
-                    node.removeAttribute("ui.class");
-                    if (node.hasAttribute("ui.petristart")) {
-                        node.addAttribute("ui.class", "PetriPlaceStart");
-                    } else {
-                        node.addAttribute("ui.class", "PetriPlace");
-                    }
-                }
-            });
+            removeLastTokens();
 
 
             for (Node vertex : value) {
@@ -796,6 +782,23 @@ public class ModelView implements Observer {
         });
 
 
+    }
+
+    private void removeLastTokens() {
+
+        Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
+
+        currentNodes.forEach(node -> {
+            if (node.hasAttribute("ui.token")) {
+                node.removeAttribute("ui.token");
+                node.removeAttribute("ui.class");
+                if (node.hasAttribute("ui.petristart")) {
+                    node.addAttribute("ui.class", "PetriPlaceStart");
+                } else {
+                    node.addAttribute("ui.class", "PetriPlace");
+                }
+            }
+        });
     }
 
     private void refreshTransitionColour() {
@@ -1143,7 +1146,7 @@ public class ModelView implements Observer {
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();
         workingCanvasAreaView.addMouseListener(PMM);
-        workingCanvasAreaView.getCamera().setViewPercent(2);
+        workingCanvasAreaView.getCamera().setViewPercent(1);
         workingCanvasAreaView.getCamera().setAutoFitView(true);
 
         ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
@@ -1154,6 +1157,11 @@ public class ModelView implements Observer {
                 double factor = Math.pow(1.25, i);
                 Camera cam = workingCanvasAreaView.getCamera();
                 zoom = cam.getViewPercent() * factor;
+
+                if (zoom < 1) {
+                    return;
+                }
+
                 Point2 pxCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
                 Point3 guClicked = cam.transformPxToGu(e.getX(), e.getY());
                 double newRatioPx2Gu = cam.getMetrics().ratioPx2Gu / factor;
@@ -1161,9 +1169,6 @@ public class ModelView implements Observer {
                 double y = guClicked.y - (pxCenter.y - e.getY()) / newRatioPx2Gu;
                 cam.setViewCenter(x, y, 0);
 
-                if (zoom < 1) {
-                    zoom = 1;
-                }
 
                 cam.setViewPercent(zoom);
             }
@@ -1190,6 +1195,14 @@ public class ModelView implements Observer {
 
     public void switchToCreateMode() {
         isCreateMode = true;
+
+        removeLastTokens();
+        for (GraphNode gnt : processModelsOnScreenGraphNodeType.values()) {
+            if (gnt.getRepresentedFeature() instanceof PetriNetTransition) {
+                workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriTransition");
+            }
+        }
+
     }
 
     public void switchToTokenMode() {
