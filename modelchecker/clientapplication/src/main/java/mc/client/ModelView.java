@@ -99,6 +99,7 @@ public class ModelView implements Observer {
     private boolean addingPetriTransition;
     private boolean isCreateMode = true;
     private HashMap graphNodeToHeadPetri = new HashMap();
+    private ArrayList pathColours = new ArrayList();
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -329,6 +330,7 @@ public class ModelView implements Observer {
 
         //Connects the node via edges on screen
         automaton.getEdges().forEach(e -> {
+
             GraphNode to = nodeMap.get(e.getTo().getId());
 
             GraphNode from = nodeMap.get(e.getFrom().getId());
@@ -364,6 +366,22 @@ public class ModelView implements Observer {
             return;
         }
 
+        TreeSet<String> petriOwners = petri.getOwners();
+        HashMap<String, String> ownerColours = new HashMap<>();
+
+        int colourTracker = 0;
+        String colour = "";
+        for (String o : petriOwners) {
+
+            if (colourTracker > pathColours.size()) {
+                colourTracker = 0;
+            }
+
+            colour = (String) pathColours.get(colourTracker);
+            ownerColours.put(o, colour);
+            colourTracker++;
+        }
+
         Set<PetriNetPlace> petriStarts = petri.getAllRoots();
         int petriStartsSize = petriStarts.size();
         AtomicInteger petriStartSizeTracker = new AtomicInteger();
@@ -376,6 +394,7 @@ public class ModelView implements Observer {
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
+
             NodeStates nodeTermination = NodeStates.NOMINAL;
             if (place.isTerminal()) {
                 nodeTermination = NodeStates.valueOf(place.getTerminal().toUpperCase());
@@ -485,6 +504,7 @@ public class ModelView implements Observer {
 
 
             Edge e;
+            String pColour = "";
 
             if (edge.getFrom().getType().equals("PetriNetPlace")) {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getFrom();
@@ -494,6 +514,10 @@ public class ModelView implements Observer {
                 } else {
                     e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + edge.getTo().getId(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
+
+                String placeOwner = pnp.getOwners().first();
+                pColour = ownerColours.get(placeOwner);
+
             } else {
                 PetriNetPlace pnp = (PetriNetPlace) edge.getTo();
                 if (pnp.isStart()) {
@@ -502,7 +526,19 @@ public class ModelView implements Observer {
                 } else {
                     e = workingCanvasArea.addEdge(edge.getFrom().getId() + "-" + edge.getTo().getId(), edge.getFrom().getId(), edge.getTo().getId(), true);
                 }
+
+                PetriNetTransition pnt = (PetriNetTransition) edge.getFrom();
+
+                if (pnt.getOwners().size() == 1) {
+                    String placeOwner = pnt.getOwners().first();
+                    pColour = ownerColours.get(placeOwner);
+                } else {
+                    String placeOwner = pnp.getOwners().first();
+                    pColour = ownerColours.get(placeOwner);
+                }
             }
+
+            e.addAttribute("ui.style", "fill-color: " + pColour + ";");
 
 
         }
@@ -709,19 +745,7 @@ public class ModelView implements Observer {
         processModelsOnScreenGSType.asMap().forEach((key, value) -> {
             //Remove Last Tokens:
 
-            Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
-
-            currentNodes.forEach(node -> {
-                if (node.hasAttribute("ui.token")) {
-                    node.removeAttribute("ui.token");
-                    node.removeAttribute("ui.class");
-                    if (node.hasAttribute("ui.petristart")) {
-                        node.addAttribute("ui.class", "PetriPlaceStart");
-                    } else {
-                        node.addAttribute("ui.class", "PetriPlace");
-                    }
-                }
-            });
+            removeLastTokens();
 
 
             for (Node vertex : value) {
@@ -758,6 +782,23 @@ public class ModelView implements Observer {
         });
 
 
+    }
+
+    private void removeLastTokens() {
+
+        Iterable<? extends Node> currentNodes = workingCanvasArea.getEachNode();
+
+        currentNodes.forEach(node -> {
+            if (node.hasAttribute("ui.token")) {
+                node.removeAttribute("ui.token");
+                node.removeAttribute("ui.class");
+                if (node.hasAttribute("ui.petristart")) {
+                    node.addAttribute("ui.class", "PetriPlaceStart");
+                } else {
+                    node.addAttribute("ui.class", "PetriPlace");
+                }
+            }
+        });
     }
 
     private void refreshTransitionColour() {
@@ -1086,6 +1127,8 @@ public class ModelView implements Observer {
         processModelsOnScreenGSType = MultimapBuilder.hashKeys().hashSetValues().build();
         processModelsOnScreenGraphNodeType = MultimapBuilder.hashKeys().hashSetValues().build();
 
+        String[] strings = {"black", "red", "yellow", "orange", "purple", "green"};
+        pathColours.addAll(Arrays.asList(strings));
 
         //Reinitialise The Working Canvas area
         workingCanvasAreaContainer = new JPanel();
@@ -1103,7 +1146,7 @@ public class ModelView implements Observer {
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();
         workingCanvasAreaView.addMouseListener(PMM);
-        workingCanvasAreaView.getCamera().setViewPercent(2);
+        workingCanvasAreaView.getCamera().setViewPercent(1);
         workingCanvasAreaView.getCamera().setAutoFitView(true);
 
         ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
@@ -1114,6 +1157,11 @@ public class ModelView implements Observer {
                 double factor = Math.pow(1.25, i);
                 Camera cam = workingCanvasAreaView.getCamera();
                 zoom = cam.getViewPercent() * factor;
+
+                if (zoom < 1) {
+                    return;
+                }
+
                 Point2 pxCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
                 Point3 guClicked = cam.transformPxToGu(e.getX(), e.getY());
                 double newRatioPx2Gu = cam.getMetrics().ratioPx2Gu / factor;
@@ -1121,9 +1169,6 @@ public class ModelView implements Observer {
                 double y = guClicked.y - (pxCenter.y - e.getY()) / newRatioPx2Gu;
                 cam.setViewCenter(x, y, 0);
 
-                if (zoom < 1) {
-                    zoom = 1;
-                }
 
                 cam.setViewPercent(zoom);
             }
@@ -1150,6 +1195,14 @@ public class ModelView implements Observer {
 
     public void switchToCreateMode() {
         isCreateMode = true;
+
+        removeLastTokens();
+        for (GraphNode gnt : processModelsOnScreenGraphNodeType.values()) {
+            if (gnt.getRepresentedFeature() instanceof PetriNetTransition) {
+                workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriTransition");
+            }
+        }
+
     }
 
     public void switchToTokenMode() {
@@ -1206,6 +1259,7 @@ public class ModelView implements Observer {
             "}" +
             "edge {" +
             "text-alignment: under;" +
+            "fill-color: blue;" +
             "}" +
             "edge.EdgeBlue {" +
             "fill-color: blue;" +

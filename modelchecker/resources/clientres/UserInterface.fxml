@@ -26,20 +26,9 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <AnchorPane fx:id="mainWindowSize" maxHeight="50.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
-            <children>
-                <Button layoutX="890.0" layoutY="2.0" mnemonicParsing="false" onAction="#handleOptions" prefHeight="38.0" prefWidth="89.0" text="Options" AnchorPane.rightAnchor="21.0" />
-                <Button fx:id="compileButton" layoutX="782.0" layoutY="2.0" mnemonicParsing="false" onAction="#handleCompileRequest" prefHeight="38.0" prefWidth="89.0" text="Compile" AnchorPane.rightAnchor="129.0" />
-                <Label layoutX="3.0" layoutY="2.0" prefHeight="38.0" prefWidth="583.0" text="SWEN324-19-v2 Process Modelling " AnchorPane.leftAnchor="3.0">
-                    <font>
-                        <Font size="24.0" />
-                    </font>
-                </Label>
-            </children>
-        </AnchorPane>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="450.0" prefWidth="200.0">
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="334.0" prefWidth="1000.0">
                   <children>
-                      <SplitPane dividerPositions="0.7" layoutX="354.0" layoutY="149.0" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                      <SplitPane dividerPositions="0.7" layoutX="354.0" layoutY="149.0" prefHeight="431.0" prefWidth="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                           <items>
                               <AnchorPane prefHeight="584.0" prefWidth="293.0">
                                   <children>
@@ -50,9 +39,15 @@
                                       </VirtualizedScrollPane>
                                   </children>
                               </AnchorPane>
-                              <AnchorPane>
+                              <AnchorPane prefHeight="317.0" prefWidth="296.0">
                                   <children>
-                                      <TextArea fx:id="compilerOutputDisplay" editable="false" layoutX="204.0" layoutY="80.0" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                      <TextArea fx:id="compilerOutputDisplay" editable="false" layoutX="204.0" layoutY="40.0" maxHeight="1.7976931348623157E308" minHeight="0.0" prefHeight="283.0" prefWidth="296.0" wrapText="true" AnchorPane.bottomAnchor="113.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0" />
+                        <AnchorPane prefHeight="38.0" prefWidth="296.0">
+                           <children>
+                                  <Button mnemonicParsing="false" onAction="#handleOptions" prefHeight="38.0" prefWidth="89.0" text="Options" AnchorPane.rightAnchor="21.0" />
+                                  <Button fx:id="compileButton" mnemonicParsing="false" onAction="#handleCompileRequest" prefHeight="38.0" prefWidth="89.0" text="Compile" AnchorPane.rightAnchor="129.0" />
+                           </children>
+                        </AnchorPane>
                                   </children>
                               </AnchorPane>
                           </items>
@@ -60,9 +55,9 @@
 
                   </children>
               </AnchorPane>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="550.0" prefWidth="200.0">
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="1000.0">
                   <children>
-                      <AnchorPane prefHeight="46.0" prefWidth="1000.0" style="-fx-background-color: #BFBFBF;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                      <AnchorPane layoutY="3.0" prefHeight="47.0" prefWidth="1000.0" style="-fx-background-color: #BFBFBF;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="3.0">
                           <children>
                               <Label layoutX="10.0" layoutY="13.0" text="Models:" AnchorPane.leftAnchor="20.0">
                                   <font>
@@ -94,7 +89,7 @@
                           </children>
 
                       </AnchorPane>
-                      <SwingNode fx:id="modelDisplayNew" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="46.0" />
+                      <SwingNode fx:id="modelDisplayNew" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="50" />
                       <Pane fx:id="shapePane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="800.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0">
                                            <!-- <children>
                                                 <Circle fx:id="circle" centerX="100.0" centerY="75.0" fill="BLUE" onMousePressed="#doMousePress" onMouseDragged="#doMouseDrag" radius="50.0" stroke="BLACK" strokeType="INSIDE" />
