@@ -53,7 +53,7 @@ public class VisualPetriToProcessCodeHelper {
         for (String[] process : processes) {
             for (int i = 0; i <= processesTextFinalSize.get(c); i++) {
                 if (i != process.length) {
-                    if(i != processesTextFinalSize.get(c)) {
+                    if (i != processesTextFinalSize.get(c)) {
                         cumulativeProcessCode += process[i] + "," + "\n";
                     } else {
                         cumulativeProcessCode += process[i] + "." + "\n";
@@ -71,8 +71,8 @@ public class VisualPetriToProcessCodeHelper {
         cumulativeProcessCode += "ParrelelProcesses = ";
 
         int i = 0;
-        for(String s: processesInParelel){
-            if(i == 0) {
+        for (String s : processesInParelel) {
+            if (i == 0) {
                 cumulativeProcessCode += s.toUpperCase();
             } else {
                 cumulativeProcessCode += " || " + s.toUpperCase();
@@ -106,10 +106,9 @@ public class VisualPetriToProcessCodeHelper {
     private void identifyProcessesInParelel(Node n) {
         Collection<Edge> pidsEnteringEdges = n.getEnteringEdgeSet();
 
-        for(Edge e: pidsEnteringEdges){
+        for (Edge e : pidsEnteringEdges) {
             processesInParelel.add(e.getNode0().getAttribute("ui.PID"));
         }
-
 
 
     }
@@ -117,12 +116,13 @@ public class VisualPetriToProcessCodeHelper {
 
     private void doDFSRecursive(Node n, int currentLineForWriting) {
 
+
         if (!allNodes.contains(n)) {
             allNodes.add(n);
         }
         boolean isCyclic = false;
 
-        if(!n.hasAttribute("ui.PIDS")) {
+        if (!n.hasAttribute("ui.PIDS")) {
 
             if (n.getAttribute("ui.PID").toString() != currentPetriHead.getAttribute("ui.PID").toString()) {
                 return;
@@ -183,24 +183,62 @@ public class VisualPetriToProcessCodeHelper {
             edges.add(it.next());
         }
 
-        if (n.hasAttribute("ui.PIDS")) {
-
-        }
 
         // Open bracket for each branch
         if (edges.size() > 1 && !n.hasAttribute("ui.PIDS")) {
+
             //branch detected
-            processesText[processesTextSize] += "(";
+
 
             //must now order the edges to so that loop paths are traversed first after this if block
             //Correction: ended up over engineering this as I found better way of handling this with tracking currentLine
             //in recursion will leave it in as slightly cleaner
-            PriorityQueue<EdgeAndBool> edgesOrdered = reorderEdges(edges);
-            edges.clear();
 
-            while (!edgesOrdered.isEmpty()) {
-                Edge ec = edgesOrdered.poll().e;
-                edges.add(ec);
+            ArrayList<Edge> edgesToRemove = new ArrayList<>();
+
+            for(int i = 0; i < edges.size(); i++){
+                for(int j = 0; j < edges.size(); j++){
+                    if(edges.get(i).getNode1().getAttribute("ui.label").equals(edges.get(j).getNode1().getAttribute("ui.label"))
+                        && i != j) {
+
+                        //Check if these transitions have the same places
+
+                        Collection<Edge> setA = edges.get(i).getNode1().getLeavingEdgeSet();
+                        Collection<Edge> setB = edges.get(j).getNode1().getLeavingEdgeSet();
+
+                        int matches = 0;
+                        for(Edge e1: setA){
+                            for(Edge e2: setB){
+                                if(e1.getNode1() == e2.getNode1()){
+                                    matches++;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if(matches == setA.size() && edgesToRemove.size()+1 < edges.size()){
+                            System.out.println("No Branch");
+                            edgesToRemove.add(edges.get(i));
+
+                        }
+                    }
+                }
+            }
+
+            for(Edge e: edgesToRemove){
+                edges.remove(e);
+            }
+
+            if(edges.size() > 1) {
+
+                processesText[processesTextSize] += "(";
+                PriorityQueue<EdgeAndBool> edgesOrdered = reorderEdges(edges);
+                edges.clear();
+
+                while (!edgesOrdered.isEmpty()) {
+                    Edge ec = edgesOrdered.poll().e;
+                    edges.add(ec);
+                }
             }
         }
 
@@ -252,7 +290,6 @@ public class VisualPetriToProcessCodeHelper {
 
 
     }
-
 
 
     private PriorityQueue<EdgeAndBool> reorderEdges(ArrayList<Edge> edges) {
