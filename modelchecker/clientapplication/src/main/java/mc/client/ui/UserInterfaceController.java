@@ -45,6 +45,9 @@ import mc.util.expr.Expression;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.stream.file.FileSinkDGS;
+import org.graphstream.stream.file.FileSourceDGS;
 
 import javax.swing.*;
 import java.awt.*;
@@ -89,6 +92,8 @@ public class UserInterfaceController implements Initializable, FontListener {
     private MenuItem openMenuItem;
     @FXML
     private MenuItem saveMenuItem;
+    @FXML
+    private MenuItem saveMenuItemDiagram;
     @FXML
     private Menu openRecentTab;
     @FXML
@@ -200,7 +205,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         ModelView.getInstance().setSettings(settingsController);
         // Have to initialise it or there is a delay between the graph becoming ready and actually displaying things
-        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
         // SO the Swing node can be used as a canvas  HOW?
 
         //register a callback for whenever the list of automata is changed
@@ -347,7 +352,7 @@ public class UserInterfaceController implements Initializable, FontListener {
                 System.out.println("typing");
                 compilerOutputDisplay.appendText("Compiling..." + "\n");
 
-        });
+            });
 
         userCodeInput.richChanges().successionEnds(Duration.ofMillis(5000))
 
@@ -356,7 +361,7 @@ public class UserInterfaceController implements Initializable, FontListener {
                 System.out.println("Recompile");
                 handleCompileRequest();
 
-        });
+            });
 
         String userCode = "processes{\n" +
             "\n" +
@@ -871,6 +876,38 @@ public class UserInterfaceController implements Initializable, FontListener {
         }
     }
 
+    @FXML
+    private void handleOpenDiagram(ActionEvent event) {
+        try {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Save as");
+            File selectedFile = chooser.showOpenDialog(null);
+            MultiGraph loadedGraph = new MultiGraph("WorkingCanvasArea");
+            FileSourceDGS fsdgs = new FileSourceDGS();
+            fsdgs.addSink(loadedGraph);
+
+
+            fsdgs.readAll(selectedFile.getAbsolutePath());
+
+            ModelView.getInstance();
+
+            SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().setLoadedGraph(loadedGraph)));
+
+
+
+        } catch (IOException e) {
+            Alert saveFailed = new Alert(Alert.AlertType.ERROR);
+            saveFailed.setTitle("Error encountered when reading file");
+            saveFailed.setContentText("Error: " + e.getMessage());
+
+            saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            saveFailed.initModality(Modality.APPLICATION_MODAL);
+            saveFailed.show();
+        }
+
+
+    }
+
     private void openFile(String filePath) {
 
         if (saveUserChanges()) {
@@ -954,6 +991,34 @@ public class UserInterfaceController implements Initializable, FontListener {
         }
     }
 
+    @FXML
+    private void handleSaveDiagram(ActionEvent event) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save as");
+        File selectedFile = chooser.showSaveDialog(null);
+
+
+        if (selectedFile != null) {
+
+
+            FileSinkDGS fsdgs = new FileSinkDGS();
+            try {
+                fsdgs.writeAll(ModelView.getInstance().getGraph(), selectedFile.getAbsolutePath());
+            } catch (IOException e) {
+                Alert saveFailed = new Alert(Alert.AlertType.ERROR);
+                saveFailed.setTitle("Error encountered when saving diagram");
+                saveFailed.setContentText("Error: " + e.getMessage());
+
+                saveFailed.initModality(Modality.APPLICATION_MODAL);
+
+                saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+                saveFailed.show();
+            }
+
+
+        }
+    }
+
 
     @FXML
     private void handleSaveAs(ActionEvent event) {
@@ -1005,7 +1070,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
             ModelView.getInstance().addDisplayedModel(modelsListNew.getSelectionModel().getSelectedItem());
-            SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
+            SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
 
             //dstr ProcessModel pm = ModelView.getInstance().getProcess(modelsList.getSelectionModel().getSelectedItem());
 
@@ -1015,16 +1080,11 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
 
-
     @FXML
     private void handleAddallModelsNew(ActionEvent event) {
         ModelView.getInstance().addAllModelsNew();
-        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
     }
-
-
-
-
 
 
     @FXML
@@ -1037,7 +1097,6 @@ public class UserInterfaceController implements Initializable, FontListener {
         //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
 
     }
-
 
 
     @FXML
@@ -1053,9 +1112,8 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private void handleClearGraphNew(ActionEvent event) {
         ModelView.getInstance().clearDisplayedNew();
-        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew(modelDisplayNew)));
+        SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
     }
-
 
 
     @FXML

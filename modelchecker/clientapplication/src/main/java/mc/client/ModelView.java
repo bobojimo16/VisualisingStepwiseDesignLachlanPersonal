@@ -214,7 +214,7 @@ public class ModelView implements Observer {
     }
 
 
-    public JPanel updateGraphNew(SwingNode modelDisplayNew) {
+    public JPanel updateGraphNew() {
 
         if (compiledResult == null) {
             return workingCanvasAreaContainer;
@@ -432,8 +432,6 @@ public class ModelView implements Observer {
                 n.addAttribute("ui.class", "PetriPlaceStart");
 
 
-
-
             } else if (!place.isStart() && !place.isSTOP()) {
                 n.addAttribute("ui.class", "PetriPlace");
             } else {
@@ -448,7 +446,7 @@ public class ModelView implements Observer {
 
             //System.out.println(place.get);
 
-            System.out.println(place.getOwners().first());
+
 
             n.addAttribute("ui.owners", place.getOwners());
         });
@@ -687,7 +685,7 @@ public class ModelView implements Observer {
             if (firstNodeClicked != null && seccondNodeClicked != null) {
                 firstNodeClicked.addAttribute("ui.class", firstNodeClass);
 
-                if(!createdNodes.contains(firstNodeClicked)) {
+                if (!createdNodes.contains(firstNodeClicked)) {
                     handleProcessEditing();
                 }
 
@@ -1020,8 +1018,6 @@ public class ModelView implements Observer {
         }
 
 
-
-
     }
 
     private void handleProcessEditing() {
@@ -1033,25 +1029,66 @@ public class ModelView implements Observer {
         while (k.hasNext()) {
             Node current = k.next();
 
-            if(!createdNodes.contains(current)) {
+            if (!createdNodes.contains(current)) {
                 createdNodes.add(current);
             }
 
-            if(current.getAttribute("ui.class").equals("PetriPlaceStart")){
+            if (current.getAttribute("ui.class").equals("PetriPlaceStart")) {
                 heads.add(current);
             }
 
         }
 
 
-        for(Node n: heads) {
-            if(!n.hasAttribute("ui.edited")) {
-                TreeSet<String> owners = n.getAttribute("ui.owners");
-                n.setAttribute("ui.label", owners.first());
-                doPIDPropogationOfExistingProcess(n);
+        for (Node n : heads) {
+            if (!n.hasAttribute("ui.edited")) {
+                String[] owners = ownersTypeConverter(n.getAttribute("ui.owners"), false);
+                n.setAttribute("ui.label", owners[0]);
                 n.addAttribute("ui.edited", true);
             }
         }
+
+
+        doPIDPropogationOfExistingProcess(heads.get(0));
+    }
+
+    private String[] ownersTypeConverter(Object res, Boolean allOwners) {
+
+        String[] owners = new String[20];
+
+        if (!res.getClass().toString().equals("class java.lang.String")) {
+            TreeSet<String> ownersTree = (TreeSet<String>) res;
+
+            if (!allOwners) {
+                owners[0] = ownersTree.first();
+            } else {
+                int c = 0;
+               for(String s: ownersTree){
+                   owners[c] = s;
+                   c++;
+               }
+            }
+        } else {
+            String[] ownersString = res.toString().replace("[", "").replace("]", "").split(", ");
+
+            if (!allOwners) {
+                owners[0] = ownersString[0];
+            } else {
+                owners = ownersString;
+            }
+        }
+
+       /* System.out.println("next");
+        System.out.println(res.getClass());
+        System.out.println(allOwners);
+
+        int c = 0;
+        for(String s: owners){
+            System.out.println("O: " + c + " " + s);
+            c++;
+        }*/
+
+        return owners;
     }
 
 
@@ -1060,27 +1097,35 @@ public class ModelView implements Observer {
 
         while (k.hasNext()) {
             Node current = k.next();
-            TreeSet<String> owners = current.getAttribute("ui.owners");
 
-            if(current.getId() != seccondNodeClicked.getId()) {
+            String[] owners = ownersTypeConverter(current.getAttribute("ui.owners"), true);
+
+            if (current.getId() != seccondNodeClicked.getId()) {
                 if (current.getAttribute("ui.class").toString().contains("PetriPlace")) {
 
-                    current.addAttribute("ui.PID", owners.first());
+                    current.addAttribute("ui.PID", owners[0]);
 
 
                 } else {
                     //Transition
                     if (current.getOutDegree() > 1) {
                         ArrayList<String> processes = new ArrayList<>();
-                        processes.addAll(owners);
+                        processes.addAll(Arrays.asList(owners));
 
 
-                       current.addAttribute("ui.PIDS", processes);
+                        current.addAttribute("ui.PIDS", processes);
                     } else {
-                        current.addAttribute("ui.PID", owners.first());
+                        current.addAttribute("ui.PID", owners[0]);
                     }
                 }
             }
+
+            if(current.hasAttribute("ui.label")) {
+                System.out.println(current.getAttribute("ui.label").toString());
+                System.out.println(current.getAttribute("ui.PID").toString());
+            }
+
+
         }
 
 
@@ -1106,12 +1151,12 @@ public class ModelView implements Observer {
 
     public void clearDisplayed() {
         processModelsToDisplay.clear();
-        initalise();
+        initalise(false);
     }
 
     public void clearDisplayedNew() {
         processModelsToDisplay.clear();
-        initalise();
+        initalise(false);
     }
 
     public void addAllModels() {
@@ -1175,7 +1220,7 @@ public class ModelView implements Observer {
     /**
      * Resets all graph varaibles and re-adds default blank state.
      */
-    private void initalise() {
+    private void initalise(Boolean isLoaded) {
         processModelsToDisplay = new HashSet<>();
         Boolean keyX = false;
         // vv.getRenderContext().getEdgeLabelTransformer().;
@@ -1188,7 +1233,13 @@ public class ModelView implements Observer {
         //Reinitialise The Working Canvas area
         workingCanvasAreaContainer = new JPanel();
         workingCanvasAreaContainer.setLayout(new BorderLayout());
-        workingCanvasArea = new MultiGraph("WorkingCanvasArea"); //field
+
+        if (!isLoaded) {
+            workingCanvasArea = new MultiGraph("WorkingCanvasArea"); //field
+        } else {
+            System.out.println(workingCanvasArea.getNodeCount());
+        }
+
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
         workingCanvasArea.addAttribute("ui.quality");
         workingCanvasArea.addAttribute("ui.antialias");
@@ -1204,13 +1255,16 @@ public class ModelView implements Observer {
         workingCanvasAreaView.getCamera().setViewPercent(1);
         workingCanvasAreaView.getCamera().setAutoFitView(true);
 
+
         ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
+
                 e.consume();
                 int i = e.getWheelRotation();
                 double factor = Math.pow(1.25, i);
                 Camera cam = workingCanvasAreaView.getCamera();
+
                 zoom = cam.getViewPercent() * factor;
 
                 if (zoom < 1) {
@@ -1241,7 +1295,7 @@ public class ModelView implements Observer {
      */
     private ModelView() {
         CompilationObservable.getInstance().addObserver(this);
-        initalise();
+        initalise(false);
     }
 
     public ArrayList<Node> getVisualCreatedPetris() {
@@ -1263,6 +1317,18 @@ public class ModelView implements Observer {
     public void switchToTokenMode() {
         isCreateMode = false;
         determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+
+    public Graph getGraph() {
+        return workingCanvasArea;
+    }
+
+    public JPanel setLoadedGraph(MultiGraph loadedGraph) {
+        workingCanvasArea = loadedGraph;
+        initalise(true);
+
+        return workingCanvasAreaContainer;
+
     }
 
     private String getStyleSheet() {
@@ -1349,6 +1415,7 @@ public class ModelView implements Observer {
             ;
 
     }
+
 }
 
 
