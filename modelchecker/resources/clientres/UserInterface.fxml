@@ -15,10 +15,12 @@
                     <items>
                         <MenuItem fx:id="newMenuItem" mnemonicParsing="false" onAction="#handleCreateNew" text="New" />
                         <MenuItem fx:id="openMenuItem" mnemonicParsing="false" onAction="#handleOpen" text="Open…" />
+                        <MenuItem fx:id="openMenuDiagramItem" mnemonicParsing="false" onAction="#handleOpenDiagram" text="Open Diagram…" />
                         <Menu fx:id="openRecentTab" mnemonicParsing="false" text="Open Recent" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#handleFileClose" text="Close" />
-                        <MenuItem fx:id="saveMenuItem" mnemonicParsing="false" onAction="#handleSave" text="Save" />
+                        <MenuItem fx:id="saveMenuItem" mnemonicParsing="false" onAction="#handleSave" text="Save Process Code" />
+                        <MenuItem fx:id="saveMenuItemDiagram" mnemonicParsing="false" onAction="#handleSaveDiagram" text="Save Process Diagram" />
                         <MenuItem mnemonicParsing="false" onAction="#handleSaveAs" text="Save As…" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#handleQuit" text="Quit" />
