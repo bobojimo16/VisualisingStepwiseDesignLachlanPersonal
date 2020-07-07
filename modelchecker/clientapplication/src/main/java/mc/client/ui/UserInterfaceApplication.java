@@ -64,7 +64,7 @@ public class UserInterfaceApplication extends Application {
         }
 
         primaryStage.setTitle("Process Modeller - New File");
-        Scene windowScene = new Scene(root, 1000, 700);
+        Scene windowScene = new Scene(root, 1000, 1000);
         primaryStage.setScene(windowScene);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/clientres/icon.jpg")));
         primaryStage.setResizable(false);
