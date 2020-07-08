@@ -15,6 +15,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +36,7 @@ import mc.compiler.CompilationObservable;
 import mc.compiler.OperationResult;
 import mc.processmodels.*;
 import mc.processmodels.automata.Automaton;
+import mc.processmodels.automata.AutomatonNode;
 import mc.processmodels.conversion.TokenRule;
 import mc.processmodels.conversion.TokenRulePureFunctions;
 import mc.processmodels.petrinet.Petrinet;
@@ -73,6 +75,7 @@ public class ModelView implements Observer {
     private SortedSet<String> modelsInList; // Processes that are in the modelsList combox
     private Multimap<String, GraphNode> processModelsOnScreenGraphNodeType; //process on the screen
     private Multimap<String, Node> processModelsOnScreenGSType; //process on the screen
+    private HashMap<String, Automaton> pmTest = new HashMap<>(); //process on the screen
     private List<String> processesChanged = new ArrayList<>();
     private Map<String, GraphNode> placeId2GraphNode = new TreeMap<>();
     private CompilationObject compiledResult;
@@ -110,6 +113,8 @@ public class ModelView implements Observer {
     private BiConsumer<List<OperationResult>, List<OperationResult>> updateLog;
     private String firstNodeClass;
     private double zoom;
+    private boolean autoPetriRelationModeEnabled = false;
+    private ArrayList<Edge> petriAutoRelations = new ArrayList<>();
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -354,7 +359,7 @@ public class ModelView implements Observer {
 
         });
 
-
+        this.pmTest.put(automaton.getId(), automaton);
         this.processModelsOnScreenGraphNodeType.replaceValues(automaton.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
     }
@@ -1267,7 +1272,7 @@ public class ModelView implements Observer {
 
                 zoom = cam.getViewPercent() * factor;
 
-                if (zoom < 1) {
+                if (zoom < 0) {
                     return;
                 }
 
@@ -1331,6 +1336,119 @@ public class ModelView implements Observer {
 
     }
 
+    public void handleAutoPetriRelation() {
+
+        if(!autoPetriRelationModeEnabled) {
+            autoPetriRelationModeEnabled = true;
+
+
+            Multimap<String, GraphNode> sds = processModelsOnScreenGraphNodeType;
+
+            Set<String> processes = new HashSet<>();
+
+            for (String s : sds.keys()) {
+                processes.add(s);
+            }
+
+            int i = 0;
+            int j = 0;
+
+            ArrayList<String> processesMatches = new ArrayList<>();
+
+            for (String p1 : processes) {
+                for (String p2 : processes) {
+                    int colonIndex1 = p1.indexOf(":*");
+                    int colonIndex2 = p2.indexOf(":*");
+
+                    if (p1.substring(0, colonIndex1).equals(p2.substring(0, colonIndex2)) && i != j && !processesMatches.contains(p1)) {
+                        System.out.println("Same Process");
+                        processesMatches.add(p1);
+                        processesMatches.add(p2);
+                    }
+                    j++;
+                }
+
+                i++;
+                j = 0;
+            }
+
+            ArrayList<String> toRemove = new ArrayList<>();
+
+            for (String s : processesMatches) {
+                if (s.contains("petrinet")) {
+                    toRemove.add(s);
+                }
+            }
+
+            for (String s : toRemove) {
+                processesMatches.remove(s);
+            }
+
+            System.out.println(processesMatches.size());
+
+            for (String p : processesMatches) {
+                Collection<Node> gsProcessA = processModelsOnScreenGSType.get(p);
+                ArrayList<Edge> gsProcessEdges = new ArrayList<>();
+
+                for (Node n : gsProcessA) {
+                    Collection<Edge> leavingEdges = n.getLeavingEdgeSet();
+                    gsProcessEdges.addAll(leavingEdges);
+                }
+
+                for (Edge e : gsProcessEdges) {
+                    Node autoN = e.getNode1();
+                    Collection<Node> gsProcessB = processModelsOnScreenGSType.get(p.replaceAll("automata", "petrinet"));
+                    Node petriN = null;
+
+                    for (Node n : gsProcessB) {
+                        if (n.hasAttribute("ui.label")) {
+                            if (n.getAttribute("ui.label").equals(e.getAttribute("ui.label"))) {
+                                System.out.println(e.getAttribute("ui.label").toString());
+                                petriN = n;
+
+                                try {
+                                    if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
+                                        Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
+                                        eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
+                                        petriAutoRelations.add(eRelation);
+
+                                    }
+                                } catch (IdAlreadyInUseException er) {
+                                    System.out.println("here");
+                                    petriN.removeAttribute("ui.class");
+                                    petriN.addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        /*for(String s: pmTest.keySet()){
+            Automaton a = pmTest.get(s);
+
+            List<AutomatonNode> anl = a.getNodes();
+
+            for(AutomatonNode an: anl){
+                System.out.println(an.toString());
+            }
+
+        }
+*/
+
+        } else {
+            //Remove the relations
+            autoPetriRelationModeEnabled = false;
+            for(Edge e: petriAutoRelations){
+                workingCanvasArea.removeEdge(e);
+            }
+
+            petriAutoRelations.clear();
+        }
+
+    }
+
     private String getStyleSheet() {
         return "node {" +
             "text-size: 20;" +
@@ -1353,7 +1471,8 @@ public class ModelView implements Observer {
             "fill-color: #5c0a04;" +
             "}" +
             "edge {" +
-            " " +
+            "text-alignment: above;" +
+            "fill-color: black;" +
             "text-size: 20;" +
             "arrow-shape: arrow;" +
             "}" +
@@ -1376,16 +1495,6 @@ public class ModelView implements Observer {
             "fill-color: gray;" +
             "}" +
             "node.highlight {" +
-            "fill-color: red;" +
-            "}" +
-            "edge {" +
-            "text-alignment: under;" +
-            "fill-color: blue;" +
-            "}" +
-            "edge.EdgeBlue {" +
-            "fill-color: blue;" +
-            "}" +
-            "edge.EdgeRed {" +
             "fill-color: red;" +
             "}" +
             "node.PetriPlaceToken {" +
@@ -1415,6 +1524,7 @@ public class ModelView implements Observer {
             ;
 
     }
+
 
 }
 
