@@ -1398,4 +1398,8 @@ public class UserInterfaceController implements Initializable, FontListener {
     public void handleTokenToggle(ActionEvent actionEvent) {
         ModelView.getInstance().switchToTokenMode();
     }
+
+    public void handleAutoPetriRelationToggle(ActionEvent actionEvent){
+        ModelView.getInstance().handleAutoPetriRelation();
+    }
 }
