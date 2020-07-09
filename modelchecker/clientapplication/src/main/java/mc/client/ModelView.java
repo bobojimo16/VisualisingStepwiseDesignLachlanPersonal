@@ -356,6 +356,13 @@ public class ModelView implements Observer {
 
             Edge edge = workingCanvasArea.addEdge("test" + Math.random(), from.getNodeId(), to.getNodeId(), true);
             edge.addAttribute("ui.label", label);
+            if(edge.isLoop()){
+                System.out.println("loop");
+                edge.addAttribute("ui.class", "autoLoop"); //first loop edge one wont have this styling but its fine
+            } else {
+                System.out.println("noloop");
+            }
+
 
         });
 
@@ -1470,8 +1477,10 @@ public class ModelView implements Observer {
             "node.AutoEnd {" +
             "fill-color: #5c0a04;" +
             "}" +
-            "edge {" +
+            "edge.autoLoop {" +
             "text-alignment: above;" +
+            "}" +
+            "edge {" +
             "fill-color: black;" +
             "text-size: 20;" +
             "arrow-shape: arrow;" +
