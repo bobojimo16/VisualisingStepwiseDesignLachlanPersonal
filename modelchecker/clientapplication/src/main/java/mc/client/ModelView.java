@@ -356,12 +356,6 @@ public class ModelView implements Observer {
 
             Edge edge = workingCanvasArea.addEdge("test" + Math.random(), from.getNodeId(), to.getNodeId(), true);
             edge.addAttribute("ui.label", label);
-            if(edge.isLoop()){
-                System.out.println("loop");
-                edge.addAttribute("ui.class", "autoLoop"); //first loop edge one wont have this styling but its fine
-            } else {
-                System.out.println("noloop");
-            }
 
 
         });
@@ -406,6 +400,8 @@ public class ModelView implements Observer {
 
         Map<String, GraphNode> nodeMap = new HashMap<>();
         Map<String, Node> nodeMapGS = new HashMap<>();
+
+        ArrayList<Node> transitions = new ArrayList<>();
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
@@ -488,6 +484,8 @@ public class ModelView implements Observer {
 
                 n.addAttribute("ui.owners", transition.getOwners());
 
+                transitions.add(n);
+
             });
 
         for (PetriNetEdge edge : petri.getEdgesNotBlocked().values()) {
@@ -566,6 +564,19 @@ public class ModelView implements Observer {
 
 
         }
+
+        //Reduce force on syncing transitions
+        for(Node n: transitions){
+            if(n.getOutDegree() > 1){
+                System.out.println("reducing");
+
+                Iterable<Edge> edges = n.getEachEdge();
+
+                edges.forEach(e -> e.addAttribute("layout.weight", 0.1));
+            }
+        }
+
+
 
         this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(petri.getId(), nodeMapGS.values());
@@ -981,6 +992,14 @@ public class ModelView implements Observer {
             } else {
                 ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
                 workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
+
+                //TEst this one day i hope:
+                Collection<Edge> outgoingPids = workingCanvasArea.getNode(seccondNodeClicked.getId()).getLeavingEdgeSet();
+
+                for(Edge e: outgoingPids){
+                    e.addAttribute("layout.weight", 0.1);
+                }
+
             }
         }
 
@@ -1255,6 +1274,8 @@ public class ModelView implements Observer {
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
         workingCanvasArea.addAttribute("ui.quality");
         workingCanvasArea.addAttribute("ui.antialias");
+        //workingCanvasArea.addAttribute("layout.stabilization-limit", 1);
+        //workingCanvasArea.addAttribute("layout.force", 1);
 
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
@@ -1417,6 +1438,7 @@ public class ModelView implements Observer {
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
                                         Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
                                         eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
+                                        eRelation.addAttribute("layout.weight", 0.1);
                                         petriAutoRelations.add(eRelation);
 
                                     }
