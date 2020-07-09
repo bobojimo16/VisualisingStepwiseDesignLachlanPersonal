@@ -784,40 +784,47 @@ public class ModelView implements Observer {
         }
 
         processModelsOnScreenGSType.asMap().forEach((key, value) -> {
-            //Remove Last Tokens:
-
-            removeLastTokens();
+            if(!key.contains("automata")) {
 
 
-            for (Node vertex : value) {
-                GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
-                if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
-                    pnidToSetPlaceId.get(VertexGN.getProcessModelId())
-                        .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())) {
+                //Remove Last Tokens:
+
+                removeLastTokens();
 
 
-                    String petriHeadConversion;
+                for (Node vertex : value) {
+                    GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
+                    if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
+                        pnidToSetPlaceId.get(VertexGN.getProcessModelId())
+                            .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())) {
 
-                    if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
-                        petriHeadConversion = (String) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature().getId());
-                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
-                    } else {
-                        petriHeadConversion = VertexGN.getRepresentedFeature().getId();
+
+                        String petriHeadConversion;
+
+                        if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
+                            petriHeadConversion = (String) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature().getId());
+                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
+                        } else {
+                            petriHeadConversion = VertexGN.getRepresentedFeature().getId();
+                        }
+
+                        //Add New Tokens
+                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
+                        workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+
+                        if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
+                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
+                        } else {
+                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
+                        }
+
                     }
-
-                    //Add New Tokens
-                    workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
-                    workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
-
-                    if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
-                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
-                    } else {
-                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
-                    }
-
                 }
+
             }
         });
+
+
 
 
     }
