@@ -796,7 +796,12 @@ public class ModelView implements Observer {
                     GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
                     if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
                         pnidToSetPlaceId.get(VertexGN.getProcessModelId())
-                            .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())) {
+                            .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
+                                && !createdNodes.contains(vertex)) {
+
+
+
+
 
 
                         String petriHeadConversion;
@@ -848,7 +853,7 @@ public class ModelView implements Observer {
 
     private void refreshTransitionColour() {
         for (GraphNode gnt : processModelsOnScreenGraphNodeType.values()) {
-            if (gnt.getRepresentedFeature() instanceof PetriNetTransition) {
+            if (gnt.getRepresentedFeature() instanceof PetriNetTransition && !createdNodes.contains(workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()))) {
                 if (((PetriNetTransition) gnt.getRepresentedFeature()).getLabel().equals(Constant.DEADLOCK)) {
                     //workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
                     //gnt.setNodeColor(NodeStates.NOMINAL);
