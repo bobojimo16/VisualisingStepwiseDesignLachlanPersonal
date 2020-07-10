@@ -15,6 +15,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
@@ -247,6 +248,9 @@ public class ModelView implements Observer {
     }
 
     private void drawCreatedProcesses() {
+        System.out.println(createdNodes.size());
+        System.out.println(createdEdges.size());
+
         for (Node cn : createdNodes) {
 
             if (workingCanvasArea.getNode(cn.getId()) != null) {
@@ -270,7 +274,7 @@ public class ModelView implements Observer {
                 continue;
             }
 
-            Edge e = workingCanvasArea.addEdge("test" + Math.random(), (Node) ce.getNode0(), (Node) ce.getNode1(), true);
+            Edge e = workingCanvasArea.addEdge(ce.getNode0().getId() + "-" + ce.getNode1().getId() , (Node) ce.getNode0(), (Node) ce.getNode1(), true);
             String cnEAttributeLabel = ce.getAttribute("ui.label");
             e.addAttribute("ui.label", cnEAttributeLabel);
         }
@@ -354,7 +358,7 @@ public class ModelView implements Observer {
             }
 
 
-            Edge edge = workingCanvasArea.addEdge("test" + Math.random(), from.getNodeId(), to.getNodeId(), true);
+            Edge edge = workingCanvasArea.addEdge(from.getNodeId() + "-" + to.getNodeId(), from.getNodeId(), to.getNodeId(), true);
             edge.addAttribute("ui.label", label);
 
 
@@ -960,7 +964,7 @@ public class ModelView implements Observer {
             }
         }
 
-        Edge edge = workingCanvasArea.addEdge("test" + Math.random(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
+        Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
         //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)
         if ((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
@@ -1192,10 +1196,7 @@ public class ModelView implements Observer {
         processModelsToDisplay.remove(modelLabel);
     }
 
-    public void clearDisplayed() {
-        processModelsToDisplay.clear();
-        initalise(false);
-    }
+
 
     public void clearDisplayedNew() {
         processModelsToDisplay.clear();
@@ -1259,12 +1260,40 @@ public class ModelView implements Observer {
             processModelsOnScreenGSType.removeAll(selectedProcess);
         }
 
+        ArrayList<Node> nodesToRemove = new ArrayList<>();
+        ArrayList<Edge> edgesToRemove = new ArrayList<>();
 
         for(Node n: createdNodes){
-            if(pids.contains(n.getAttribute("ui.PID")) && workingCanvasArea.getNode(n.getId()) != null){
-                workingCanvasArea.removeNode(n);
+            if(pids.contains(n.getAttribute("ui.PID"))){
+
+                if(workingCanvasArea.getNode(n.getId()) != null) {
+                    workingCanvasArea.removeNode(n);
+                }
+
+                nodesToRemove.add(n);
             }
         }
+
+
+        for(Node n: nodesToRemove){
+            createdNodes.remove(n);
+        }
+
+        for(Edge e: createdEdges){
+            for(Node n: nodesToRemove){
+                if(e.getNode0() == n || e.getNode1() == n ){
+                    edgesToRemove.add(e);
+                }
+            }
+        }
+
+
+
+        for(Edge e: edgesToRemove){
+            createdEdges.remove(e);
+        }
+
+
     }
 
 
