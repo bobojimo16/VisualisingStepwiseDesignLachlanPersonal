@@ -1237,16 +1237,28 @@ public class ModelView implements Observer {
 
     public void removeProcessModelNew(String selectedProcess) {
 
+        HashSet<String> pids = new HashSet<>();
+
         if (selectedProcess != null && processModelsToDisplay.contains(selectedProcess)) {
 
             processModelsToDisplay.remove(selectedProcess);
             processesChanged.remove(selectedProcess);
             modelsInList.remove(selectedProcess);
 
+
+
             for (Node n : processModelsOnScreenGSType.get(selectedProcess)) {
                 workingCanvasArea.removeNode(n);
+                pids.add(n.getAttribute("ui.PID"));
             }
             processModelsOnScreenGSType.removeAll(selectedProcess);
+        }
+
+
+        for(Node n: createdNodes){
+            if(pids.contains(n.getAttribute("ui.PID")) && workingCanvasArea.getNode(n.getId()) != null){
+                workingCanvasArea.removeNode(n);
+            }
         }
     }
 
@@ -1260,8 +1272,6 @@ public class ModelView implements Observer {
      */
     private void initalise(Boolean isLoaded) {
         processModelsToDisplay = new HashSet<>();
-        Boolean keyX = false;
-        // vv.getRenderContext().getEdgeLabelTransformer().;
         processModelsOnScreenGSType = MultimapBuilder.hashKeys().hashSetValues().build();
         processModelsOnScreenGraphNodeType = MultimapBuilder.hashKeys().hashSetValues().build();
 
@@ -1274,9 +1284,13 @@ public class ModelView implements Observer {
 
         if (!isLoaded) {
             workingCanvasArea = new MultiGraph("WorkingCanvasArea"); //field
+            createdNodes.clear();
+            createdEdges.clear();
         } else {
             System.out.println(workingCanvasArea.getNodeCount());
         }
+
+
 
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
         workingCanvasArea.addAttribute("ui.quality");
