@@ -93,6 +93,7 @@ public class ModelView implements Observer {
     private boolean isCreateMode = true;
     private HashMap graphNodeToHeadPetri = new HashMap();
     private ArrayList pathColours = new ArrayList();
+    private HashMap<String, String> ownersToPID = new HashMap();
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -707,6 +708,7 @@ public class ModelView implements Observer {
                 firstNodeClicked.addAttribute("ui.class", firstNodeClass);
 
                 if (!createdNodes.contains(firstNodeClicked)) {
+                    System.out.println("not contained");
                     handleProcessEditing();
                 }
 
@@ -1083,7 +1085,8 @@ public class ModelView implements Observer {
         for (Node n : heads) {
             if (!n.hasAttribute("ui.edited")) {
                 String[] owners = ownersTypeConverter(n.getAttribute("ui.owners"), false);
-                n.setAttribute("ui.label", owners[0]);
+                n.setAttribute("ui.label", n.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                ownersToPID.put(owners[0], n.getAttribute("ui.label").toString().replaceAll(" ", ""));
                 n.addAttribute("ui.edited", true);
             }
         }
@@ -1138,9 +1141,11 @@ public class ModelView implements Observer {
         while (k.hasNext()) {
             Node current = k.next();
 
+            if (current.hasAttribute("ui.owners")) {
+
             String[] owners = ownersTypeConverter(current.getAttribute("ui.owners"), true);
 
-            if (current.getId() != seccondNodeClicked.getId()) {
+
                 if (current.getAttribute("ui.class").toString().contains("PetriPlace")) {
 
                     current.addAttribute("ui.PID", owners[0]);
@@ -1522,6 +1527,10 @@ public class ModelView implements Observer {
 
     }
 
+    public HashMap<String, String> getOwnersToPIDMapping() {
+        return ownersToPID;
+    }
+
     private String getStyleSheet() {
         return "node {" +
             "text-size: 20;" +
@@ -1599,6 +1608,7 @@ public class ModelView implements Observer {
             ;
 
     }
+
 
 
 }
