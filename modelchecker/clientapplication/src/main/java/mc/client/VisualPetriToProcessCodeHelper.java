@@ -17,10 +17,12 @@ public class VisualPetriToProcessCodeHelper {
     private int processesTextSize = 0;
     private boolean innerProcessDetected;
     private Set<String> processesInParelel = new HashSet<>();
+    private HashMap<String, String> ownersToPID = new HashMap<>();
 
 
-    public String doConversion(ArrayList<Node> visualCreatedProcesses) {
+    public String doConversion(ArrayList<Node> visualCreatedProcesses, HashMap<String, String> ownersToPIDMapping) {
         allNodes = visualCreatedProcesses;
+        ownersToPID = ownersToPIDMapping;
 
         //performParelelSplitting(allNodes);
 
@@ -73,9 +75,9 @@ public class VisualPetriToProcessCodeHelper {
         int i = 0;
         for (String s : processesInParelel) {
             if (i == 0) {
-                cumulativeProcessCode += s.toUpperCase();
+                cumulativeProcessCode += ownersToPID.get(s);
             } else {
-                cumulativeProcessCode += " || " + s.toUpperCase();
+                cumulativeProcessCode += " || " + ownersToPID.get(s);
             }
 
             i++;
