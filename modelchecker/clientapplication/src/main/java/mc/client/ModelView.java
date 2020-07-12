@@ -707,9 +707,12 @@ public class ModelView implements Observer {
             if (firstNodeClicked != null && seccondNodeClicked != null) {
                 firstNodeClicked.addAttribute("ui.class", firstNodeClass);
 
-                if (!createdNodes.contains(firstNodeClicked)) {
-                    System.out.println("not contained");
-                    handleProcessEditing();
+
+
+                if (!createdNodes.contains(workingCanvasArea.getNode(firstNodeClicked.getId()))) {
+                    handleProcessEditing(firstNodeClicked);
+                } else if (!createdNodes.contains(workingCanvasArea.getNode(seccondNodeClicked.getId()))) {
+                    handleProcessEditing(seccondNodeClicked);
                 }
 
                 doDrawEdge();
@@ -1062,9 +1065,9 @@ public class ModelView implements Observer {
 
     }
 
-    private void handleProcessEditing() {
+    private void handleProcessEditing(Node n) {
 
-        Iterator<Node> k = workingCanvasArea.getNode(firstNodeClicked.getId()).getBreadthFirstIterator(false);
+        Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
 
         ArrayList<Node> heads = new ArrayList<>();
 
@@ -1082,12 +1085,12 @@ public class ModelView implements Observer {
         }
 
 
-        for (Node n : heads) {
-            if (!n.hasAttribute("ui.edited")) {
-                String[] owners = ownersTypeConverter(n.getAttribute("ui.owners"), false);
-                n.setAttribute("ui.label", n.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                ownersToPID.put(owners[0], n.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                n.addAttribute("ui.edited", true);
+        for (Node hn : heads) {
+            if (!hn.hasAttribute("ui.edited")) {
+                String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
+                hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                hn.addAttribute("ui.edited", true);
             }
         }
 
@@ -1329,7 +1332,7 @@ public class ModelView implements Observer {
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
         workingLayout = Layouts.newLayoutAlgorithm();
-        workingLayout.setForce(0.1); // 1 by default
+        workingLayout.setForce(0.05); // 1 by default
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();

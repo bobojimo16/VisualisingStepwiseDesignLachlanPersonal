@@ -74,10 +74,17 @@ public class VisualPetriToProcessCodeHelper {
 
         int i = 0;
         for (String s : processesInParelel) {
+
+            String res = ownersToPID.get(s);
+
+            if(res == null){
+                res = s;
+            }
+
             if (i == 0) {
-                cumulativeProcessCode += ownersToPID.get(s);
+                cumulativeProcessCode += res;
             } else {
-                cumulativeProcessCode += " || " + ownersToPID.get(s);
+                cumulativeProcessCode += " || " + res;
             }
 
             i++;
