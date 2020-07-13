@@ -220,7 +220,7 @@ public class ModelView implements Observer {
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
         workingCanvasArea.addAttribute("ui.quality");
         workingCanvasArea.addAttribute("ui.antialias");
-
+//
         //Do Drawing Work On Canvas
         compiledResult.getProcessMap().keySet().stream()
             .filter(processModelsToDisplay::contains)
