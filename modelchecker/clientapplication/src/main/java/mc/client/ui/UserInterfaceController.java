@@ -74,6 +74,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     private SettingsController settingsController;
     private NewProcessController nameNewGraphElementController;
     private LabelEdgeController labelEdgeController;
+    private NameNewParrelelProcessController nameNewParrelelProcessController;
 
 
     @FXML
@@ -378,6 +379,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         nameNewGraphElementController = new NewProcessController();
         chooseProcessController = new ChooseProcessController();
         labelEdgeController = new LabelEdgeController();
+        nameNewParrelelProcessController = new NameNewParrelelProcessController();
         //newProcessController.initialize();
 
 
@@ -1402,5 +1404,39 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public void handleAutoPetriRelationToggle(ActionEvent actionEvent){
         ModelView.getInstance().handleAutoPetriRelation();
+    }
+
+    public String nameParrelelProceses() {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameParrelelProcess.fxml"));
+        loader.setController(nameNewParrelelProcessController); //links to  SettingsController.java
+        String toReturn = "";
+        try {
+            Stage nameParrelelProcesesStage = new Stage();
+            nameParrelelProcesesStage.setTitle("Label Parrelel Processes");
+
+            Scene windowScene = new Scene(loader.load(), 402, 326);
+            nameParrelelProcesesStage.setScene(windowScene);
+
+            //settingsController.setWindow(newProcessStage.getScene().getWindow());
+            nameParrelelProcesesStage.initOwner(UserInterfaceApplication.getPrimaryStage());
+            //settingsStage.initModality(Modality.APPLICATION_MODAL);
+            nameParrelelProcesesStage.initModality(Modality.NONE);
+            nameParrelelProcesesStage.setResizable(false);
+            nameParrelelProcesesStage.showAndWait();
+            toReturn = nameNewParrelelProcessController.getNewProcessNameValue();
+
+        } catch (IOException e) {
+            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            optionsLayoutLoadFailed.setTitle("Error encountered when loading new proccess dialogue");
+            optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
+
+            optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
+            optionsLayoutLoadFailed.initOwner(modelDisplayNew.getScene().getWindow());
+
+            optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            optionsLayoutLoadFailed.show();
+        }
+
+        return toReturn;
     }
 }

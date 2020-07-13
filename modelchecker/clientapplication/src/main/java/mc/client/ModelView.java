@@ -721,6 +721,8 @@ public class ModelView implements Observer {
                /* firstNodeClicked.addAttribute("ui.class", firstNodeClass);
                 seccondNodeClicked.addAttribute("ui.class", seccondNodeClass);*/
 
+               System.out.println("Unsetting");
+
                 firstNodeClicked = null;
                 seccondNodeClicked = null;
 
@@ -1007,6 +1009,19 @@ public class ModelView implements Observer {
                 ArrayList<String> processes = getConnectedPIDS(workingCanvasArea.getNode(seccondNodeClicked.getId()));
                 workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDS", processes);
 
+                String parrelelCompositionName = determineParrelCompositionName(seccondNodeClicked);
+
+                if(parrelelCompositionName.isEmpty()){
+                    Platform.runLater(() -> {
+                        String processValue = uic.nameParrelelProceses();
+                        System.out.println(seccondNodeClicked.getId());
+                        System.out.println(processValue);
+                        seccondNodeClicked.addAttribute("ui.PIDSName", processValue);
+                    });
+
+                } else {
+                    System.out.println("pcn: " + parrelelCompositionName);
+                }
                 //TEst this one day i hope:
                 Collection<Edge> outgoingPids = workingCanvasArea.getNode(seccondNodeClicked.getId()).getLeavingEdgeSet();
 
@@ -1065,6 +1080,22 @@ public class ModelView implements Observer {
 
     }
 
+    private String determineParrelCompositionName(Node seccondNodeClicked) {
+        Iterator<Node> searcher = workingCanvasArea.getNode(seccondNodeClicked.getId()).getBreadthFirstIterator(false);
+        String parrelCompositionName = "";
+
+        while(searcher.hasNext()){
+            Node current = searcher.next();
+
+            if(current.hasAttribute("ui.PIDS") && current.getId() != seccondNodeClicked.getId()){
+                parrelCompositionName = current.getAttribute("ui.PIDSName").toString();
+            }
+        }
+
+        return parrelCompositionName;
+
+    }
+
     private void handleProcessEditing(Node n) {
 
         Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
@@ -1101,38 +1132,41 @@ public class ModelView implements Observer {
     private String[] ownersTypeConverter(Object res, Boolean allOwners) {
 
         String[] owners = new String[20];
+        int actualOwnersSize;
 
         if (!res.getClass().toString().equals("class java.lang.String")) {
             TreeSet<String> ownersTree = (TreeSet<String>) res;
 
             if (!allOwners) {
                 owners[0] = ownersTree.first();
+                actualOwnersSize = 1;
             } else {
                 int c = 0;
                 for (String s : ownersTree) {
                     owners[c] = s;
                     c++;
                 }
+                actualOwnersSize = c;
             }
         } else {
             String[] ownersString = res.toString().replace("[", "").replace("]", "").split(", ");
 
             if (!allOwners) {
                 owners[0] = ownersString[0];
+                actualOwnersSize = 1;
             } else {
                 owners = ownersString;
+                actualOwnersSize = ownersString.length;
             }
         }
 
-       /* System.out.println("next");
-        System.out.println(res.getClass());
-        System.out.println(allOwners);
 
-        int c = 0;
-        for(String s: owners){
-            System.out.println("O: " + c + " " + s);
-            c++;
+
+        /*for(int i = 0; i < actualOwnersSize; i++){
+            owners[i] = owners[i] + pid;
+            i++;
         }*/
+
 
         return owners;
     }

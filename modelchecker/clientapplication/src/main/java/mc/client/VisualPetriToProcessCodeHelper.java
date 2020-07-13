@@ -1,8 +1,10 @@
 package mc.client;
 
+import com.google.common.collect.MultimapBuilder;
 import mc.client.ui.TrieNode;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
+import scala.collection.mutable.MultiMap;
 
 import java.util.*;
 
@@ -16,11 +18,12 @@ public class VisualPetriToProcessCodeHelper {
     private String[] processesText = new String[100];
     private int processesTextSize = 0;
     private boolean innerProcessDetected;
-    private Set<String> processesInParelel = new HashSet<>();
+    private HashMap<String, ArrayList<String>> processesInParelel = new HashMap<>();
     private HashMap<String, String> ownersToPID = new HashMap<>();
 
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses, HashMap<String, String> ownersToPIDMapping) {
+
         allNodes = visualCreatedProcesses;
         ownersToPID = ownersToPIDMapping;
 
@@ -70,25 +73,32 @@ public class VisualPetriToProcessCodeHelper {
             c++;
         }
 
-        cumulativeProcessCode += "ParrelelProcesses = ";
+        for(String s1: processesInParelel.keySet()){
+            cumulativeProcessCode += s1 + " = ";
 
-        int i = 0;
-        for (String s : processesInParelel) {
+            int i = 0;
+            for (String s2 : processesInParelel.get(s1)) {
 
-            String res = ownersToPID.get(s);
+                String res = ownersToPID.get(s2);
 
-            if(res == null){
-                res = s;
+                if(res == null){
+                    res = s2;
+                }
+
+                if (i == 0) {
+                    cumulativeProcessCode += res;
+                } else {
+                    cumulativeProcessCode += " || " + res;
+                }
+
+                i++;
             }
 
-            if (i == 0) {
-                cumulativeProcessCode += res;
-            } else {
-                cumulativeProcessCode += " || " + res;
-            }
-
-            i++;
         }
+
+
+
+
 
         cumulativeProcessCode += ".";
 
@@ -114,11 +124,13 @@ public class VisualPetriToProcessCodeHelper {
 
     private void identifyProcessesInParelel(Node n) {
         Collection<Edge> pidsEnteringEdges = n.getEnteringEdgeSet();
+        ArrayList<String> pids = new ArrayList<>();
 
         for (Edge e : pidsEnteringEdges) {
-            processesInParelel.add(e.getNode0().getAttribute("ui.PID"));
+            pids.add(e.getNode0().getAttribute("ui.PID"));
         }
 
+        processesInParelel.put(n.getAttribute("ui.PIDSName").toString(), pids);
 
     }
 
