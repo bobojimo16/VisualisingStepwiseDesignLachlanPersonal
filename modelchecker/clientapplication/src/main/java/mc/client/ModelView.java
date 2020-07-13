@@ -12,6 +12,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -708,7 +709,6 @@ public class ModelView implements Observer {
                 firstNodeClicked.addAttribute("ui.class", firstNodeClass);
 
 
-
                 if (!createdNodes.contains(workingCanvasArea.getNode(firstNodeClicked.getId()))) {
                     handleProcessEditing(firstNodeClicked);
                 } else if (!createdNodes.contains(workingCanvasArea.getNode(seccondNodeClicked.getId()))) {
@@ -717,19 +717,36 @@ public class ModelView implements Observer {
 
                 doDrawEdge();
 
+               /* Thread t = new Thread() {
+                    public void run() {
+                        doDrawEdge();
+                    }
+                };
+
+                t.start();
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }*/
+
 
                /* firstNodeClicked.addAttribute("ui.class", firstNodeClass);
                 seccondNodeClicked.addAttribute("ui.class", seccondNodeClass);*/
 
-               System.out.println("Unsetting");
-
-                firstNodeClicked = null;
-                seccondNodeClicked = null;
 
             }
         } else {
             handleTokenGame(x, y);
         }
+    }
+
+    private void unsettingClicked() {
+        System.out.println("Unsetting");
+
+        firstNodeClicked = null;
+        seccondNodeClicked = null;
+
     }
 
     private void handleTokenGame(int x, int y) {
@@ -838,17 +855,17 @@ public class ModelView implements Observer {
           /*  if(nodeSelected != null) {
 
                 if ((node.getAttribute("ui.PID").toString().equals(nodeSelected.getAttribute("ui.PID").toString()))) {*/
-                    System.out.println(node.getAttribute("ui.PID").toString());
-                    if (node.hasAttribute("ui.token")) {
-                        node.removeAttribute("ui.token");
-                        node.removeAttribute("ui.class");
-                        if (node.hasAttribute("ui.petristart")) {
-                            node.addAttribute("ui.class", "PetriPlaceStart");
-                            node.removeAttribute("ui.petristart");
-                        } else {
-                            node.addAttribute("ui.class", "PetriPlace");
-                        }
-                    }
+            System.out.println(node.getAttribute("ui.PID").toString());
+            if (node.hasAttribute("ui.token")) {
+                node.removeAttribute("ui.token");
+                node.removeAttribute("ui.class");
+                if (node.hasAttribute("ui.petristart")) {
+                    node.addAttribute("ui.class", "PetriPlaceStart");
+                    node.removeAttribute("ui.petristart");
+                } else {
+                    node.addAttribute("ui.class", "PetriPlace");
+                }
+            }
           /*      }
             }*/
 
@@ -881,7 +898,7 @@ public class ModelView implements Observer {
 
         //Reject Building Processes Backwards
 
-        if (!firstNodeType.equals("PetriPlaceStart") && firstNodeClicked.getInDegree() == 0) {
+        if (!firstNodeType.equals("PetriPlaceStart") && firstNodeClicked.getInDegree() == 0 && !firstNodeType.contains("Auto")) {
             Platform.runLater(() ->
             {
                 uic.reportError("backwardsPetriBuilding");
@@ -967,14 +984,26 @@ public class ModelView implements Observer {
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
         //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)
+        CountDownLatch latch = new CountDownLatch(1);
         if ((firstNodeType.contains("Auto") && seccondNodeType.contains("Auto"))) {
             Platform.runLater(() -> {
                 String labelValue = uic.nameEdge();
                 edge.addAttribute("ui.label", labelValue);
+                latch.countDown();
             });
+
+            try {
+                latch.await();
+            } catch (InterruptedException e){
+                e.printStackTrace();
+            }
+
         }
-        createdEdges.add(edge);
-        doPostEdgeUpdates(edge);
+
+        if(!firstNodeType.contains("Auto")) {
+            createdEdges.add(edge);
+            doPostEdgeUpdates(edge);
+        }
     }
 
 
@@ -1011,17 +1040,26 @@ public class ModelView implements Observer {
 
                 String parrelelCompositionName = determineParrelCompositionName(seccondNodeClicked);
 
+
+                CountDownLatch latch = new CountDownLatch(1);
                 if(parrelelCompositionName.isEmpty()){
                     Platform.runLater(() -> {
                         String processValue = uic.nameParrelelProceses();
-                        System.out.println(seccondNodeClicked.getId());
-                        System.out.println(processValue);
-                        seccondNodeClicked.addAttribute("ui.PIDSName", processValue);
+                        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDSName", processValue);
+                        latch.countDown();
                     });
 
+                    try {
+                        latch.await();
+                    } catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+
                 } else {
-                    System.out.println("pcn: " + parrelelCompositionName);
+                    workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDSName", parrelelCompositionName);
                 }
+
+
                 //TEst this one day i hope:
                 Collection<Edge> outgoingPids = workingCanvasArea.getNode(seccondNodeClicked.getId()).getLeavingEdgeSet();
 
@@ -1034,6 +1072,7 @@ public class ModelView implements Observer {
 
         //The subsequent places of a PIDS transisition need specifying, because which process should they belong to?
         //Answer: let the user decide
+
         for (Node currentNode : createdNodes) {
 
             if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
@@ -1049,18 +1088,30 @@ public class ModelView implements Observer {
 
                             //Boolean res = deterimineIfPlaceIsInLoop(workingCanvasArea.getNode(e.getNode1()));
 
+
                             //Available Pids
+
                             if (eCounter < pidsSize - 1) {
+
+                                CountDownLatch latch = new CountDownLatch(1);
                                 Platform.runLater(() -> {
                                     String petriType = e.getNode1().getAttribute("ui.class");
                                     workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
                                     String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
+                                    latch.countDown();
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
                                     selectedPIDS.add(selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
                                 });
+
+                                try {
+                                    latch.await();
+                                } catch (InterruptedException e1) {
+                                    e1.printStackTrace();
+                                }
+
 
                             } else {
                                 //Must choose remaining one
@@ -1078,16 +1129,19 @@ public class ModelView implements Observer {
         }
 
 
+
+        unsettingClicked();
+
     }
 
     private String determineParrelCompositionName(Node seccondNodeClicked) {
         Iterator<Node> searcher = workingCanvasArea.getNode(seccondNodeClicked.getId()).getBreadthFirstIterator(false);
         String parrelCompositionName = "";
 
-        while(searcher.hasNext()){
+        while (searcher.hasNext()) {
             Node current = searcher.next();
 
-            if(current.hasAttribute("ui.PIDS") && current.getId() != seccondNodeClicked.getId()){
+            if (current.hasAttribute("ui.PIDS") && current.getId() != seccondNodeClicked.getId()) {
                 parrelCompositionName = current.getAttribute("ui.PIDSName").toString();
             }
         }
@@ -1180,7 +1234,7 @@ public class ModelView implements Observer {
 
             if (current.hasAttribute("ui.owners")) {
 
-            String[] owners = ownersTypeConverter(current.getAttribute("ui.owners"), true);
+                String[] owners = ownersTypeConverter(current.getAttribute("ui.owners"), true);
 
 
                 if (current.getAttribute("ui.class").toString().contains("PetriPlace")) {
@@ -1645,7 +1699,6 @@ public class ModelView implements Observer {
             ;
 
     }
-
 
 
 }

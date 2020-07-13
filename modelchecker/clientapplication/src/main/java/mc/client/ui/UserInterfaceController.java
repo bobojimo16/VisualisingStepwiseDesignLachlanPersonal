@@ -1390,7 +1390,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.show();
         }
 
-        System.out.println(toReturn);
+        System.out.println("Returing");
         return toReturn;
     }
 
@@ -1436,6 +1436,9 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
             optionsLayoutLoadFailed.show();
         }
+
+
+        System.out.println("returning: " + toReturn);
 
         return toReturn;
     }

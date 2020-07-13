@@ -94,6 +94,8 @@ public class VisualPetriToProcessCodeHelper {
                 i++;
             }
 
+            cumulativeProcessCode += "\n";
+
         }
 
 
