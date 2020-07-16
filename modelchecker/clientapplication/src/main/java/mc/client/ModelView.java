@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.application.Platform;
 import lombok.Getter;
@@ -119,6 +120,14 @@ public class ModelView implements Observer {
     public void setReferenceToUIC(UserInterfaceController userInterfaceController) {
         uic = userInterfaceController;
     }
+
+
+
+
+
+
+
+
 
     /**
      * This method is called whenever the observed object is changed. An
@@ -360,6 +369,8 @@ public class ModelView implements Observer {
         this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
     }
 
+
+
     private void addPetrinetNew(Petrinet petri) {
 
         if (processModelsOnScreenGSType.containsKey(petri.getId())) {
@@ -401,6 +412,8 @@ public class ModelView implements Observer {
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
+
+
 
             NodeStates nodeTermination = NodeStates.NOMINAL;
             if (place.isTerminal()) {
@@ -1578,7 +1591,7 @@ public class ModelView implements Observer {
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
                                         Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
                                         eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
-                                        eRelation.addAttribute("layout.weight", 0.1);
+                                        eRelation.addAttribute("layout.weight", 1);
                                         petriAutoRelations.add(eRelation);
 
                                     }
@@ -1636,12 +1649,15 @@ public class ModelView implements Observer {
             "}" +
             "node.AutoStart {" +
             "fill-color: #1F9F06;" +
+            "shape: box;" +
             "}" +
             "node.AutoNeutral {" +
             "fill-color: #b8b4b4;" +
+            "shape: box;" +
             "}" +
             "node.AutoEnd {" +
             "fill-color: #5c0a04;" +
+            "shape: box;" +
             "}" +
             "edge.autoLoop {" +
             "text-alignment: above;" +
@@ -1699,6 +1715,7 @@ public class ModelView implements Observer {
             ;
 
     }
+
 
 
 }
