@@ -200,7 +200,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         }
 
         settingsController = new SettingsController();
-        settingsController.initialize();
+        settingsController.setReferenceToUIC(this);
         settingsController.addFontListener(this);
 
         ModelView.getInstance().setReferenceToUIC(this);
@@ -374,8 +374,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         userCodeInput.appendText(userCode);
 
-        settingsController = new SettingsController();
-        settingsController.initialize();
+        //settingsController = new SettingsController();
 
         nameNewGraphElementController = new NewProcessController();
         chooseProcessController = new ChooseProcessController();
@@ -1133,7 +1132,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             Stage settingsStage = new Stage();
             settingsStage.setTitle("Settings");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 400, 400);
             settingsStage.setScene(windowScene);
 
             settingsController.setWindow(settingsStage.getScene().getWindow());
@@ -1446,5 +1445,13 @@ public class UserInterfaceController implements Initializable, FontListener {
         System.out.println("returning: " + toReturn);
 
         return toReturn;
+    }
+
+    public void changeSyncingEdgeWeight(double sync) {
+        ModelView.getInstance().setSyningEdgeWight(sync);
+    }
+
+    public void changeRelatingEdgeWeight(double relatingWeight) {
+        ModelView.getInstance().setRelatingEdgeWight(relatingWeight);
     }
 }

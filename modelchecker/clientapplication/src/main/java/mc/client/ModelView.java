@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.application.Platform;
 import lombok.Getter;
@@ -96,6 +95,9 @@ public class ModelView implements Observer {
     private HashMap graphNodeToHeadPetri = new HashMap();
     private ArrayList pathColours = new ArrayList();
     private HashMap<String, String> ownersToPID = new HashMap();
+    private Set<Node> transitions = new HashSet<>();
+    private double syncingTransitionWeightValue = 1;
+    private double relatingWeightValue = 1;
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -408,7 +410,7 @@ public class ModelView implements Observer {
         Map<String, GraphNode> nodeMap = new HashMap<>();
         Map<String, Node> nodeMapGS = new HashMap<>();
 
-        ArrayList<Node> transitions = new ArrayList<>();
+
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
@@ -579,16 +581,7 @@ public class ModelView implements Observer {
 
         }
 
-        //Reduce force on syncing transitions
-        for (Node n : transitions) {
-            if (n.getOutDegree() > 1) {
-                System.out.println("reducing");
-
-                Iterable<Edge> edges = n.getEachEdge();
-
-                edges.forEach(e -> e.addAttribute("layout.weight", 0.1));
-            }
-        }
+        setSyningEdgeWight(null);
 
 
         this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
@@ -663,6 +656,7 @@ public class ModelView implements Observer {
             addingPetriPlaceEnd = false;
         } else if (addingPetriTransition) {
             latestNode.addAttribute("ui.class", "PetriTransition");
+            transitions.add(latestNode);
             addingPetriTransition = false;
         } else {
             System.out.println("doing nothing");
@@ -1591,8 +1585,10 @@ public class ModelView implements Observer {
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
                                         Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
                                         eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
-                                        eRelation.addAttribute("layout.weight", 1);
                                         petriAutoRelations.add(eRelation);
+                                        setRelatingEdgeWight(null);
+
+
 
                                     }
                                 } catch (IdAlreadyInUseException er) {
@@ -1635,12 +1631,47 @@ public class ModelView implements Observer {
         return ownersToPID;
     }
 
+    public void setSyningEdgeWight(Double sync) {
+
+
+        if(sync != null) {
+            syncingTransitionWeightValue = sync;
+        }
+
+
+        System.out.println("STV: " + syncingTransitionWeightValue);
+
+        //Reduce force on syncing transitions
+        for (Node n : transitions) {
+            if (n.getOutDegree() > 1) {
+
+                Iterable<Edge> edges = n.getEachEdge();
+
+                edges.forEach(e -> e.addAttribute("layout.weight", syncingTransitionWeightValue));
+            }
+        }
+
+    }
+
+    public void setRelatingEdgeWight(Double relatingWeight) {
+
+        if(relatingWeight != null) {
+            relatingWeightValue = relatingWeight;
+        }
+
+        for(Edge eRelation: petriAutoRelations){
+            eRelation.addAttribute("layout.weight", relatingWeightValue);
+
+        }
+
+
+    }
+
     private String getStyleSheet() {
         return "node {" +
             "text-size: 20;" +
-            "text-color: white; " +
+            "text-color: black; " +
             "text-background-color: black;" +
-            "text-background-mode: plain;" +
             "text-alignment: above;" +
             "text-style: normal;" +
             "size: 20px; " +
