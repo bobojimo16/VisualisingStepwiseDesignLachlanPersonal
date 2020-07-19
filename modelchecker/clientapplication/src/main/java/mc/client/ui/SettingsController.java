@@ -36,6 +36,9 @@ public class SettingsController implements Initializable {
     private boolean Symbolic = false;
     Collection<String> disp = new ArrayList<>();
     List<FontListener> fontListeners = new ArrayList<>(2);
+    //
+
+    private UserInterfaceController uic;
 
     @Setter
     private Window window;
@@ -47,6 +50,13 @@ public class SettingsController implements Initializable {
     private Slider delaySlider;
     @FXML
     private Slider fontSlider;
+
+    @FXML
+    private Slider syncingEdgeSlider;
+
+    @FXML
+    private Slider processRelatingSlider;
+
 
     @FXML
     private Slider repulseSlider;
@@ -72,6 +82,10 @@ public class SettingsController implements Initializable {
 
     @FXML
     private ComboBox<String> displayList = new ComboBox<>();
+
+    private double syncWeight;
+
+    private double relatingWeight;
 
     private void handleButtonAction(ActionEvent e) {
 
@@ -208,8 +222,21 @@ public class SettingsController implements Initializable {
         });
         stepSlider.valueProperty().addListener((arg0, arg1, newVal) -> {
             step = newVal.intValue();
+            fontListeners.stream().forEach(x -> x.changeFontSize());
 
         });
+
+        syncingEdgeSlider.valueProperty().addListener((arg0, arg1, newVal) -> {
+            syncWeight = newVal.doubleValue();
+            uic.changeSyncingEdgeWeight(syncWeight);
+        });
+
+        processRelatingSlider.valueProperty().addListener((arg0, arg1, newVal) -> {
+            relatingWeight = newVal.doubleValue();
+            uic.changeRelatingEdgeWeight(relatingWeight);
+        });
+
+
 
         Ids.setOnAction(e -> handleButtonAction(e));
         Opt.setOnAction(e -> handleButtonAction(e));
@@ -231,6 +258,7 @@ public class SettingsController implements Initializable {
     }
 
     @FXML
-    public void initialize() {
+    public void setReferenceToUIC(UserInterfaceController userInterfaceController) {
+        uic = userInterfaceController;
     }
 }

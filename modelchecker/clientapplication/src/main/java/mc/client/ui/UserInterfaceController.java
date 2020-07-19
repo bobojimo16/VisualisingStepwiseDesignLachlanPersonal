@@ -2,6 +2,7 @@ package mc.client.ui;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.sun.org.apache.regexp.internal.RE;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -199,7 +200,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         }
 
         settingsController = new SettingsController();
-        settingsController.initialize();
+        settingsController.setReferenceToUIC(this);
         settingsController.addFontListener(this);
 
         ModelView.getInstance().setReferenceToUIC(this);
@@ -373,8 +374,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         userCodeInput.appendText(userCode);
 
-        settingsController = new SettingsController();
-        settingsController.initialize();
+        //settingsController = new SettingsController();
 
         nameNewGraphElementController = new NewProcessController();
         chooseProcessController = new ChooseProcessController();
@@ -391,9 +391,10 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
     private void AddProcessShapesAutoInitial() {
-        newAutomataNodeStart = new Circle(60, 75, 20);
-        newAutomataNodeNeutral = new Circle(110, 75, 20);
-        newAutomataNodeEnd = new Circle(160, 75, 20);
+        int xTran = 20;
+        newAutomataNodeStart = new Rectangle(60-xTran, 75, 40, 40);
+        newAutomataNodeNeutral = new Rectangle(110-xTran, 75, 40, 40);
+        newAutomataNodeEnd = new Rectangle(160-xTran, 75, 40, 40);
 
         processShapesAuto.add(newAutomataNodeStart);
         processShapesAuto.add(newAutomataNodeNeutral);
@@ -408,7 +409,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         newAutomataNodeEnd.setId("AutoEnd");
 
         for (Shape s : processShapesAuto) {
-            Circle c = (Circle) s;
+            Rectangle c = (Rectangle) s;
             c.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragAuto);
             c.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressAuto);
             c.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleaseAuto);
@@ -418,32 +419,33 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     public void doMouseDragAuto(MouseEvent mouseEvent) {
-        Circle c = (Circle) mouseEvent.getSource();
-        double xOffset = mouseEvent.getX() - c.getCenterX();
-        double yOffset = mouseEvent.getY() - c.getCenterY();
-        c.setCenterX(c.getCenterX() + xOffset);
-        c.setCenterY(c.getCenterY() + yOffset);
+        Rectangle c = (Rectangle) mouseEvent.getSource();
+        double xOffset = mouseEvent.getX() - c.getX();
+        double yOffset = mouseEvent.getY() - c.getY();
+        c.setX(c.getX() + xOffset);
+        c.setY(c.getY() + yOffset);
     }
 
     public void doMousePressAuto(MouseEvent mouseEvent) {
 
+        int xTran = 20;
+
         //todo add switch
 
-        Circle c = (Circle) mouseEvent.getSource();
+        Rectangle c = (Rectangle) mouseEvent.getSource();
 
-        System.out.println(c);
 
         if (c.getId().equals("AutoStart")) {
-            nextAutomataNode = new Circle(60, 75, 20);
+            nextAutomataNode = new Rectangle(60-xTran, 75, 40, 40);
             nextAutomataNode.setFill(Color.GREEN);
             nextAutomataNode.setId("AutoStart");
 
         } else if (c.getId().equals("AutoNeutral")) {
-            nextAutomataNode = new Circle(110, 75, 20);
+            nextAutomataNode = new Rectangle(110-xTran, 75, 40, 40);
             nextAutomataNode.setFill(Color.GRAY);
             nextAutomataNode.setId("AutoNeutral");
         } else {
-            nextAutomataNode = new Circle(160, 75, 20);
+            nextAutomataNode = new Rectangle(160-xTran, 75, 40, 40);
             nextAutomataNode.setFill(Color.RED);
             nextAutomataNode.setId("AutoEnd");
         }
@@ -456,7 +458,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
     public void doMouseReleaseAuto(MouseEvent mouseEvent) {
-        Circle c = (Circle) mouseEvent.getSource();
+        Rectangle c = (Rectangle) mouseEvent.getSource();
         if (c.getId().equals("AutoStart")) {
             shapePane.getChildren().remove(newAutomataNodeStart);
             newAutomataNodeStart = nextAutomataNode;
@@ -467,6 +469,8 @@ public class UserInterfaceController implements Initializable, FontListener {
             shapePane.getChildren().remove(newAutomataNodeEnd);
             newAutomataNodeEnd = nextAutomataNode;
         }
+
+        System.out.println("id: " + c.getId());
 
         addAutomataToGraph(c.getId());
     }
@@ -1128,7 +1132,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             Stage settingsStage = new Stage();
             settingsStage.setTitle("Settings");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 400, 400);
             settingsStage.setScene(windowScene);
 
             settingsController.setWindow(settingsStage.getScene().getWindow());
@@ -1441,5 +1445,13 @@ public class UserInterfaceController implements Initializable, FontListener {
         System.out.println("returning: " + toReturn);
 
         return toReturn;
+    }
+
+    public void changeSyncingEdgeWeight(double sync) {
+        ModelView.getInstance().setSyningEdgeWight(sync);
+    }
+
+    public void changeRelatingEdgeWeight(double relatingWeight) {
+        ModelView.getInstance().setRelatingEdgeWight(relatingWeight);
     }
 }

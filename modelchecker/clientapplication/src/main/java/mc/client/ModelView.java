@@ -95,6 +95,9 @@ public class ModelView implements Observer {
     private HashMap graphNodeToHeadPetri = new HashMap();
     private ArrayList pathColours = new ArrayList();
     private HashMap<String, String> ownersToPID = new HashMap();
+    private Set<Node> transitions = new HashSet<>();
+    private double syncingTransitionWeightValue = 1;
+    private double relatingWeightValue = 1;
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -119,6 +122,14 @@ public class ModelView implements Observer {
     public void setReferenceToUIC(UserInterfaceController userInterfaceController) {
         uic = userInterfaceController;
     }
+
+
+
+
+
+
+
+
 
     /**
      * This method is called whenever the observed object is changed. An
@@ -360,6 +371,8 @@ public class ModelView implements Observer {
         this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
     }
 
+
+
     private void addPetrinetNew(Petrinet petri) {
 
         if (processModelsOnScreenGSType.containsKey(petri.getId())) {
@@ -397,10 +410,12 @@ public class ModelView implements Observer {
         Map<String, GraphNode> nodeMap = new HashMap<>();
         Map<String, Node> nodeMapGS = new HashMap<>();
 
-        ArrayList<Node> transitions = new ArrayList<>();
+
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
+
+
 
             NodeStates nodeTermination = NodeStates.NOMINAL;
             if (place.isTerminal()) {
@@ -566,16 +581,7 @@ public class ModelView implements Observer {
 
         }
 
-        //Reduce force on syncing transitions
-        for (Node n : transitions) {
-            if (n.getOutDegree() > 1) {
-                System.out.println("reducing");
-
-                Iterable<Edge> edges = n.getEachEdge();
-
-                edges.forEach(e -> e.addAttribute("layout.weight", 0.1));
-            }
-        }
+        setSyningEdgeWight(null);
 
 
         this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
@@ -650,6 +656,7 @@ public class ModelView implements Observer {
             addingPetriPlaceEnd = false;
         } else if (addingPetriTransition) {
             latestNode.addAttribute("ui.class", "PetriTransition");
+            transitions.add(latestNode);
             addingPetriTransition = false;
         } else {
             System.out.println("doing nothing");
@@ -1578,8 +1585,10 @@ public class ModelView implements Observer {
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
                                         Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
                                         eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
-                                        eRelation.addAttribute("layout.weight", 0.1);
                                         petriAutoRelations.add(eRelation);
+                                        setRelatingEdgeWight(null);
+
+
 
                                     }
                                 } catch (IdAlreadyInUseException er) {
@@ -1622,12 +1631,47 @@ public class ModelView implements Observer {
         return ownersToPID;
     }
 
+    public void setSyningEdgeWight(Double sync) {
+
+
+        if(sync != null) {
+            syncingTransitionWeightValue = sync;
+        }
+
+
+        System.out.println("STV: " + syncingTransitionWeightValue);
+
+        //Reduce force on syncing transitions
+        for (Node n : transitions) {
+            if (n.getOutDegree() > 1) {
+
+                Iterable<Edge> edges = n.getEachEdge();
+
+                edges.forEach(e -> e.addAttribute("layout.weight", syncingTransitionWeightValue));
+            }
+        }
+
+    }
+
+    public void setRelatingEdgeWight(Double relatingWeight) {
+
+        if(relatingWeight != null) {
+            relatingWeightValue = relatingWeight;
+        }
+
+        for(Edge eRelation: petriAutoRelations){
+            eRelation.addAttribute("layout.weight", relatingWeightValue);
+
+        }
+
+
+    }
+
     private String getStyleSheet() {
         return "node {" +
             "text-size: 20;" +
-            "text-color: white; " +
+            "text-color: black; " +
             "text-background-color: black;" +
-            "text-background-mode: plain;" +
             "text-alignment: above;" +
             "text-style: normal;" +
             "size: 20px; " +
@@ -1636,12 +1680,15 @@ public class ModelView implements Observer {
             "}" +
             "node.AutoStart {" +
             "fill-color: #1F9F06;" +
+            "shape: box;" +
             "}" +
             "node.AutoNeutral {" +
             "fill-color: #b8b4b4;" +
+            "shape: box;" +
             "}" +
             "node.AutoEnd {" +
             "fill-color: #5c0a04;" +
+            "shape: box;" +
             "}" +
             "edge.autoLoop {" +
             "text-alignment: above;" +
@@ -1699,6 +1746,7 @@ public class ModelView implements Observer {
             ;
 
     }
+
 
 
 }
