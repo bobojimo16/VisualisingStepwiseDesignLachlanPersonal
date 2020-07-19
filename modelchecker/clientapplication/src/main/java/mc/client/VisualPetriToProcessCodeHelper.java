@@ -132,7 +132,11 @@ public class VisualPetriToProcessCodeHelper {
             pids.add(e.getNode0().getAttribute("ui.PID"));
         }
 
-        processesInParelel.put(n.getAttribute("ui.PIDSName").toString(), pids);
+        if(n.hasAttribute("ui.PIDSName")) {
+            processesInParelel.put(n.getAttribute("ui.PIDSName").toString(), pids);
+        } else {
+            processesInParelel.put(n.getAttribute("ui.initialProcessName").toString(), pids);
+        }
 
     }
 

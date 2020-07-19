@@ -95,7 +95,7 @@ public class ModelView implements Observer {
     private HashMap graphNodeToHeadPetri = new HashMap();
     private ArrayList pathColours = new ArrayList();
     private HashMap<String, String> ownersToPID = new HashMap();
-    private Set<Node> transitions = new HashSet<>();
+    private Set<Node> petriTransitions = new HashSet<>();
     private double syncingTransitionWeightValue = 1;
     private double relatingWeightValue = 1;
 
@@ -494,7 +494,13 @@ public class ModelView implements Observer {
 
                 n.addAttribute("ui.owners", transition.getOwners());
 
-                transitions.add(n);
+                //This is for reuse of initial parelel process name for parrelel process editing
+                int colonIndex1 = petri.getId().indexOf(":*");
+                String intitialProcessName = petri.getId().substring(0, colonIndex1);
+
+
+                n.addAttribute("ui.initialProcessName", intitialProcessName);
+                petriTransitions.add(n);
 
             });
 
@@ -656,7 +662,6 @@ public class ModelView implements Observer {
             addingPetriPlaceEnd = false;
         } else if (addingPetriTransition) {
             latestNode.addAttribute("ui.class", "PetriTransition");
-            transitions.add(latestNode);
             addingPetriTransition = false;
         } else {
             System.out.println("doing nothing");
@@ -1071,7 +1076,7 @@ public class ModelView implements Observer {
                 Collection<Edge> outgoingPids = workingCanvasArea.getNode(seccondNodeClicked.getId()).getLeavingEdgeSet();
 
                 for (Edge e : outgoingPids) {
-                    e.addAttribute("layout.weight", 0.1);
+                    e.addAttribute("layout.weight", syncingTransitionWeightValue);
                 }
 
             }
@@ -1621,9 +1626,10 @@ public class ModelView implements Observer {
             for (Edge e : petriAutoRelations) {
                 workingCanvasArea.removeEdge(e);
             }
-
             petriAutoRelations.clear();
         }
+
+
 
     }
 
@@ -1641,12 +1647,21 @@ public class ModelView implements Observer {
 
         System.out.println("STV: " + syncingTransitionWeightValue);
 
+        System.out.println("cns: " + petriTransitions.size());
+
         //Reduce force on syncing transitions
-        for (Node n : transitions) {
-            if (n.getOutDegree() > 1) {
-
+        for (Node n : petriTransitions) {
+            if(n.getOutDegree() > 1) {
                 Iterable<Edge> edges = n.getEachEdge();
+                edges.forEach(e -> e.addAttribute("layout.weight", syncingTransitionWeightValue));
+            }
+        }
 
+
+
+        for (Node n : createdNodes) {
+            if(n.getAttribute("ui.class").toString().equals("PetriTransition") && n.getOutDegree() > 1) {
+                Iterable<Edge> edges = n.getEachEdge();
                 edges.forEach(e -> e.addAttribute("layout.weight", syncingTransitionWeightValue));
             }
         }
