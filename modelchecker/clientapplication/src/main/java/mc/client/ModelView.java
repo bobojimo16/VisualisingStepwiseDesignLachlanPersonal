@@ -7,9 +7,7 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -39,6 +37,7 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.graphicGraph.GraphicElement;
+import org.graphstream.ui.graphicGraph.GraphicGraph;
 import org.graphstream.ui.layout.Layout;
 import org.graphstream.ui.layout.Layouts;
 import org.graphstream.ui.view.Camera;
@@ -48,6 +47,7 @@ import org.graphstream.ui.view.Viewer;
 import javax.swing.*;
 
 import org.graphstream.graph.*;
+import org.graphstream.ui.view.util.ShortcutManager;
 
 /**
  * Created by bealjaco on 29/11/17.
@@ -122,13 +122,6 @@ public class ModelView implements Observer {
     public void setReferenceToUIC(UserInterfaceController userInterfaceController) {
         uic = userInterfaceController;
     }
-
-
-
-
-
-
-
 
 
     /**
@@ -372,7 +365,6 @@ public class ModelView implements Observer {
     }
 
 
-
     private void addPetrinetNew(Petrinet petri) {
 
         if (processModelsOnScreenGSType.containsKey(petri.getId())) {
@@ -411,10 +403,8 @@ public class ModelView implements Observer {
         Map<String, Node> nodeMapGS = new HashMap<>();
 
 
-
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
-
 
 
             NodeStates nodeTermination = NodeStates.NOMINAL;
@@ -681,7 +671,8 @@ public class ModelView implements Observer {
     }
 
 
-    public void determineIfNodeClicked(int x, int y) {
+    public void determineIfNodeClicked(int x, int y, int clickType) {
+
 
         //To handle the extra redundant "click" from the bot prevents unwanted node linking kinda shit implementation though
         if (nodeRecentlyPlaced) {
@@ -697,15 +688,20 @@ public class ModelView implements Observer {
                 if (firstNodeClicked == null) {
                     firstNodeClicked = (Node) ge;
                     System.out.println("Selecting First Node: " + firstNodeClicked.getId());
-                    firstNodeClass = firstNodeClicked.getAttribute("ui.class");
 
-                    firstNodeClicked.removeAttribute("ui.class");
-                    //handleProcessEditing(null);
-
-                    if (firstNodeClass.equals("PetriTransition")) {
-                        firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00; shape: box;");
+                    if (clickType == 3) {
+                        handleNodeDeletion();
                     } else {
-                        firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00;");
+                        firstNodeClass = firstNodeClicked.getAttribute("ui.class");
+
+                        firstNodeClicked.removeAttribute("ui.class");
+                        //handleProcessEditing(null);
+
+                        if (firstNodeClass.equals("PetriTransition")) {
+                            firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00; shape: box;");
+                        } else {
+                            firstNodeClicked.addAttribute("ui.style", "fill-color: #ccff00;");
+                        }
                     }
 
                 } else {
@@ -728,6 +724,9 @@ public class ModelView implements Observer {
                 }
 
                 doDrawEdge();
+
+                firstNodeClicked = null;
+                seccondNodeClicked = null;
 
                /* Thread t = new Thread() {
                     public void run() {
@@ -1006,13 +1005,13 @@ public class ModelView implements Observer {
 
             try {
                 latch.await();
-            } catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
         }
 
-        if(!firstNodeType.contains("Auto")) {
+        if (!firstNodeType.contains("Auto")) {
             createdEdges.add(edge);
             doPostEdgeUpdates(edge);
         }
@@ -1054,7 +1053,7 @@ public class ModelView implements Observer {
 
 
                 CountDownLatch latch = new CountDownLatch(1);
-                if(parrelelCompositionName.isEmpty()){
+                if (parrelelCompositionName.isEmpty()) {
                     Platform.runLater(() -> {
                         String processValue = uic.nameParrelelProceses();
                         workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PIDSName", processValue);
@@ -1063,7 +1062,7 @@ public class ModelView implements Observer {
 
                     try {
                         latch.await();
-                    } catch (InterruptedException e){
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
@@ -1141,7 +1140,6 @@ public class ModelView implements Observer {
                 }
             }
         }
-
 
 
         unsettingClicked();
@@ -1401,6 +1399,41 @@ public class ModelView implements Observer {
         return compiledResult.getProcessMap();
     }
 
+    private void handleNodeDeletion() {
+        System.out.println("delete");
+
+        if (firstNodeClicked == null) {
+            return;
+        }
+
+
+        for (Node n : createdNodes) {
+            if (n.getId().equals(firstNodeClicked.getId())) {
+
+
+                if (n.getOutDegree() != 0) {
+                    Platform.runLater(() ->
+                    {
+                        uic.reportError("deletingNonLeaf");
+                    });
+
+                    firstNodeClicked = null;
+                    return;
+                }
+
+
+                workingCanvasArea.removeNode(firstNodeClicked.getId());
+                createdNodes.remove(firstNodeClicked);
+
+            }
+        }
+
+
+        firstNodeClicked = null;
+
+
+    }
+
     /**
      * Resets all graph varaibles and re-adds default blank state.
      */
@@ -1470,9 +1503,54 @@ public class ModelView implements Observer {
             }
         });
 
+        workingCanvasAreaViewer.getDefaultView().setShortcutManager(new ShortcutManager() {
+
+            private View view;
+
+            @Override
+            public void init(GraphicGraph graph, View view) {
+                this.view = view;
+                view.addKeyListener(this);
+            }
+
+            @Override
+            public void release() {
+                view.removeKeyListener(this);
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                if (keyCode == KeyEvent.VK_DELETE) {
+                    handleNodeDeletion();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                System.out.println("keyReleased!");
+            }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                System.out.println("keyTyped!");
+            }
+        });
+
+
+
+        /*Robot robot = null;
+        try {
+            robot = new Robot();
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+        robot.mousePress(InputEvent.BUTTON1_MASK);
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);*/
+
+
         workingCanvasAreaContainer.add((Component) workingCanvasAreaView, BorderLayout.CENTER);
     }
-
 
     @Getter
     private static ModelView instance = new ModelView();
@@ -1503,7 +1581,7 @@ public class ModelView implements Observer {
 
     public void switchToTokenMode() {
         isCreateMode = false;
-        determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE);
+        determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
     }
 
     public Graph getGraph() {
@@ -1596,7 +1674,6 @@ public class ModelView implements Observer {
                                         setRelatingEdgeWight(null);
 
 
-
                                     }
                                 } catch (IdAlreadyInUseException er) {
                                     System.out.println("here");
@@ -1632,7 +1709,6 @@ public class ModelView implements Observer {
         }
 
 
-
     }
 
     public HashMap<String, String> getOwnersToPIDMapping() {
@@ -1642,7 +1718,7 @@ public class ModelView implements Observer {
     public void setSyningEdgeWight(Double sync) {
 
 
-        if(sync != null) {
+        if (sync != null) {
             syncingTransitionWeightValue = sync;
         }
 
@@ -1653,16 +1729,15 @@ public class ModelView implements Observer {
 
         //Reduce force on syncing transitions
         for (Node n : petriTransitions) {
-            if(n.getOutDegree() > 1) {
+            if (n.getOutDegree() > 1) {
                 Iterable<Edge> edges = n.getEachEdge();
                 edges.forEach(e -> e.addAttribute("layout.weight", syncingTransitionWeightValue));
             }
         }
 
 
-
         for (Node n : createdNodes) {
-            if(n.getAttribute("ui.class").toString().equals("PetriTransition") && n.getOutDegree() > 1) {
+            if (n.getAttribute("ui.class").toString().equals("PetriTransition") && n.getOutDegree() > 1) {
                 Iterable<Edge> edges = n.getEachEdge();
                 edges.forEach(e -> e.addAttribute("layout.weight", syncingTransitionWeightValue));
             }
@@ -1672,11 +1747,11 @@ public class ModelView implements Observer {
 
     public void setRelatingEdgeWight(Double relatingWeight) {
 
-        if(relatingWeight != null) {
+        if (relatingWeight != null) {
             relatingWeightValue = relatingWeight;
         }
 
-        for(Edge eRelation: petriAutoRelations){
+        for (Edge eRelation : petriAutoRelations) {
             eRelation.addAttribute("layout.weight", relatingWeightValue);
 
         }
@@ -1763,7 +1838,6 @@ public class ModelView implements Observer {
             ;
 
     }
-
 
 
 }

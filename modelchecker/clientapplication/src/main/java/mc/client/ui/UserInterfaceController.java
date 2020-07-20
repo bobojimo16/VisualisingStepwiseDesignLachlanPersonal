@@ -716,6 +716,8 @@ public class UserInterfaceController implements Initializable, FontListener {
             case "backwardsPetriBuilding":
                 a.setContentText("Unable to build Petri-Nets backwards, make sure the process contains a start place");
                 break;
+            case "deletingNonLeaf":
+                a.setContentText("Unable to delete non leaf nodes");
             default:
                 break;
         }
