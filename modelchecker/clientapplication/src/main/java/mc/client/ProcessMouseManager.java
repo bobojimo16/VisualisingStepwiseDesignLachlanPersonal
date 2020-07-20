@@ -39,7 +39,7 @@ public class ProcessMouseManager implements MouseManager {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        ModelView.getInstance().determineIfNodeClicked(e.getX(), e.getY());
+        ModelView.getInstance().determineIfNodeClicked(e.getX(), e.getY(), e.getButton());
 
     }
 

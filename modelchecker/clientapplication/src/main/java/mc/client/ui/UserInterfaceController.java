@@ -392,9 +392,9 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     private void AddProcessShapesAutoInitial() {
         int xTran = 20;
-        newAutomataNodeStart = new Rectangle(60-xTran, 75, 40, 40);
-        newAutomataNodeNeutral = new Rectangle(110-xTran, 75, 40, 40);
-        newAutomataNodeEnd = new Rectangle(160-xTran, 75, 40, 40);
+        newAutomataNodeStart = new Rectangle(60 - xTran, 75, 40, 40);
+        newAutomataNodeNeutral = new Rectangle(110 - xTran, 75, 40, 40);
+        newAutomataNodeEnd = new Rectangle(160 - xTran, 75, 40, 40);
 
         processShapesAuto.add(newAutomataNodeStart);
         processShapesAuto.add(newAutomataNodeNeutral);
@@ -436,16 +436,16 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
         if (c.getId().equals("AutoStart")) {
-            nextAutomataNode = new Rectangle(60-xTran, 75, 40, 40);
+            nextAutomataNode = new Rectangle(60 - xTran, 75, 40, 40);
             nextAutomataNode.setFill(Color.GREEN);
             nextAutomataNode.setId("AutoStart");
 
         } else if (c.getId().equals("AutoNeutral")) {
-            nextAutomataNode = new Rectangle(110-xTran, 75, 40, 40);
+            nextAutomataNode = new Rectangle(110 - xTran, 75, 40, 40);
             nextAutomataNode.setFill(Color.GRAY);
             nextAutomataNode.setId("AutoNeutral");
         } else {
-            nextAutomataNode = new Rectangle(160-xTran, 75, 40, 40);
+            nextAutomataNode = new Rectangle(160 - xTran, 75, 40, 40);
             nextAutomataNode.setFill(Color.RED);
             nextAutomataNode.setId("AutoEnd");
         }
@@ -639,7 +639,18 @@ public class UserInterfaceController implements Initializable, FontListener {
             //settingsStage.initModality(Modality.APPLICATION_MODAL);
             newProcessStage.initModality(Modality.NONE);
             newProcessStage.setResizable(false);
+
+            CountDownLatch latch = new CountDownLatch(1);
             newProcessStage.showAndWait();
+            latch.countDown();
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
             ModelView.getInstance().setLatestNodeName(nameNewGraphElementController.getNewProcessNameValue());
 
         } catch (IOException e) {
@@ -716,6 +727,8 @@ public class UserInterfaceController implements Initializable, FontListener {
             case "backwardsPetriBuilding":
                 a.setContentText("Unable to build Petri-Nets backwards, make sure the process contains a start place");
                 break;
+            case "deletingNonLeaf":
+                a.setContentText("Unable to delete non leaf nodes");
             default:
                 break;
         }
@@ -898,7 +911,6 @@ public class UserInterfaceController implements Initializable, FontListener {
             ModelView.getInstance();
 
             SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().setLoadedGraph(loadedGraph)));
-
 
 
         } catch (IOException e) {
@@ -1406,7 +1418,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         ModelView.getInstance().switchToTokenMode();
     }
 
-    public void handleAutoPetriRelationToggle(ActionEvent actionEvent){
+    public void handleAutoPetriRelationToggle(ActionEvent actionEvent) {
         ModelView.getInstance().handleAutoPetriRelation();
     }
 
