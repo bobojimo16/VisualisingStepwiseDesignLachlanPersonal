@@ -1109,22 +1109,22 @@ public class ModelView implements Observer {
                                 System.out.println("e1: " + e.getNode1().getId());
                                 workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
 
-                                //CountDownLatch latch = new CountDownLatch(1);
+                                CountDownLatch latch = new CountDownLatch(1);
                                 Platform.runLater(() -> {
 
                                     String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
-                                    //latch.countDown();
+                                    latch.countDown();
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
                                     selectedPIDS.add(selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
                                 });
 
-                                /*try {
+                                try {
                                     latch.await();
                                 } catch (InterruptedException e1) {
                                     e1.printStackTrace();
-                                }*/
+                                }
 
 
                             } else {

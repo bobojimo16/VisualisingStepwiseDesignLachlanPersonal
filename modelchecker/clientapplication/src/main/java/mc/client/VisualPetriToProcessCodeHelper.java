@@ -275,14 +275,33 @@ public class VisualPetriToProcessCodeHelper {
         }
 
 
+        if(n.getAttribute("ui.class").equals("PetriTransition")) {
+            System.out.println(edges.size());
+        }
+
+
+
+
         for (int i = 0; i < edges.size(); i++) {
 
             Node outGoingNode = edges.get(i).getNode1();
+
+
             //Node outGoing = current;
 
             //if node is not a place then get its value
-            if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
+            if(outGoingNode.getAttribute("ui.class").equals("PetriPlaceEnd")){
+                System.out.println("og: " + outGoingNode.getAttribute("ui.PID").toString());
+                System.out.println("n: " + n.getAttribute("ui.PID").toString());
+                if(outGoingNode.getAttribute("ui.PID").toString().equals(currentPetriHead.getAttribute("ui.PID"))){
+                    String nextValue = doValueEvaluation(outGoingNode);
+                    processesText[currentLineForWriting] += nextValue;
+                }
+            }
+            else if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
                 String nextValue = doValueEvaluation(outGoingNode);
+                System.out.println(n.getId());
+                System.out.println(nextValue);
                 processesText[currentLineForWriting] += nextValue;
                 //cumulativeProcessCode += nextValue;
             }
