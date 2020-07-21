@@ -151,6 +151,10 @@ public class VisualPetriToProcessCodeHelper {
 
         if (!n.hasAttribute("ui.PIDS")) {
 
+            if(!n.hasAttribute("ui.PID")){
+                System.out.println(n.getAttribute("ui.label").toString());
+            }
+
             if (!n.getAttribute("ui.PID").toString().trim().equals(currentPetriHead.getAttribute("ui.PID").toString().trim())) {
                 if(n.hasAttribute("ui.label")) {
                     System.out.println("PID1: " + n.getAttribute("ui.PID").toString());

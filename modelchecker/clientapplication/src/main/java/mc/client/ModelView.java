@@ -1049,8 +1049,11 @@ public class ModelView implements Observer {
 
     private void doPostEdgeUpdates(Edge edge) {
 
-        //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS"
-        workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
+        //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS" ? wat
+        if(workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1) {
+            System.out.println("indegree1");
+            workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
+        }
 
 
         //When a transition has multiple entering edges it means it is a parrelel transition denoted as PIDS (PID Plural)
@@ -1114,7 +1117,16 @@ public class ModelView implements Observer {
                     int eCounter = 0;
 
                     for (Edge e : outGoingEdges) {
-                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0) {
+                        if(workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.label")) {
+                            System.out.println(workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.label").toString());
+                        }
+
+                        System.out.println("PID: " + workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.PID"));
+
+
+                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0
+                            && !workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
+
 
                             //Boolean res = deterimineIfPlaceIsInLoop(workingCanvasArea.getNode(e.getNode1()));
 
@@ -1188,6 +1200,8 @@ public class ModelView implements Observer {
     }
 
     private void handleProcessEditing(Node n) {
+
+        System.out.println("doingexisting");
 
         Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
 
