@@ -11,6 +11,7 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -91,7 +92,6 @@ public class ModelView implements Observer {
     private boolean addingPetriPlaceNeutral;
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
-    private boolean isCreateMode = true;
     private HashMap graphNodeToHeadPetri = new HashMap();
     private ArrayList pathColours = new ArrayList();
     private HashMap<String, String> ownersToPID = new HashMap();
@@ -110,6 +110,7 @@ public class ModelView implements Observer {
     private double zoom;
     private boolean autoPetriRelationModeEnabled = false;
     private ArrayList<Edge> petriAutoRelations = new ArrayList<>();
+    public String interactionType = "create";
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -362,6 +363,11 @@ public class ModelView implements Observer {
         this.pmTest.put(automaton.getId(), automaton);
         this.processModelsOnScreenGraphNodeType.replaceValues(automaton.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
+
+        if (interactionType.equals("autopetrirelation")) {
+            System.out.println("dorelation1");
+            handleAutoPetriRelation();
+        }
     }
 
 
@@ -583,6 +589,11 @@ public class ModelView implements Observer {
         this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(petri.getId(), nodeMapGS.values());
 
+        if (interactionType.equals("autopetrirelation")) {
+            System.out.println("dorelation2");
+            handleAutoPetriRelation();
+        }
+
 
     }
 
@@ -681,7 +692,7 @@ public class ModelView implements Observer {
         }
 
 
-        if (isCreateMode) {
+        if (interactionType.equals("create")) {
             GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
 
             if (ge != null) {
@@ -764,11 +775,17 @@ public class ModelView implements Observer {
         //Do Token Game
         GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
         Node nodeSelected = (Node) ge;
-        MappingNdMarking thisMapping;
 
 
         if (nodeSelected != null) {
-            System.out.println("Here1");
+
+            for (Node n : createdNodes) {
+                if (n.getId().equals(nodeSelected.getId())) {
+                    return;
+                }
+            }
+
+
             String pid = nodeSelected.getAttribute("ui.PID");
             GraphNode gn = nodeSelected.getAttribute("ui.GraphNode");
             ProcessModelObject clk = gn.getRepresentedFeature();
@@ -799,8 +816,8 @@ public class ModelView implements Observer {
 
                 }
             }
+
         } else {
-            System.out.println("Here6");
             CurrentMarkingsSeen.setCurrentMarkingsSeen(CurrentMarkingsSeen.getRootMarkings());
             refreshTransitionColour();
         }
@@ -866,7 +883,7 @@ public class ModelView implements Observer {
           /*  if(nodeSelected != null) {
 
                 if ((node.getAttribute("ui.PID").toString().equals(nodeSelected.getAttribute("ui.PID").toString()))) {*/
-            System.out.println(node.getAttribute("ui.PID").toString());
+
             if (node.hasAttribute("ui.token")) {
                 node.removeAttribute("ui.token");
                 node.removeAttribute("ui.class");
@@ -1086,6 +1103,8 @@ public class ModelView implements Observer {
 
         for (Node currentNode : createdNodes) {
 
+            System.out.println("Here1");
+
             if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
                 Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
                 if (currentNode.hasAttribute("ui.PIDS")) {
@@ -1106,21 +1125,27 @@ public class ModelView implements Observer {
                                 String petriType = e.getNode1().getAttribute("ui.class");
                                 workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
                                 System.out.println("e1: " + e.getNode1().getId());
-                                workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                                //workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
 
-                                CountDownLatch latch = new CountDownLatch(1);
+
+                                final CountDownLatch latchToWaitForJavaFx = new CountDownLatch(1);
+
                                 Platform.runLater(() -> {
 
-                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS")));
-                                    latch.countDown();
+                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS"), e.getNode1().getId()));
+
+
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
+                                    System.out.println("selpid: " + selectedPID);
                                     selectedPIDS.add(selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
                                     workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
+                                    latchToWaitForJavaFx.countDown();
                                 });
 
+
                                 try {
-                                    latch.await();
+                                    latchToWaitForJavaFx.await();
                                 } catch (InterruptedException e1) {
                                     e1.printStackTrace();
                                 }
@@ -1567,38 +1592,55 @@ public class ModelView implements Observer {
         return createdNodes;
     }
 
-    public void switchToCreateMode() {
-        isCreateMode = true;
+    public void switchInteractionType(String type) {
+        switch (type) {
+            case "create":
+                switchToCreateMode();
+                break;
+            case "token":
+                switchToTokenMode();
+                break;
+            case "autopetrirelation":
+                handleAutoPetriRelation();
+                break;
+            default:
+                break;
+        }
 
+    }
+
+    public void switchToCreateMode() {
+        interactionType = "create";
         removeLastTokens(null);
+        clearPetriTransitionHighlighting();
+        resetAutoPetriRelations();
+
+    }
+
+    public void switchToTokenMode() {
+        interactionType = "token";
+        determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
+        clearPetriTransitionHighlighting();
+        resetAutoPetriRelations();
+    }
+
+    public void clearPetriTransitionHighlighting() {
         for (GraphNode gnt : processModelsOnScreenGraphNodeType.values()) {
             if (gnt.getRepresentedFeature() instanceof PetriNetTransition) {
                 workingCanvasArea.getNode(gnt.getRepresentedFeature().getId()).addAttribute("ui.class", "PetriTransition");
             }
         }
 
-    }
-
-    public void switchToTokenMode() {
-        isCreateMode = false;
-        determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
-    }
-
-    public Graph getGraph() {
-        return workingCanvasArea;
-    }
-
-    public JPanel setLoadedGraph(MultiGraph loadedGraph) {
-        workingCanvasArea = loadedGraph;
-        initalise(true);
-
-        return workingCanvasAreaContainer;
 
     }
 
     public void handleAutoPetriRelation() {
 
-        if (!autoPetriRelationModeEnabled) {
+        interactionType = "autopetrirelation";
+        removeLastTokens(null);
+        clearPetriTransitionHighlighting();
+
+        if (interactionType.equals("autopetrirelation")) {
             autoPetriRelationModeEnabled = true;
 
 
@@ -1606,9 +1648,14 @@ public class ModelView implements Observer {
 
             Set<String> processes = new HashSet<>();
 
+            System.out.println("sds: " + sds.keySet().size());
+
+
             for (String s : sds.keys()) {
                 processes.add(s);
             }
+
+            System.out.println(processes.size());
 
             int i = 0;
             int j = 0;
@@ -1701,15 +1748,33 @@ public class ModelView implements Observer {
 
         } else {
             //Remove the relations
-            autoPetriRelationModeEnabled = false;
-            for (Edge e : petriAutoRelations) {
-                workingCanvasArea.removeEdge(e);
-            }
-            petriAutoRelations.clear();
+            //autoPetriRelationModeEnabled = false;
+            resetAutoPetriRelations();
+
         }
 
 
     }
+
+    private void resetAutoPetriRelations() {
+        for (Edge e : petriAutoRelations) {
+            workingCanvasArea.removeEdge(e);
+        }
+        petriAutoRelations.clear();
+    }
+
+    public Graph getGraph() {
+        return workingCanvasArea;
+    }
+
+    public JPanel setLoadedGraph(MultiGraph loadedGraph) {
+        workingCanvasArea = loadedGraph;
+        initalise(true);
+
+        return workingCanvasAreaContainer;
+
+    }
+
 
     public HashMap<String, String> getOwnersToPIDMapping() {
         return ownersToPID;
@@ -1758,6 +1823,8 @@ public class ModelView implements Observer {
 
 
     }
+
+
 
     private String getStyleSheet() {
         return "node {" +

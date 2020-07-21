@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -64,6 +65,11 @@ public class UserInterfaceApplication extends Application {
         }
 
         primaryStage.setTitle("Process Modeller - New File");
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        double width = screenSize.getWidth();
+        double height = screenSize.getHeight();
+
+
         Scene windowScene = new Scene(root, 1000, 1000);
         primaryStage.setScene(windowScene);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/clientres/icon.jpg")));
