@@ -1156,7 +1156,6 @@ public class ModelView implements Observer {
 
 
 
-                                System.out.println(workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.PID").toString());
 
                             }
                         }
