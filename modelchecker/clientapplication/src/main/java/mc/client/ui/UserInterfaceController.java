@@ -2,6 +2,7 @@ package mc.client.ui;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.sun.org.apache.regexp.internal.RE;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -45,6 +46,7 @@ import mc.util.expr.Expression;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
+import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.stream.file.FileSinkDGS;
 import org.graphstream.stream.file.FileSourceDGS;
@@ -54,6 +56,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.*;
@@ -74,6 +77,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     private SettingsController settingsController;
     private NewProcessController nameNewGraphElementController;
     private LabelEdgeController labelEdgeController;
+    private NameNewParrelelProcessController nameNewParrelelProcessController;
 
 
     @FXML
@@ -198,7 +202,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         }
 
         settingsController = new SettingsController();
-        settingsController.initialize();
+        settingsController.setReferenceToUIC(this);
         settingsController.addFontListener(this);
 
         ModelView.getInstance().setReferenceToUIC(this);
@@ -372,12 +376,12 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         userCodeInput.appendText(userCode);
 
-        settingsController = new SettingsController();
-        settingsController.initialize();
+        //settingsController = new SettingsController();
 
         nameNewGraphElementController = new NewProcessController();
         chooseProcessController = new ChooseProcessController();
         labelEdgeController = new LabelEdgeController();
+        nameNewParrelelProcessController = new NameNewParrelelProcessController();
         //newProcessController.initialize();
 
 
@@ -389,9 +393,10 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
     private void AddProcessShapesAutoInitial() {
-        newAutomataNodeStart = new Circle(60, 75, 20);
-        newAutomataNodeNeutral = new Circle(110, 75, 20);
-        newAutomataNodeEnd = new Circle(160, 75, 20);
+        int xTran = 20;
+        newAutomataNodeStart = new Rectangle(60 - xTran, 75, 40, 40);
+        newAutomataNodeNeutral = new Rectangle(110 - xTran, 75, 40, 40);
+        newAutomataNodeEnd = new Rectangle(160 - xTran, 75, 40, 40);
 
         processShapesAuto.add(newAutomataNodeStart);
         processShapesAuto.add(newAutomataNodeNeutral);
@@ -406,7 +411,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         newAutomataNodeEnd.setId("AutoEnd");
 
         for (Shape s : processShapesAuto) {
-            Circle c = (Circle) s;
+            Rectangle c = (Rectangle) s;
             c.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragAuto);
             c.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressAuto);
             c.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleaseAuto);
@@ -416,57 +421,69 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     public void doMouseDragAuto(MouseEvent mouseEvent) {
-        Circle c = (Circle) mouseEvent.getSource();
-        double xOffset = mouseEvent.getX() - c.getCenterX();
-        double yOffset = mouseEvent.getY() - c.getCenterY();
-        c.setCenterX(c.getCenterX() + xOffset);
-        c.setCenterY(c.getCenterY() + yOffset);
+        if(ModelView.getInstance().interactionType.equals("create")) {
+            Rectangle c = (Rectangle) mouseEvent.getSource();
+            double xOffset = mouseEvent.getX() - c.getX();
+            double yOffset = mouseEvent.getY() - c.getY();
+            c.setX(c.getX() + xOffset);
+            c.setY(c.getY() + yOffset);
+        }
     }
 
     public void doMousePressAuto(MouseEvent mouseEvent) {
 
-        //todo add switch
+        if(ModelView.getInstance().interactionType.equals("create")) {
 
-        Circle c = (Circle) mouseEvent.getSource();
+            int xTran = 20;
 
-        System.out.println(c);
+            //todo add switch
 
-        if (c.getId().equals("AutoStart")) {
-            nextAutomataNode = new Circle(60, 75, 20);
-            nextAutomataNode.setFill(Color.GREEN);
-            nextAutomataNode.setId("AutoStart");
+            Rectangle c = (Rectangle) mouseEvent.getSource();
 
-        } else if (c.getId().equals("AutoNeutral")) {
-            nextAutomataNode = new Circle(110, 75, 20);
-            nextAutomataNode.setFill(Color.GRAY);
-            nextAutomataNode.setId("AutoNeutral");
-        } else {
-            nextAutomataNode = new Circle(160, 75, 20);
-            nextAutomataNode.setFill(Color.RED);
-            nextAutomataNode.setId("AutoEnd");
+
+            if (c.getId().equals("AutoStart")) {
+                nextAutomataNode = new Rectangle(60 - xTran, 75, 40, 40);
+                nextAutomataNode.setFill(Color.GREEN);
+                nextAutomataNode.setId("AutoStart");
+
+            } else if (c.getId().equals("AutoNeutral")) {
+                nextAutomataNode = new Rectangle(110 - xTran, 75, 40, 40);
+                nextAutomataNode.setFill(Color.GRAY);
+                nextAutomataNode.setId("AutoNeutral");
+            } else {
+                nextAutomataNode = new Rectangle(160 - xTran, 75, 40, 40);
+                nextAutomataNode.setFill(Color.RED);
+                nextAutomataNode.setId("AutoEnd");
+            }
+
+            nextAutomataNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragAuto);
+            nextAutomataNode.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressAuto);
+            nextAutomataNode.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleaseAuto);
+            shapePane.getChildren().add(nextAutomataNode);
         }
-
-        nextAutomataNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragAuto);
-        nextAutomataNode.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressAuto);
-        nextAutomataNode.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleaseAuto);
-        shapePane.getChildren().add(nextAutomataNode);
     }
 
 
     public void doMouseReleaseAuto(MouseEvent mouseEvent) {
-        Circle c = (Circle) mouseEvent.getSource();
-        if (c.getId().equals("AutoStart")) {
-            shapePane.getChildren().remove(newAutomataNodeStart);
-            newAutomataNodeStart = nextAutomataNode;
-        } else if (c.getId().equals("AutoNeutral")) {
-            shapePane.getChildren().remove(newAutomataNodeNeutral);
-            newAutomataNodeNeutral = nextAutomataNode;
-        } else {
-            shapePane.getChildren().remove(newAutomataNodeEnd);
-            newAutomataNodeEnd = nextAutomataNode;
+        if(ModelView.getInstance().interactionType.equals("create")) {
+
+            Rectangle c = (Rectangle) mouseEvent.getSource();
+            if (c.getId().equals("AutoStart")) {
+                shapePane.getChildren().remove(newAutomataNodeStart);
+                newAutomataNodeStart = nextAutomataNode;
+            } else if (c.getId().equals("AutoNeutral")) {
+                shapePane.getChildren().remove(newAutomataNodeNeutral);
+                newAutomataNodeNeutral = nextAutomataNode;
+            } else {
+                shapePane.getChildren().remove(newAutomataNodeEnd);
+                newAutomataNodeEnd = nextAutomataNode;
+            }
+
+            System.out.println("id: " + c.getId());
+
+            addAutomataToGraph(c.getId());
         }
 
-        addAutomataToGraph(c.getId());
     }
 
 
@@ -521,86 +538,103 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     private void doMouseDragPetriPlace(MouseEvent mouseEvent) {
-        Circle c = (Circle) mouseEvent.getSource();
-        double xOffset = mouseEvent.getX() - c.getCenterX();
-        double yOffset = mouseEvent.getY() - c.getCenterY();
-        c.setCenterX(c.getCenterX() + xOffset);
-        c.setCenterY(c.getCenterY() + yOffset);
+        if(ModelView.getInstance().interactionType.equals("create")) {
+            Circle c = (Circle) mouseEvent.getSource();
+            double xOffset = mouseEvent.getX() - c.getCenterX();
+            double yOffset = mouseEvent.getY() - c.getCenterY();
+            c.setCenterX(c.getCenterX() + xOffset);
+            c.setCenterY(c.getCenterY() + yOffset);
+        }
     }
 
     private void doMousePressPetriPlace(MouseEvent mouseEvent) {
-        //todo add switch
+        if(ModelView.getInstance().interactionType.equals("create")) {
+            //todo add switch
 
-        Circle c = (Circle) mouseEvent.getSource();
+            Circle c = (Circle) mouseEvent.getSource();
 
-        System.out.println(c);
+            System.out.println(c);
 
-        if (c.getId().equals("PetriPlaceStart")) {
-            nextPetriPlaceNode = new Circle(60, 220, 20);
-            nextPetriPlaceNode.setFill(Color.GREEN);
-            nextPetriPlaceNode.setId("PetriPlaceStart");
+            if (c.getId().equals("PetriPlaceStart")) {
+                nextPetriPlaceNode = new Circle(60, 220, 20);
+                nextPetriPlaceNode.setFill(Color.GREEN);
+                nextPetriPlaceNode.setId("PetriPlaceStart");
 
-        } else if (c.getId().equals("PetriPlaceNeutral")) {
-            nextPetriPlaceNode = new Circle(110, 220, 20);
-            nextPetriPlaceNode.setFill(Color.GRAY);
-            nextPetriPlaceNode.setId("PetriPlaceNeutral");
-        } else {
-            nextPetriPlaceNode = new Circle(160, 220, 20);
-            nextPetriPlaceNode.setFill(Color.RED);
-            nextPetriPlaceNode.setId("PetriPlaceEnd");
+            } else if (c.getId().equals("PetriPlaceNeutral")) {
+                nextPetriPlaceNode = new Circle(110, 220, 20);
+                nextPetriPlaceNode.setFill(Color.GRAY);
+                nextPetriPlaceNode.setId("PetriPlaceNeutral");
+            } else {
+                nextPetriPlaceNode = new Circle(160, 220, 20);
+                nextPetriPlaceNode.setFill(Color.RED);
+                nextPetriPlaceNode.setId("PetriPlaceEnd");
+            }
+
+            nextPetriPlaceNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragPetriPlace);
+            nextPetriPlaceNode.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressPetriPlace);
+            nextPetriPlaceNode.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleasePetriPlace);
+            shapePane.getChildren().add(nextPetriPlaceNode);
         }
-
-        nextPetriPlaceNode.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragPetriPlace);
-        nextPetriPlaceNode.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressPetriPlace);
-        nextPetriPlaceNode.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleasePetriPlace);
-        shapePane.getChildren().add(nextPetriPlaceNode);
 
     }
 
     public void doMouseReleasePetriPlace(MouseEvent mouseEvent) {
-        Circle c = (Circle) mouseEvent.getSource();
-        if (c.getId().equals("PetriPlaceStart")) {
-            shapePane.getChildren().remove(newPetriPlaceStart);
-            newPetriPlaceStart = nextPetriPlaceNode;
-        } else if (c.getId().equals("PetriPlaceNeutral")) {
-            shapePane.getChildren().remove(newPetriPlaceNeutral);
-            newPetriPlaceNeutral = nextPetriPlaceNode;
-        } else {
-            shapePane.getChildren().remove(newPetriPlaceEnd);
-            newPetriPlaceEnd = nextPetriPlaceNode;
-        }
 
-        addPetriPlaceToGraph(c.getId());
+
+        if(ModelView.getInstance().interactionType.equals("create")) {
+
+            Circle c = (Circle) mouseEvent.getSource();
+            if (c.getId().equals("PetriPlaceStart")) {
+                shapePane.getChildren().remove(newPetriPlaceStart);
+                newPetriPlaceStart = nextPetriPlaceNode;
+            } else if (c.getId().equals("PetriPlaceNeutral")) {
+                shapePane.getChildren().remove(newPetriPlaceNeutral);
+                newPetriPlaceNeutral = nextPetriPlaceNode;
+            } else {
+                shapePane.getChildren().remove(newPetriPlaceEnd);
+                newPetriPlaceEnd = nextPetriPlaceNode;
+            }
+
+            addPetriPlaceToGraph(c.getId());
+        }
 
     }
 
 
     public void doMouseDragPetriTransition(MouseEvent mouseEvent) {
-        Rectangle r = (Rectangle) mouseEvent.getSource();
-        double xOffset = mouseEvent.getX() - r.getX();
-        double yOffset = mouseEvent.getY() - r.getY();
-        r.setX(r.getX() + xOffset);
-        r.setY(r.getY() + yOffset);
+        if(ModelView.getInstance().interactionType.equals("create")) {
+            Rectangle r = (Rectangle) mouseEvent.getSource();
+            double xOffset = mouseEvent.getX() - r.getX();
+            double yOffset = mouseEvent.getY() - r.getY();
+            r.setX(r.getX() + xOffset);
+            r.setY(r.getY() + yOffset);
+        }
     }
 
     public void doMousePressPetriTransition(MouseEvent mouseEvent) {
         //todo add switch
-        nextPetriTransition = new Rectangle(90, 260, 40, 40);
-        nextPetriTransition.setFill(Color.GRAY);
-        nextPetriTransition.setId("PetriTransition");
+        if(ModelView.getInstance().interactionType.equals("create")) {
+            nextPetriTransition = new Rectangle(90, 260, 40, 40);
+            nextPetriTransition.setFill(Color.GRAY);
+            nextPetriTransition.setId("PetriTransition");
 
 
-        nextPetriTransition.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragPetriTransition);
-        nextPetriTransition.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressPetriTransition);
-        nextPetriTransition.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleasePetriTransition);
-        shapePane.getChildren().add(nextPetriTransition);
+            nextPetriTransition.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::doMouseDragPetriTransition);
+            nextPetriTransition.addEventHandler(MouseEvent.MOUSE_PRESSED, this::doMousePressPetriTransition);
+            nextPetriTransition.addEventHandler(MouseEvent.MOUSE_RELEASED, this::doMouseReleasePetriTransition);
+            shapePane.getChildren().add(nextPetriTransition);
+        }
 
     }
 
     public void doMouseReleasePetriTransition(MouseEvent mouseEvent) {
-        shapePane.getChildren().remove(newPetriTransition);
-        newPetriTransition = nextPetriTransition;
-        addPetriTransitionToGraph();
+        if(ModelView.getInstance().interactionType.equals("create")) {
+            if (ModelView.getInstance().interactionType.equals("create")) {
+                shapePane.getChildren().remove(newPetriTransition);
+                newPetriTransition = nextPetriTransition;
+                addPetriTransitionToGraph();
+            }
+        }
     }
 
     private void addPetriPlaceToGraph(String petriPlaceType) {
@@ -633,7 +667,18 @@ public class UserInterfaceController implements Initializable, FontListener {
             //settingsStage.initModality(Modality.APPLICATION_MODAL);
             newProcessStage.initModality(Modality.NONE);
             newProcessStage.setResizable(false);
+
+            CountDownLatch latch = new CountDownLatch(1);
             newProcessStage.showAndWait();
+            latch.countDown();
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
             ModelView.getInstance().setLatestNodeName(nameNewGraphElementController.getNewProcessNameValue());
 
         } catch (IOException e) {
@@ -710,6 +755,8 @@ public class UserInterfaceController implements Initializable, FontListener {
             case "backwardsPetriBuilding":
                 a.setContentText("Unable to build Petri-Nets backwards, make sure the process contains a start place");
                 break;
+            case "deletingNonLeaf":
+                a.setContentText("Unable to delete non leaf nodes");
             default:
                 break;
         }
@@ -892,7 +939,6 @@ public class UserInterfaceController implements Initializable, FontListener {
             ModelView.getInstance();
 
             SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().setLoadedGraph(loadedGraph)));
-
 
 
         } catch (IOException e) {
@@ -1126,7 +1172,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             Stage settingsStage = new Stage();
             settingsStage.setTitle("Settings");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 400, 400);
             settingsStage.setScene(windowScene);
 
             settingsController.setWindow(settingsStage.getScene().getWindow());
@@ -1342,7 +1388,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         visualPetriToProcessCodeHelper = new VisualPetriToProcessCodeHelper();
 
-        String conversionResult = visualPetriToProcessCodeHelper.doConversion(ModelView.getInstance().getVisualCreatedPetris());
+        String conversionResult = visualPetriToProcessCodeHelper.doConversion(ModelView.getInstance().getVisualCreatedPetris(),
+            ModelView.getInstance().getOwnersToPIDMapping());
 
         System.out.println(conversionResult);
 
@@ -1355,7 +1402,10 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     }
 
-    public String doParelelProcessSpecifying(ArrayList<String> processes) {
+    public String doParelelProcessSpecifying(ArrayList<String> processes, String id) {
+
+
+
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/ChooseProcess.fxml"));
         loader.setController(chooseProcessController); //links to  SettingsController.java
@@ -1387,15 +1437,64 @@ public class UserInterfaceController implements Initializable, FontListener {
             optionsLayoutLoadFailed.show();
         }
 
-        System.out.println(toReturn);
+        System.out.println("Returing");
         return toReturn;
     }
 
     public void handleCreateToggle(ActionEvent actionEvent) {
-        ModelView.getInstance().switchToCreateMode();
+        ModelView.getInstance().switchInteractionType("create");
     }
 
     public void handleTokenToggle(ActionEvent actionEvent) {
-        ModelView.getInstance().switchToTokenMode();
+        ModelView.getInstance().switchInteractionType("token");
+    }
+
+    public void handleAutoPetriRelationToggle(ActionEvent actionEvent) {
+        ModelView.getInstance().switchInteractionType("autopetrirelation");
+    }
+
+    public String nameParrelelProceses() {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameParrelelProcess.fxml"));
+        loader.setController(nameNewParrelelProcessController); //links to  SettingsController.java
+        String toReturn = "";
+        try {
+            Stage nameParrelelProcesesStage = new Stage();
+            nameParrelelProcesesStage.setTitle("Label Parrelel Processes");
+
+            Scene windowScene = new Scene(loader.load(), 402, 326);
+            nameParrelelProcesesStage.setScene(windowScene);
+
+            //settingsController.setWindow(newProcessStage.getScene().getWindow());
+            nameParrelelProcesesStage.initOwner(UserInterfaceApplication.getPrimaryStage());
+            //settingsStage.initModality(Modality.APPLICATION_MODAL);
+            nameParrelelProcesesStage.initModality(Modality.NONE);
+            nameParrelelProcesesStage.setResizable(false);
+            nameParrelelProcesesStage.showAndWait();
+            toReturn = nameNewParrelelProcessController.getNewProcessNameValue();
+
+        } catch (IOException e) {
+            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            optionsLayoutLoadFailed.setTitle("Error encountered when loading new proccess dialogue");
+            optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
+
+            optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
+            optionsLayoutLoadFailed.initOwner(modelDisplayNew.getScene().getWindow());
+
+            optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            optionsLayoutLoadFailed.show();
+        }
+
+
+        System.out.println("returning: " + toReturn);
+
+        return toReturn;
+    }
+
+    public void changeSyncingEdgeWeight(double sync) {
+        ModelView.getInstance().setSyningEdgeWight(sync);
+    }
+
+    public void changeRelatingEdgeWeight(double relatingWeight) {
+        ModelView.getInstance().setRelatingEdgeWight(relatingWeight);
     }
 }

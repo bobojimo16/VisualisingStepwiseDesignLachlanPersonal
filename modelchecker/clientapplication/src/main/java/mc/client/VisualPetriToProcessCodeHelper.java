@@ -1,8 +1,10 @@
 package mc.client;
 
+import com.google.common.collect.MultimapBuilder;
 import mc.client.ui.TrieNode;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
+import scala.collection.mutable.MultiMap;
 
 import java.util.*;
 
@@ -16,11 +18,14 @@ public class VisualPetriToProcessCodeHelper {
     private String[] processesText = new String[100];
     private int processesTextSize = 0;
     private boolean innerProcessDetected;
-    private Set<String> processesInParelel = new HashSet<>();
+    private HashMap<String, ArrayList<String>> processesInParelel = new HashMap<>();
+    private HashMap<String, String> ownersToPID = new HashMap<>();
 
 
-    public String doConversion(ArrayList<Node> visualCreatedProcesses) {
+    public String doConversion(ArrayList<Node> visualCreatedProcesses, HashMap<String, String> ownersToPIDMapping) {
+
         allNodes = visualCreatedProcesses;
+        ownersToPID = ownersToPIDMapping;
 
         //performParelelSplitting(allNodes);
 
@@ -68,18 +73,34 @@ public class VisualPetriToProcessCodeHelper {
             c++;
         }
 
-        cumulativeProcessCode += "ParrelelProcesses = ";
+        for(String s1: processesInParelel.keySet()){
+            cumulativeProcessCode += s1 + " = ";
 
-        int i = 0;
-        for (String s : processesInParelel) {
-            if (i == 0) {
-                cumulativeProcessCode += s.toUpperCase();
-            } else {
-                cumulativeProcessCode += " || " + s.toUpperCase();
+            int i = 0;
+            for (String s2 : processesInParelel.get(s1)) {
+
+                String res = ownersToPID.get(s2);
+
+                if(res == null){
+                    res = s2;
+                }
+
+                if (i == 0) {
+                    cumulativeProcessCode += res;
+                } else {
+                    cumulativeProcessCode += " || " + res;
+                }
+
+                i++;
             }
 
-            i++;
+            cumulativeProcessCode += "\n";
+
         }
+
+
+
+
 
         cumulativeProcessCode += ".";
 
@@ -105,11 +126,17 @@ public class VisualPetriToProcessCodeHelper {
 
     private void identifyProcessesInParelel(Node n) {
         Collection<Edge> pidsEnteringEdges = n.getEnteringEdgeSet();
+        ArrayList<String> pids = new ArrayList<>();
 
         for (Edge e : pidsEnteringEdges) {
-            processesInParelel.add(e.getNode0().getAttribute("ui.PID"));
+            pids.add(e.getNode0().getAttribute("ui.PID"));
         }
 
+        if(n.hasAttribute("ui.PIDSName")) {
+            processesInParelel.put(n.getAttribute("ui.PIDSName").toString(), pids);
+        } else {
+            processesInParelel.put(n.getAttribute("ui.initialProcessName").toString(), pids);
+        }
 
     }
 
@@ -123,6 +150,10 @@ public class VisualPetriToProcessCodeHelper {
         boolean isCyclic = false;
 
         if (!n.hasAttribute("ui.PIDS")) {
+
+            if(!n.hasAttribute("ui.PID")){
+                System.out.println(n.getAttribute("ui.label").toString());
+            }
 
             if (!n.getAttribute("ui.PID").toString().trim().equals(currentPetriHead.getAttribute("ui.PID").toString().trim())) {
                 if(n.hasAttribute("ui.label")) {
@@ -248,14 +279,33 @@ public class VisualPetriToProcessCodeHelper {
         }
 
 
+        if(n.getAttribute("ui.class").equals("PetriTransition")) {
+            System.out.println(edges.size());
+        }
+
+
+
+
         for (int i = 0; i < edges.size(); i++) {
 
             Node outGoingNode = edges.get(i).getNode1();
+
+
             //Node outGoing = current;
 
             //if node is not a place then get its value
-            if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
+            if(outGoingNode.getAttribute("ui.class").equals("PetriPlaceEnd")){
+                System.out.println("og: " + outGoingNode.getAttribute("ui.PID").toString());
+                System.out.println("n: " + n.getAttribute("ui.PID").toString());
+                if(outGoingNode.getAttribute("ui.PID").toString().equals(currentPetriHead.getAttribute("ui.PID"))){
+                    String nextValue = doValueEvaluation(outGoingNode);
+                    processesText[currentLineForWriting] += nextValue;
+                }
+            }
+            else if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
                 String nextValue = doValueEvaluation(outGoingNode);
+                System.out.println(n.getId());
+                System.out.println(nextValue);
                 processesText[currentLineForWriting] += nextValue;
                 //cumulativeProcessCode += nextValue;
             }
