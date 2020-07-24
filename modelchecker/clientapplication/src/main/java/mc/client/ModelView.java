@@ -817,6 +817,7 @@ public class ModelView implements Observer {
         removeLastTokens(nodeSelected);
 
         processModelsOnScreenGSType.asMap().forEach((key, value) -> {
+
             if (!key.contains("automata")) {
 
                 for (Node vertex : value) {
@@ -829,21 +830,36 @@ public class ModelView implements Observer {
                         String petriHeadConversion;
 
                         if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
+                            System.out.println(VertexGN.getRepresentedFeature().getId());
                             petriHeadConversion = (String) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature().getId());
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
                         } else {
                             petriHeadConversion = VertexGN.getRepresentedFeature().getId();
                         }
 
+                        System.out.println("k: " + key);
+
+                        System.out.println("pnc: " + petriHeadConversion);
+
                         //Add New Tokens
                         workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
-                        workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
 
 
+
+                        System.out.println(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString());
                         if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
+                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
-                        } else {
+                        }
+
+                        else if(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlace")) {
+                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
+                        }
+
+                        else if(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlaceEnd")) {
+                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceEndToken");
                         }
 
                     }
@@ -867,12 +883,19 @@ public class ModelView implements Observer {
 
             if (node.hasAttribute("ui.token")) {
                 node.removeAttribute("ui.token");
-                node.removeAttribute("ui.class");
                 if (node.hasAttribute("ui.petristart")) {
                     node.addAttribute("ui.class", "PetriPlaceStart");
                     node.removeAttribute("ui.petristart");
-                } else {
+                }
+
+                else if(node.getAttribute("ui.class").toString().equals("PetriPlaceToken")) {
+                    node.removeAttribute("ui.class");
                     node.addAttribute("ui.class", "PetriPlace");
+                }
+
+                else if(node.getAttribute("ui.class").toString().equals("PetriPlaceEndToken")) {
+                    node.removeAttribute("ui.class");
+                    node.addAttribute("ui.class", "PetriPlaceEnd");
                 }
             }
           /*      }
@@ -1378,6 +1401,7 @@ public class ModelView implements Observer {
                 pids.add(n.getAttribute("ui.PID"));
             }
             processModelsOnScreenGSType.removeAll(selectedProcess);
+            processModelsOnScreenGraphNodeType.removeAll(selectedProcess);
         }
 
         ArrayList<Node> nodesToRemove = new ArrayList<>();
@@ -1492,6 +1516,11 @@ public class ModelView implements Observer {
         workingCanvasAreaView.addMouseListener(PMM);
         workingCanvasAreaView.getCamera().setViewPercent(1);
         workingCanvasAreaView.getCamera().setAutoFitView(true);
+
+        Camera cam = workingCanvasAreaView.getCamera();
+        cam.setBounds(0, 0, 0, 1, 1, 0);
+
+
 
 
         ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
@@ -1875,9 +1904,19 @@ public class ModelView implements Observer {
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
             "shadow-color: #0d4503; " +
+            "}" +
+            "node.PetriPlaceEndToken {" +
+            "fill-color: black;" +
+            "size: 10px; " +
+            "shadow-mode: plain;" +
+            "shadow-offset: 0;" +
+            "shadow-width: 10;" +
+            "shadow-color: red; " +
             "}"
 
             ;
+
+
 
     }
 
