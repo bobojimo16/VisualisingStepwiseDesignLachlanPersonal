@@ -92,7 +92,7 @@ public class ModelView implements Observer {
     private boolean addingPetriPlaceNeutral;
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
-    private HashMap graphNodeToHeadPetri = new HashMap();
+    private HashMap graphNodeToHeadPetri = new HashMap<PetriNetPlace, Node>();
     private ArrayList pathColours = new ArrayList();
     private HashMap<String, String> ownersToPID = new HashMap();
     private Set<Node> petriTransitions = new HashSet<>();
@@ -430,8 +430,9 @@ public class ModelView implements Observer {
 
             if (place.isStart()) {
                 n = workingCanvasArea.addNode(petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
-                graphNodeToHeadPetri.put(place.getId(), petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
+                //place.setGSName(petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
                 startToIntValue.put(place, (petriStartsSize + 1 - petriStartSizeTracker.get()));
+                graphNodeToHeadPetri.put(place, n);
                 petriStartSizeTracker.getAndIncrement();
             } else {
                 place.setId(place.getId() + petri.getId());
@@ -817,6 +818,7 @@ public class ModelView implements Observer {
         removeLastTokens(nodeSelected);
 
         processModelsOnScreenGSType.asMap().forEach((key, value) -> {
+
             if (!key.contains("automata")) {
 
                 for (Node vertex : value) {
@@ -826,24 +828,40 @@ public class ModelView implements Observer {
                             .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
                         && !createdNodes.contains(vertex)) {
 
-                        String petriHeadConversion;
+                        String petriHeadConversion = "";
 
                         if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
-                            petriHeadConversion = (String) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature().getId());
+                            System.out.println(VertexGN.getRepresentedFeature().getId());
+                            Node n = (Node) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature());
+                            petriHeadConversion = n.getId();
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
                         } else {
                             petriHeadConversion = VertexGN.getRepresentedFeature().getId();
                         }
 
+                        System.out.println("k: " + key);
+
+                        System.out.println("pnc: " + petriHeadConversion);
+
                         //Add New Tokens
                         workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
-                        workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
 
 
+
+                        System.out.println(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString());
                         if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
+                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
-                        } else {
+                        }
+
+                        else if(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlace")) {
+                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
+                        }
+
+                        else if(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlaceEnd")) {
+                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceEndToken");
                         }
 
                     }
@@ -867,12 +885,19 @@ public class ModelView implements Observer {
 
             if (node.hasAttribute("ui.token")) {
                 node.removeAttribute("ui.token");
-                node.removeAttribute("ui.class");
                 if (node.hasAttribute("ui.petristart")) {
                     node.addAttribute("ui.class", "PetriPlaceStart");
                     node.removeAttribute("ui.petristart");
-                } else {
+                }
+
+                else if(node.getAttribute("ui.class").toString().equals("PetriPlaceToken")) {
+                    node.removeAttribute("ui.class");
                     node.addAttribute("ui.class", "PetriPlace");
+                }
+
+                else if(node.getAttribute("ui.class").toString().equals("PetriPlaceEndToken")) {
+                    node.removeAttribute("ui.class");
+                    node.addAttribute("ui.class", "PetriPlaceEnd");
                 }
             }
           /*      }
@@ -1378,6 +1403,7 @@ public class ModelView implements Observer {
                 pids.add(n.getAttribute("ui.PID"));
             }
             processModelsOnScreenGSType.removeAll(selectedProcess);
+            processModelsOnScreenGraphNodeType.removeAll(selectedProcess);
         }
 
         ArrayList<Node> nodesToRemove = new ArrayList<>();
@@ -1492,6 +1518,11 @@ public class ModelView implements Observer {
         workingCanvasAreaView.addMouseListener(PMM);
         workingCanvasAreaView.getCamera().setViewPercent(1);
         workingCanvasAreaView.getCamera().setAutoFitView(true);
+
+        Camera cam = workingCanvasAreaView.getCamera();
+        cam.setBounds(0, 0, 0, 1, 1, 0);
+
+
 
 
         ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
@@ -1875,9 +1906,19 @@ public class ModelView implements Observer {
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
             "shadow-color: #0d4503; " +
+            "}" +
+            "node.PetriPlaceEndToken {" +
+            "fill-color: black;" +
+            "size: 10px; " +
+            "shadow-mode: plain;" +
+            "shadow-offset: 0;" +
+            "shadow-width: 10;" +
+            "shadow-color: red; " +
             "}"
 
             ;
+
+
 
     }
 
