@@ -92,7 +92,7 @@ public class ModelView implements Observer {
     private boolean addingPetriPlaceNeutral;
     private boolean addingPetriPlaceEnd;
     private boolean addingPetriTransition;
-    private HashMap graphNodeToHeadPetri = new HashMap();
+    private HashMap graphNodeToHeadPetri = new HashMap<PetriNetPlace, Node>();
     private ArrayList pathColours = new ArrayList();
     private HashMap<String, String> ownersToPID = new HashMap();
     private Set<Node> petriTransitions = new HashSet<>();
@@ -430,8 +430,9 @@ public class ModelView implements Observer {
 
             if (place.isStart()) {
                 n = workingCanvasArea.addNode(petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
-                graphNodeToHeadPetri.put(place.getId(), petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
+                //place.setGSName(petri.getId() + (petriStartsSize + 1 - petriStartSizeTracker.get()));
                 startToIntValue.put(place, (petriStartsSize + 1 - petriStartSizeTracker.get()));
+                graphNodeToHeadPetri.put(place, n);
                 petriStartSizeTracker.getAndIncrement();
             } else {
                 place.setId(place.getId() + petri.getId());
@@ -827,11 +828,12 @@ public class ModelView implements Observer {
                             .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
                         && !createdNodes.contains(vertex)) {
 
-                        String petriHeadConversion;
+                        String petriHeadConversion = "";
 
                         if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
                             System.out.println(VertexGN.getRepresentedFeature().getId());
-                            petriHeadConversion = (String) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature().getId());
+                            Node n = (Node) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature());
+                            petriHeadConversion = n.getId();
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
                         } else {
                             petriHeadConversion = VertexGN.getRepresentedFeature().getId();

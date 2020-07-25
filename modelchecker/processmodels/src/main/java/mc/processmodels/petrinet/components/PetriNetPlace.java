@@ -30,7 +30,9 @@ public class PetriNetPlace extends ProcessModelObject implements Comparable<Petr
 
     // set of probability distibution ids - data on PetriNet
   private Set<String> probDists = new TreeSet<>();
-  public   Set<String> getProbabilityDistributions(){return probDists;}
+    private String gsName;
+
+    public   Set<String> getProbabilityDistributions(){return probDists;}
   public void addProbabilityDistribution(String id) {probDists.add(id);}
   public void clearProbabilityDistributions(){probDists.clear();}
 
@@ -229,6 +231,7 @@ public class PetriNetPlace extends ProcessModelObject implements Comparable<Petr
       .distinct()
       .collect(Collectors.toSet());
   }
+
 
   public String toString() {
     StringBuilder builder = new StringBuilder();
