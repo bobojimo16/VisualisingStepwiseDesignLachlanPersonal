@@ -2,29 +2,23 @@ package mc.client.ui;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.sun.org.apache.regexp.internal.RE;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.TilePane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Box;
 import javafx.scene.shape.*;
 //import javafx.scene.shape.Shape;
 import javafx.scene.shape.Rectangle;
@@ -32,7 +26,6 @@ import javafx.scene.shape.Shape;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import lombok.Getter;
 import mc.client.ModelView;
 import mc.client.VisualPetriToProcessCodeHelper;
 import mc.compiler.CompilationObject;
@@ -40,23 +33,17 @@ import mc.compiler.CompilationObservable;
 import mc.compiler.Compiler;
 import mc.compiler.OperationResult;
 import mc.exceptions.CompilationException;
-import mc.processmodels.ProcessModel;
 import mc.util.LogMessage;
 import mc.util.expr.Expression;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
-import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.stream.file.FileSinkDGS;
 import org.graphstream.stream.file.FileSourceDGS;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseMotionListener;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.*;
@@ -69,6 +56,8 @@ import static mc.client.ui.SyntaxHighlighting.computeHighlighting;
 
 public class UserInterfaceController implements Initializable, FontListener {
 
+    public AnchorPane modelDisplayNewContainer;
+    public AnchorPane modelDisplayNewController;
     private boolean holdHighlighting = false; // If there is an compiler issue, highlight the area. Dont keep applying highlighting it wipes it out
     private javafx.stage.Popup autocompleteBox = new javafx.stage.Popup();
     private ExecutorService executor; // Runs the highlighting in separate ctx
@@ -177,6 +166,7 @@ public class UserInterfaceController implements Initializable, FontListener {
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
         String col = "rgba(153, 255, 204, 1.0)";
         try {
 
@@ -481,18 +471,21 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             System.out.println("id: " + c.getId());
 
-            addAutomataToGraph(c.getId());
+            addAutomataToGraph(c.getId(), mouseEvent);
         }
 
     }
 
 
-    private void addAutomataToGraph(String nodeType) {
+    private void addAutomataToGraph(String nodeType, MouseEvent mouseEvent) {
 
-        ModelView.getInstance().setNewVisualNodeType(nodeType);
+        if(determineInBounds(mouseEvent)) {
 
-        if (nodeType.equals("AutoStart")) {
-            initiateNameNewGraphElementPopup();
+            ModelView.getInstance().setNewVisualNodeType(nodeType);
+
+            if (nodeType.equals("AutoStart")) {
+                initiateNameNewGraphElementPopup();
+            }
         }
     }
 
@@ -595,7 +588,7 @@ public class UserInterfaceController implements Initializable, FontListener {
                 newPetriPlaceEnd = nextPetriPlaceNode;
             }
 
-            addPetriPlaceToGraph(c.getId());
+            addPetriPlaceToGraph(c.getId(), mouseEvent);
         }
 
     }
@@ -632,23 +625,37 @@ public class UserInterfaceController implements Initializable, FontListener {
             if (ModelView.getInstance().interactionType.equals("create")) {
                 shapePane.getChildren().remove(newPetriTransition);
                 newPetriTransition = nextPetriTransition;
-                addPetriTransitionToGraph();
+                addPetriTransitionToGraph(mouseEvent);
             }
         }
     }
 
-    private void addPetriPlaceToGraph(String petriPlaceType) {
-        ModelView.getInstance().setNewVisualNodeType(petriPlaceType);
+    private void addPetriPlaceToGraph(String petriPlaceType, MouseEvent mouseEvent) {
 
-        if (petriPlaceType.equals("PetriPlaceStart")) {
-            initiateNameNewGraphElementPopup();
+        if(determineInBounds(mouseEvent)) {
+
+            ModelView.getInstance().setNewVisualNodeType(petriPlaceType);
+
+            if (petriPlaceType.equals("PetriPlaceStart")) {
+                initiateNameNewGraphElementPopup();
+            }
         }
 
     }
 
-    private void addPetriTransitionToGraph() {
-        ModelView.getInstance().setNewVisualNodeType("petriTransition");
-        initiateNameNewGraphElementPopup();
+    private Boolean determineInBounds(MouseEvent mouseEvent){
+        return mouseEvent.getSceneY() > modelDisplayNewContainer.getLayoutY()+modelDisplayNewController.getHeight()
+            && mouseEvent.getSceneY() < modelDisplayNewContainer.getLayoutY() + modelDisplayNewContainer.getHeight()
+            && mouseEvent.getSceneX() > 0
+            && mouseEvent.getSceneX() < shapePane.getLayoutX();
+    }
+
+    private void addPetriTransitionToGraph(MouseEvent mouseEvent) {
+
+        if(determineInBounds(mouseEvent)) {
+            ModelView.getInstance().setNewVisualNodeType("petriTransition");
+            initiateNameNewGraphElementPopup();
+        }
     }
 
     private void initiateNameNewGraphElementPopup() {
