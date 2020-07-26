@@ -155,13 +155,16 @@ public class VisualPetriToProcessCodeHelper {
                 System.out.println(n.getAttribute("ui.label").toString());
             }
 
-            if (!n.getAttribute("ui.PID").toString().trim().equals(currentPetriHead.getAttribute("ui.PID").toString().trim())) {
-                if(n.hasAttribute("ui.label")) {
-                    System.out.println("PID1: " + n.getAttribute("ui.PID").toString());
-                    System.out.println("PID2: " + currentPetriHead.getAttribute("ui.PID").toString());
-                    System.out.println("Returning: " + n.getAttribute("ui.label").toString());
+            if(n.hasAttribute("ui.PID")) {
+
+                if (!n.getAttribute("ui.PID").toString().trim().equals(currentPetriHead.getAttribute("ui.PID").toString().trim())) {
+                    if (n.hasAttribute("ui.label")) {
+                        System.out.println("PID1: " + n.getAttribute("ui.PID").toString());
+                        System.out.println("PID2: " + currentPetriHead.getAttribute("ui.PID").toString());
+                        System.out.println("Returning: " + n.getAttribute("ui.label").toString());
+                    }
+                    return;
                 }
-                return;
             }
         } else {
             identifyProcessesInParelel(n);

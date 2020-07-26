@@ -11,7 +11,6 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -589,7 +588,9 @@ public class ModelView implements Observer {
     }
 
     public void setNewVisualNodeType(String nodeType) {
+
         // todo switch
+
 
         if (nodeType.equals("AutoStart")) {
             addingAutoNodeStart = true;
@@ -1056,8 +1057,12 @@ public class ModelView implements Observer {
     private void doPostEdgeUpdates(Edge edge) {
 
         //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS" ? wat
-        if(workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1) {
-            workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", firstNodeClicked.getAttribute("ui.PID").toString());
+
+
+
+        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).equals("PetriPlaceInnerStart"))
+            || firstNodeClicked.getAttribute("ui.class").equals("PetriPlaceStart")) {
+            workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString());
         }
 
 
@@ -1868,7 +1873,7 @@ public class ModelView implements Observer {
             "}" +
             "node.PetriPlace {" +
             "fill-color: gray;" +
-            "text-visibility-mode: hidden;" +
+            /*"text-visibility-mode: hidden;" +*/
             "}" +
             "node.PetriPlaceStart {" +
             "fill-color: #0d4503;" +
@@ -1914,6 +1919,9 @@ public class ModelView implements Observer {
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
             "shadow-color: red; " +
+            "}" +
+            "node.PetriPlaceInnerStart {" +
+            "fill-color: red;" +
             "}"
 
             ;

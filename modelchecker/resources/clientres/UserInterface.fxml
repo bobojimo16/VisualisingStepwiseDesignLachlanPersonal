@@ -57,9 +57,10 @@
 
                   </children>
               </AnchorPane>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="1000.0">
+              <AnchorPane fx:id="modelDisplayNewContainer" minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="1000.0">
                   <children>
-                      <AnchorPane layoutY="3.0" prefHeight="47.0" prefWidth="1000.0" style="-fx-background-color: #BFBFBF;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="3.0">
+                      <SwingNode fx:id="modelDisplayNew" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="50" />
+                      <AnchorPane fx:id="modelDisplayNewController" layoutY="3.0" prefHeight="47.0" prefWidth="1000.0" style="-fx-background-color: #BFBFBF;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="3.0">
                           <children>
                               <Label layoutX="10.0" layoutY="13.0" text="Models:" AnchorPane.leftAnchor="20.0">
                                   <font>
@@ -91,7 +92,6 @@
                           </children>
 
                       </AnchorPane>
-                      <SwingNode fx:id="modelDisplayNew" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="50" />
                       <Pane fx:id="shapePane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="800.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0">
                                            <!-- <children>
                                                 <Circle fx:id="circle" centerX="100.0" centerY="75.0" fill="BLUE" onMousePressed="#doMousePress" onMouseDragged="#doMouseDrag" radius="50.0" stroke="BLACK" strokeType="INSIDE" />
