@@ -1057,7 +1057,11 @@ public class ModelView implements Observer {
     private void doPostEdgeUpdates(Edge edge) {
 
         //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS" ? wat
-        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1) || firstNodeClicked.getAttribute("ui.class").equals("PetriPlaceStart")) {
+
+
+
+        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).equals("PetriPlaceInnerStart"))
+            || firstNodeClicked.getAttribute("ui.class").equals("PetriPlaceStart")) {
             workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString());
         }
 
@@ -1869,7 +1873,7 @@ public class ModelView implements Observer {
             "}" +
             "node.PetriPlace {" +
             "fill-color: gray;" +
-            "text-visibility-mode: hidden;" +
+            /*"text-visibility-mode: hidden;" +*/
             "}" +
             "node.PetriPlaceStart {" +
             "fill-color: #0d4503;" +
@@ -1915,9 +1919,10 @@ public class ModelView implements Observer {
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
             "shadow-color: red; " +
-            "}"/* +
+            "}" +
             "node.PetriPlaceInnerStart {" +
-            ""*/
+            "fill-color: red;" +
+            "}"
 
             ;
 
