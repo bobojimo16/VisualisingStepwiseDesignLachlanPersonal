@@ -1060,7 +1060,7 @@ public class ModelView implements Observer {
 
 
 
-        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).equals("PetriPlaceInnerStart"))
+        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).toString().contains("PetriPlace"))
             || firstNodeClicked.getAttribute("ui.class").equals("PetriPlaceStart")) {
             workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString());
         }
@@ -1216,39 +1216,64 @@ public class ModelView implements Observer {
 
     }
 
+    private Boolean determineIfIndexedProcess(Iterator<Node> k) {
+
+        Boolean indexed = false;
+        while (k.hasNext()) {
+            Node current = k.next();
+
+            if(current.hasAttribute("ui.label")){
+                if(current.getAttribute("ui.label").toString().contains("[")){
+                    indexed = true;
+                }
+            }
+
+        }
+
+        return indexed;
+
+
+    }
+
     private void handleProcessEditing(Node n) {
 
 
         Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
+        Boolean indexed = determineIfIndexedProcess(k);
 
-        ArrayList<Node> heads = new ArrayList<>();
+        if(!indexed) {
 
-        while (k.hasNext()) {
-            Node current = k.next();
+            ArrayList<Node> heads = new ArrayList<>();
 
-            if (!createdNodes.contains(current)) {
-                createdNodes.add(current);
+            while (k.hasNext()) {
+                Node current = k.next();
+
+                if (!createdNodes.contains(current)) {
+                    createdNodes.add(current);
+                }
+
+                if (current.getAttribute("ui.class").equals("PetriPlaceStart")) {
+                    heads.add(current);
+                }
+
             }
 
-            if (current.getAttribute("ui.class").equals("PetriPlaceStart")) {
-                heads.add(current);
+
+            for (Node hn : heads) {
+                if (!hn.hasAttribute("ui.edited")) {
+                    String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
+                    hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                    ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                    hn.addAttribute("ui.edited", true);
+                }
             }
 
+
+            doPIDPropogationOfExistingProcess(heads.get(0));
         }
-
-
-        for (Node hn : heads) {
-            if (!hn.hasAttribute("ui.edited")) {
-                String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
-                hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                hn.addAttribute("ui.edited", true);
-            }
-        }
-
-
-        doPIDPropogationOfExistingProcess(heads.get(0));
     }
+
+
 
     private String[] ownersTypeConverter(Object res, Boolean allOwners) {
 
