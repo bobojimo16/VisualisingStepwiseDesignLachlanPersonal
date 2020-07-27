@@ -24,88 +24,93 @@ public class VisualPetriToProcessCodeHelper {
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses, HashMap<String, String> ownersToPIDMapping) {
 
-        allNodes = visualCreatedProcesses;
-        ownersToPID = ownersToPIDMapping;
+        try {
 
-        //performParelelSplitting(allNodes);
+            allNodes = visualCreatedProcesses;
+            ownersToPID = ownersToPIDMapping;
 
-        ArrayList<Node> HeadPetriNodes = new ArrayList<>();
-        cumulativeProcessCode = "";
+            //performParelelSplitting(allNodes);
+
+            ArrayList<Node> HeadPetriNodes = new ArrayList<>();
+            cumulativeProcessCode = "";
 
 
-        //Remove Nodes that arn't Petri Head Nodes
-        for (Node n : visualCreatedProcesses) {
-            if (n.getAttribute("ui.class").equals("PetriPlaceStart")) {
-                HeadPetriNodes.add(n);
+            //Remove Nodes that arn't Petri Head Nodes
+            for (Node n : visualCreatedProcesses) {
+                if (n.getAttribute("ui.class").equals("PetriPlaceStart")) {
+                    HeadPetriNodes.add(n);
+                }
             }
-        }
 
-        //For each head petri node perform dfsrecursive search
-        for (Node n : HeadPetriNodes) {
-            currentPetriHead = n;
-            innerProcessCounter = 1;
-            doClearingJobs(visualCreatedProcesses);
-            String petriID = n.getAttribute("ui.label");
-            processesText[0] += petriID.toUpperCase() + " = ";
-            doDFSRecursive(n, processesTextSize);
-            processes.add(processesText);
-            processesTextFinalSize.add(processesTextSize);
-            processesTextSize = 0;
-            processesText = new String[100];
-        }
+            //For each head petri node perform dfsrecursive search
+            for (Node n : HeadPetriNodes) {
+                currentPetriHead = n;
+                innerProcessCounter = 1;
+                doClearingJobs(visualCreatedProcesses);
+                String petriID = n.getAttribute("ui.label");
+                processesText[0] += petriID.toUpperCase() + " = ";
+                doDFSRecursive(n, processesTextSize);
+                processes.add(processesText);
+                processesTextFinalSize.add(processesTextSize);
+                processesTextSize = 0;
+                processesText = new String[100];
+            }
 
-        int c = 0;
-        for (String[] process : processes) {
-            for (int i = 0; i <= processesTextFinalSize.get(c); i++) {
-                if (i != process.length) {
-                    if (i != processesTextFinalSize.get(c)) {
-                        cumulativeProcessCode += process[i] + "," + "\n";
+            int c = 0;
+            for (String[] process : processes) {
+                for (int i = 0; i <= processesTextFinalSize.get(c); i++) {
+                    if (i != process.length) {
+                        if (i != processesTextFinalSize.get(c)) {
+                            cumulativeProcessCode += process[i] + "," + "\n";
+                        } else {
+                            cumulativeProcessCode += process[i] + "." + "\n";
+                        }
                     } else {
-                        cumulativeProcessCode += process[i] + "." + "\n";
+                        cumulativeProcessCode += process[i];
                     }
-                } else {
-                    cumulativeProcessCode += process[i];
+
                 }
+                cumulativeProcessCode += "\n";
 
-            }
-            cumulativeProcessCode += "\n";
-
-            c++;
-        }
-
-        for(String s1: processesInParelel.keySet()){
-            cumulativeProcessCode += s1 + " = ";
-
-            int i = 0;
-            for (String s2 : processesInParelel.get(s1)) {
-
-                String res = ownersToPID.get(s2);
-
-                if(res == null){
-                    res = s2;
-                }
-
-                if (i == 0) {
-                    cumulativeProcessCode += res;
-                } else {
-                    cumulativeProcessCode += " || " + res;
-                }
-
-                i++;
+                c++;
             }
 
-            cumulativeProcessCode += "\n";
+            for (String s1 : processesInParelel.keySet()) {
+                cumulativeProcessCode += s1 + " = ";
 
+                int i = 0;
+                for (String s2 : processesInParelel.get(s1)) {
+
+                    String res = ownersToPID.get(s2);
+
+                    if (res == null) {
+                        res = s2;
+                    }
+
+                    if (i == 0) {
+                        cumulativeProcessCode += res;
+                    } else {
+                        cumulativeProcessCode += " || " + res;
+                    }
+
+                    i++;
+                }
+
+                cumulativeProcessCode += "\n";
+
+            }
+
+
+            cumulativeProcessCode += ".";
+
+            //cumulativeProcessCode += ".";
+            return cumulativeProcessCode;
+
+        } catch (Exception e1) {
+            return "Your Processes Returned an Error";
+        } catch (Error e2) {
+            return "Your Processes Returned an Error";
         }
-
-
-
-
-
-        cumulativeProcessCode += ".";
-
-        //cumulativeProcessCode += ".";
-        return cumulativeProcessCode;
     }
 
     private void doClearingJobs(ArrayList<Node> visualCreatedProcesses) {
@@ -132,7 +137,7 @@ public class VisualPetriToProcessCodeHelper {
             pids.add(e.getNode0().getAttribute("ui.PID"));
         }
 
-        if(n.hasAttribute("ui.PIDSName")) {
+        if (n.hasAttribute("ui.PIDSName")) {
             processesInParelel.put(n.getAttribute("ui.PIDSName").toString(), pids);
         } else {
             processesInParelel.put(n.getAttribute("ui.initialProcessName").toString(), pids);
@@ -142,8 +147,6 @@ public class VisualPetriToProcessCodeHelper {
 
 
     private void doDFSRecursive(Node n, int currentLineForWriting) {
-
-
         if (!allNodes.contains(n)) {
             allNodes.add(n);
         }
@@ -151,11 +154,11 @@ public class VisualPetriToProcessCodeHelper {
 
         if (!n.hasAttribute("ui.PIDS")) {
 
-            if(!n.hasAttribute("ui.PID")){
+            if (!n.hasAttribute("ui.PID")) {
                 System.out.println(n.getAttribute("ui.label").toString());
             }
 
-            if(n.hasAttribute("ui.PID")) {
+            if (n.hasAttribute("ui.PID")) {
 
                 if (!n.getAttribute("ui.PID").toString().trim().equals(currentPetriHead.getAttribute("ui.PID").toString().trim())) {
                     if (n.hasAttribute("ui.label")) {
@@ -235,9 +238,9 @@ public class VisualPetriToProcessCodeHelper {
 
             ArrayList<Edge> edgesToRemove = new ArrayList<>();
 
-            for(int i = 0; i < edges.size(); i++){
-                for(int j = 0; j < edges.size(); j++){
-                    if(edges.get(i).getNode1().getAttribute("ui.label").equals(edges.get(j).getNode1().getAttribute("ui.label"))
+            for (int i = 0; i < edges.size(); i++) {
+                for (int j = 0; j < edges.size(); j++) {
+                    if (edges.get(i).getNode1().getAttribute("ui.label").equals(edges.get(j).getNode1().getAttribute("ui.label"))
                         && i != j) {
 
                         //Check if these transitions have the same places
@@ -246,16 +249,16 @@ public class VisualPetriToProcessCodeHelper {
                         Collection<Edge> setB = edges.get(j).getNode1().getLeavingEdgeSet();
 
                         int matches = 0;
-                        for(Edge e1: setA){
-                            for(Edge e2: setB){
-                                if(e1.getNode1() == e2.getNode1()){
+                        for (Edge e1 : setA) {
+                            for (Edge e2 : setB) {
+                                if (e1.getNode1() == e2.getNode1()) {
                                     matches++;
                                     break;
                                 }
                             }
                         }
 
-                        if(matches == setA.size() && edgesToRemove.size()+1 < edges.size()){
+                        if (matches == setA.size() && edgesToRemove.size() + 1 < edges.size()) {
                             System.out.println("No Branch");
                             edgesToRemove.add(edges.get(i));
 
@@ -264,11 +267,11 @@ public class VisualPetriToProcessCodeHelper {
                 }
             }
 
-            for(Edge e: edgesToRemove){
+            for (Edge e : edgesToRemove) {
                 edges.remove(e);
             }
 
-            if(edges.size() > 1) {
+            if (edges.size() > 1) {
 
                 processesText[processesTextSize] += "(";
                 PriorityQueue<EdgeAndBool> edgesOrdered = reorderEdges(edges);
@@ -282,11 +285,9 @@ public class VisualPetriToProcessCodeHelper {
         }
 
 
-        if(n.getAttribute("ui.class").equals("PetriTransition")) {
+        if (n.getAttribute("ui.class").equals("PetriTransition")) {
             System.out.println(edges.size());
         }
-
-
 
 
         for (int i = 0; i < edges.size(); i++) {
@@ -297,15 +298,14 @@ public class VisualPetriToProcessCodeHelper {
             //Node outGoing = current;
 
             //if node is not a place then get its value
-            if(outGoingNode.getAttribute("ui.class").equals("PetriPlaceEnd")){
+            if (outGoingNode.getAttribute("ui.class").equals("PetriPlaceEnd")) {
                 System.out.println("og: " + outGoingNode.getAttribute("ui.PID").toString());
                 System.out.println("n: " + n.getAttribute("ui.PID").toString());
-                if(outGoingNode.getAttribute("ui.PID").toString().equals(currentPetriHead.getAttribute("ui.PID"))){
+                if (outGoingNode.getAttribute("ui.PID").toString().equals(currentPetriHead.getAttribute("ui.PID"))) {
                     String nextValue = doValueEvaluation(outGoingNode);
                     processesText[currentLineForWriting] += nextValue;
                 }
-            }
-            else if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
+            } else if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
                 String nextValue = doValueEvaluation(outGoingNode);
                 System.out.println(n.getId());
                 System.out.println(nextValue);
