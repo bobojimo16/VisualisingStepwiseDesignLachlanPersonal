@@ -663,6 +663,7 @@ public class ModelView implements Observer {
         createdNodes.add(latestNode);
         nodeRecentlyPlaced = true;
 
+
     }
 
     public void setLatestNodeName(String newProcessNameValue) {
@@ -1060,7 +1061,7 @@ public class ModelView implements Observer {
 
 
 
-        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).equals("PetriPlaceInnerStart"))
+        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).toString().contains("PetriPlace"))
             || firstNodeClicked.getAttribute("ui.class").equals("PetriPlaceStart")) {
             workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString());
         }
@@ -1116,88 +1117,102 @@ public class ModelView implements Observer {
 
         for (Node currentNode : createdNodes) {
 
-            if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
-                Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
-                if (currentNode.hasAttribute("ui.PIDS")) {
-                    ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
-                    ArrayList<String> selectedPIDS = new ArrayList<>();
+            if(!currentNode.hasAttribute("processSet")) {
 
-                    //add existing pids to selected
+                if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
+                    Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
+                    if (currentNode.hasAttribute("ui.PIDS")) {
+                        ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
+                        ArrayList<String> selectedPIDS = new ArrayList<>();
 
-                    for (Edge e : outGoingEdges) {
-                        if(workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")){
-                            selectedPIDS.add(workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.PID").toString());
+                        //add existing pids to selected
+
+                        for (Edge e : outGoingEdges) {
+                            if (workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
+                                selectedPIDS.add(workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.PID").toString());
+                            }
                         }
-                    }
-
-                    System.out.println("pidss: " + selectedPIDS.size());
 
 
+                        int pidsSize = allPIDS.size();
+                        int eCounter = 0;
 
-                    int pidsSize = allPIDS.size();
-                    int eCounter = 0;
-
-                    for (Edge e : outGoingEdges) {
-
+                        for (Edge e : outGoingEdges) {
 
 
-                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0
-                            && !workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
+                            if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0
+                                && !workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
 
-                            if (eCounter < pidsSize - 1) {
-                                String petriType = e.getNode1().getAttribute("ui.class");
-                                workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
-                                //workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                                if (eCounter < pidsSize - 1) {
+                                    String petriType = e.getNode1().getAttribute("ui.class");
+                                    workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
 
+                                    String s = doShit(e.getNode1().getId());
 
-                                final CountDownLatch latchToWaitForJavaFx = new CountDownLatch(1);
-
-                                Platform.runLater(() -> {
-
-                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS"), e.getNode1().getId()));
+                                    System.out.println(s);
 
 
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
-                                    selectedPIDS.add(selectedPID);
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
-                                    latchToWaitForJavaFx.countDown();
-                                });
 
 
-                                try {
-                                    latchToWaitForJavaFx.await();
-                                } catch (InterruptedException e1) {
-                                    e1.printStackTrace();
-                                }
+                                    final CountDownLatch latchToWaitForJavaFx = new CountDownLatch(1);
+
+                                    Platform.runLater(() -> {
+
+                                        String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS"), e.getNode1().getId()));
 
 
-                            } else {
-                                //Must choose remaining one
-                                for (String s : allPIDS) {
-                                    if (!selectedPIDS.contains(s)) {
-                                        String selectedPID = s;
+                                        workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
                                         selectedPIDS.add(selectedPID);
                                         workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
                                         workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
-                                        selectedPIDS.add(s);
+                                        latchToWaitForJavaFx.countDown();
+                                    });
+
+
+                                    try {
+
+                                        latchToWaitForJavaFx.await();
+                                    } catch (InterruptedException e1) {
+                                        e1.printStackTrace();
                                     }
+
+
+                                } else {
+                                    //Must choose remaining one
+                                    for (String s : allPIDS) {
+                                        if (!selectedPIDS.contains(s)) {
+                                            String selectedPID = s;
+                                            selectedPIDS.add(selectedPID);
+                                            workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
+                                            workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
+                                            selectedPIDS.add(s);
+                                        }
+                                    }
+
+
                                 }
-
-
-
-
                             }
+                            eCounter++;
                         }
-                        eCounter++;
                     }
                 }
+            }
+        }
+
+        for (Node currentNode : createdNodes) {
+            if(currentNode.hasAttribute("processSet")){
+                currentNode.removeAttribute("processSet");
             }
         }
 
 
         unsettingClicked();
 
+    }
+
+    private String doShit(String id) {
+        workingCanvasArea.getNode(id).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+        return "done";
     }
 
     private String determineParrelCompositionName(Node seccondNodeClicked) {
@@ -1216,39 +1231,67 @@ public class ModelView implements Observer {
 
     }
 
+    private Boolean determineIfIndexedProcess(Iterator<Node> k) {
+
+        Boolean indexed = false;
+        while (k.hasNext()) {
+            Node current = k.next();
+
+            if(current.hasAttribute("ui.label")){
+                if(current.getAttribute("ui.label").toString().contains("[")){
+                    indexed = true;
+                }
+            }
+
+        }
+
+        return indexed;
+
+
+    }
+
     private void handleProcessEditing(Node n) {
+
+        Iterator<Node> l = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
+        Boolean indexed = determineIfIndexedProcess(l);
 
 
         Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
 
-        ArrayList<Node> heads = new ArrayList<>();
 
-        while (k.hasNext()) {
-            Node current = k.next();
+        if(!indexed) {
 
-            if (!createdNodes.contains(current)) {
-                createdNodes.add(current);
+            ArrayList<Node> heads = new ArrayList<>();
+
+            while (k.hasNext()) {
+                Node current = k.next();
+
+                if (!createdNodes.contains(current)) {
+                    createdNodes.add(current);
+                }
+
+                if (current.getAttribute("ui.class").equals("PetriPlaceStart")) {
+                    heads.add(current);
+                }
+
             }
 
-            if (current.getAttribute("ui.class").equals("PetriPlaceStart")) {
-                heads.add(current);
+
+            for (Node hn : heads) {
+                if (!hn.hasAttribute("ui.edited")) {
+                    String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
+                    hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                    ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                    hn.addAttribute("ui.edited", true);
+                }
             }
 
+
+            doPIDPropogationOfExistingProcess(heads.get(0));
         }
-
-
-        for (Node hn : heads) {
-            if (!hn.hasAttribute("ui.edited")) {
-                String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
-                hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                hn.addAttribute("ui.edited", true);
-            }
-        }
-
-
-        doPIDPropogationOfExistingProcess(heads.get(0));
     }
+
+
 
     private String[] ownersTypeConverter(Object res, Boolean allOwners) {
 
@@ -1838,6 +1881,14 @@ public class ModelView implements Observer {
 
 
     private String getStyleSheet() {
+
+        Boolean trans = true;
+        String transString = "";
+
+        if(trans){
+            transString = "88";
+        }
+
         return "node {" +
             "text-size: 20;" +
             "text-color: black; " +
@@ -1849,15 +1900,15 @@ public class ModelView implements Observer {
             "shadow-color: #000000, #ffffff;" +
             "}" +
             "node.AutoStart {" +
-            "fill-color: #1F9F06;" +
+            "fill-color: #1F9F06" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoNeutral {" +
-            "fill-color: #b8b4b4;" +
+            "fill-color: #b8b4b4" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoEnd {" +
-            "fill-color: #5c0a04;" +
+            "fill-color: #5c0a04" + transString + ";" +
             "shape: box;" +
             "}" +
             "edge.autoLoop {" +
