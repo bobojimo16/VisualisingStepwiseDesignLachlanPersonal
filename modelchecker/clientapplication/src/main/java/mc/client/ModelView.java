@@ -1237,9 +1237,12 @@ public class ModelView implements Observer {
 
     private void handleProcessEditing(Node n) {
 
+        Iterator<Node> l = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
+        Boolean indexed = determineIfIndexedProcess(l);
+
 
         Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
-        Boolean indexed = determineIfIndexedProcess(k);
+
 
         if(!indexed) {
 
