@@ -663,6 +663,7 @@ public class ModelView implements Observer {
         createdNodes.add(latestNode);
         nodeRecentlyPlaced = true;
 
+
     }
 
     public void setLatestNodeName(String newProcessNameValue) {
@@ -1116,88 +1117,102 @@ public class ModelView implements Observer {
 
         for (Node currentNode : createdNodes) {
 
-            if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
-                Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
-                if (currentNode.hasAttribute("ui.PIDS")) {
-                    ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
-                    ArrayList<String> selectedPIDS = new ArrayList<>();
+            if(!currentNode.hasAttribute("processSet")) {
 
-                    //add existing pids to selected
+                if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
+                    Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
+                    if (currentNode.hasAttribute("ui.PIDS")) {
+                        ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
+                        ArrayList<String> selectedPIDS = new ArrayList<>();
 
-                    for (Edge e : outGoingEdges) {
-                        if(workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")){
-                            selectedPIDS.add(workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.PID").toString());
+                        //add existing pids to selected
+
+                        for (Edge e : outGoingEdges) {
+                            if (workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
+                                selectedPIDS.add(workingCanvasArea.getNode(e.getNode1().getId()).getAttribute("ui.PID").toString());
+                            }
                         }
-                    }
-
-                    System.out.println("pidss: " + selectedPIDS.size());
 
 
+                        int pidsSize = allPIDS.size();
+                        int eCounter = 0;
 
-                    int pidsSize = allPIDS.size();
-                    int eCounter = 0;
-
-                    for (Edge e : outGoingEdges) {
-
+                        for (Edge e : outGoingEdges) {
 
 
-                        if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0
-                            && !workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
+                            if (!workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("processSet") && workingCanvasArea.getNode(e.getNode1().getId()).getOutDegree() == 0
+                                && !workingCanvasArea.getNode(e.getNode1().getId()).hasAttribute("ui.PID")) {
 
-                            if (eCounter < pidsSize - 1) {
-                                String petriType = e.getNode1().getAttribute("ui.class");
-                                workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
-                                //workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                                if (eCounter < pidsSize - 1) {
+                                    String petriType = e.getNode1().getAttribute("ui.class");
+                                    workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
 
+                                    String s = doShit(e.getNode1().getId());
 
-                                final CountDownLatch latchToWaitForJavaFx = new CountDownLatch(1);
-
-                                Platform.runLater(() -> {
-
-                                    String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS"), e.getNode1().getId()));
+                                    System.out.println(s);
 
 
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
-                                    selectedPIDS.add(selectedPID);
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
-                                    workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
-                                    latchToWaitForJavaFx.countDown();
-                                });
 
 
-                                try {
-                                    latchToWaitForJavaFx.await();
-                                } catch (InterruptedException e1) {
-                                    e1.printStackTrace();
-                                }
+                                    final CountDownLatch latchToWaitForJavaFx = new CountDownLatch(1);
+
+                                    Platform.runLater(() -> {
+
+                                        String selectedPID = (uic.doParelelProcessSpecifying(currentNode.getAttribute("ui.PIDS"), e.getNode1().getId()));
 
 
-                            } else {
-                                //Must choose remaining one
-                                for (String s : allPIDS) {
-                                    if (!selectedPIDS.contains(s)) {
-                                        String selectedPID = s;
+                                        workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.class", petriType);
                                         selectedPIDS.add(selectedPID);
                                         workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
                                         workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
-                                        selectedPIDS.add(s);
+                                        latchToWaitForJavaFx.countDown();
+                                    });
+
+
+                                    try {
+
+                                        latchToWaitForJavaFx.await();
+                                    } catch (InterruptedException e1) {
+                                        e1.printStackTrace();
                                     }
+
+
+                                } else {
+                                    //Must choose remaining one
+                                    for (String s : allPIDS) {
+                                        if (!selectedPIDS.contains(s)) {
+                                            String selectedPID = s;
+                                            selectedPIDS.add(selectedPID);
+                                            workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("ui.PID", selectedPID);
+                                            workingCanvasArea.getNode(e.getNode1().getId()).addAttribute("processSet");
+                                            selectedPIDS.add(s);
+                                        }
+                                    }
+
+
                                 }
-
-
-
-
                             }
+                            eCounter++;
                         }
-                        eCounter++;
                     }
                 }
+            }
+        }
+
+        for (Node currentNode : createdNodes) {
+            if(currentNode.hasAttribute("processSet")){
+                currentNode.removeAttribute("processSet");
             }
         }
 
 
         unsettingClicked();
 
+    }
+
+    private String doShit(String id) {
+        workingCanvasArea.getNode(id).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+        return "done";
     }
 
     private String determineParrelCompositionName(Node seccondNodeClicked) {
