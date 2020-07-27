@@ -1881,6 +1881,14 @@ public class ModelView implements Observer {
 
 
     private String getStyleSheet() {
+
+        Boolean trans = true;
+        String transString = "";
+
+        if(trans){
+            transString = "88";
+        }
+
         return "node {" +
             "text-size: 20;" +
             "text-color: black; " +
@@ -1892,15 +1900,15 @@ public class ModelView implements Observer {
             "shadow-color: #000000, #ffffff;" +
             "}" +
             "node.AutoStart {" +
-            "fill-color: #1F9F06;" +
+            "fill-color: #1F9F06" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoNeutral {" +
-            "fill-color: #b8b4b4;" +
+            "fill-color: #b8b4b4" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoEnd {" +
-            "fill-color: #5c0a04;" +
+            "fill-color: #5c0a04" + transString + ";" +
             "shape: box;" +
             "}" +
             "edge.autoLoop {" +
