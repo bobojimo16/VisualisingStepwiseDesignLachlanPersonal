@@ -236,12 +236,12 @@ public class VisualPetriToProcessCodeHelper {
             for (int i = 0; i < edges.size(); i++) {
                 for (int j = 0; j < edges.size(); j++) {
                     if (edges.get(i).getNode1().getAttribute("ui.label").equals(edges.get(j).getNode1().getAttribute("ui.label"))
-                        && i != j) {
+                        && i != j && edges.get(i).getNode1().getAttribute("ui.label").equals(n.getAttribute("ui."))) {
+
+                        System.out.println("L: " + edges.get(i).getNode1().getAttribute("ui.label").toString());
 
                         Collection<Edge> leavingEdgesA = edges.get(i).getSourceNode().getLeavingEdgeSet();
                         Collection<Edge> leavingEdgesB = edges.get(j).getSourceNode().getLeavingEdgeSet();
-
-                        int matches = 0;
 
                         for(Edge e1: leavingEdgesA){
                             leavingNodesA.add(e1.getNode1());
@@ -251,32 +251,31 @@ public class VisualPetriToProcessCodeHelper {
                             leavingNodesB.add(e2.getNode1());
                         }
 
+                        int matches = 0;
 
+                        for(Node n1: leavingNodesA){
+                            for(Node n2: leavingNodesB){
+                                if(n1.getId() == n2.getId()){
+                                    matches++;
+                                }
 
+                            }
+                        }
+
+                        if(matches != leavingNodesA.size()){
+                            System.out.println("Incomplete Process");
+
+                            if(n.hasAttribute("ui.label")) {
+                                System.out.println(n.getAttribute("ui.label").toString());
+                            }
+                        } else {
+                            System.out.println("M" + matches);
+                        }
                     }
                 }
             }
 
-            int matches = 0;
 
-            for(Node n1: leavingNodesA){
-                for(Node n2: leavingNodesB){
-                    if(n1.getId() == n2.getId()){
-                        matches++;
-                    }
-
-                }
-            }
-
-            if(matches != leavingNodesA.size()){
-                System.out.println("Incomplete Process");
-
-                if(n.hasAttribute("ui.label")) {
-                    System.out.println(n.getAttribute("ui.label").toString());
-                }
-            } else {
-                System.out.println("M" + matches);
-            }
         }
 
         /*//When Leaf
@@ -330,14 +329,10 @@ public class VisualPetriToProcessCodeHelper {
 
                             System.out.println("No Branch");
                             edgesToRemove.add(edges.get(i));
-
-
-                        //eif one of these transitions has pids
-                        } else if(edges.get(i).getNode1().hasAttribute("ui.PIDS")
-                            || edges.get(j).getNode1().hasAttribute("ui.PIDS") ){
-                            processIncomplete = true;
-
                         }
+
+
+
                     }
                 }
             }
