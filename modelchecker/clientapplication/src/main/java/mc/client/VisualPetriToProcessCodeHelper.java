@@ -20,6 +20,7 @@ public class VisualPetriToProcessCodeHelper {
     private boolean innerProcessDetected;
     private HashMap<String, ArrayList<String>> processesInParelel = new HashMap<>();
     private HashMap<String, String> ownersToPID = new HashMap<>();
+    private boolean processIncomplete = false;
 
 
     public String doConversion(ArrayList<Node> visualCreatedProcesses, HashMap<String, String> ownersToPIDMapping) {
@@ -102,6 +103,10 @@ public class VisualPetriToProcessCodeHelper {
 
 
             cumulativeProcessCode += ".";
+
+            if(processIncomplete){
+                cumulativeProcessCode += "One of these Processes is Incomplete";
+            }
 
             //cumulativeProcessCode += ".";
             return cumulativeProcessCode;
@@ -211,6 +216,69 @@ public class VisualPetriToProcessCodeHelper {
             n.setAttribute("ui.class", "PetriPlaceInnerStart");
         }
 
+        //If a place has incoming transitions with the same label then both of these transitions must have the same outgoing places
+
+
+        if (n.getAttribute("ui.class").toString().contains("Place") && n.getInDegree() > 1) {
+            Iterator<? extends Edge> k = n.getEnteringEdgeIterator();
+
+            //Get Place edges
+            ArrayList<Edge> edges = new ArrayList<>();
+            for (Iterator<? extends Edge> it = k; it.hasNext(); ) {
+                edges.add(it.next());
+            }
+
+            Collection<Node> leavingNodesA = new ArrayList<>();
+            Collection<Node> leavingNodesB = new ArrayList<>();
+
+
+            //For each edge get its source node
+            for (int i = 0; i < edges.size(); i++) {
+                for (int j = 0; j < edges.size(); j++) {
+                    if (edges.get(i).getNode1().getAttribute("ui.label").equals(edges.get(j).getNode1().getAttribute("ui.label"))
+                        && i != j) {
+
+                        Collection<Edge> leavingEdgesA = edges.get(i).getSourceNode().getLeavingEdgeSet();
+                        Collection<Edge> leavingEdgesB = edges.get(j).getSourceNode().getLeavingEdgeSet();
+
+                        int matches = 0;
+
+                        for(Edge e1: leavingEdgesA){
+                            leavingNodesA.add(e1.getNode1());
+                        }
+
+                        for(Edge e2: leavingEdgesB){
+                            leavingNodesB.add(e2.getNode1());
+                        }
+
+
+
+                    }
+                }
+            }
+
+            int matches = 0;
+
+            for(Node n1: leavingNodesA){
+                for(Node n2: leavingNodesB){
+                    if(n1.getId() == n2.getId()){
+                        matches++;
+                    }
+
+                }
+            }
+
+            if(matches != leavingNodesA.size()){
+                System.out.println("Incomplete Process");
+
+                if(n.hasAttribute("ui.label")) {
+                    System.out.println(n.getAttribute("ui.label").toString());
+                }
+            } else {
+                System.out.println("M" + matches);
+            }
+        }
+
         /*//When Leaf
         if (n.getAttribute("ui.class").equals("PetriPlaceEnd")) {
             //leaf
@@ -259,8 +327,15 @@ public class VisualPetriToProcessCodeHelper {
                         }
 
                         if (matches == setA.size() && edgesToRemove.size() + 1 < edges.size()) {
+
                             System.out.println("No Branch");
                             edgesToRemove.add(edges.get(i));
+
+
+                        //eif one of these transitions has pids
+                        } else if(edges.get(i).getNode1().hasAttribute("ui.PIDS")
+                            || edges.get(j).getNode1().hasAttribute("ui.PIDS") ){
+                            processIncomplete = true;
 
                         }
                     }
@@ -348,6 +423,8 @@ public class VisualPetriToProcessCodeHelper {
 
 
     }
+
+
 
 
     private PriorityQueue<EdgeAndBool> reorderEdges(ArrayList<Edge> edges) {

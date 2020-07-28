@@ -715,6 +715,10 @@ public class ModelView implements Observer {
 
             } else {
                 System.out.println("Node not Clicked");
+                if(firstNodeClicked != null) {
+                    firstNodeClicked.addAttribute("ui.class", firstNodeClass);
+                }
+                firstNodeClicked = null;
             }
 
             if (firstNodeClicked != null && seccondNodeClicked != null) {
@@ -1496,7 +1500,9 @@ public class ModelView implements Observer {
 
     private void handleNodeDeletion() {
 
-        if (firstNodeClicked == null) {
+        System.out.println("dodelete");
+
+       /* if (firstNodeClicked == null) {
             return;
         }
 
@@ -1523,7 +1529,7 @@ public class ModelView implements Observer {
         }
 
 
-        firstNodeClicked = null;
+        firstNodeClicked = null;*/
 
 
     }
