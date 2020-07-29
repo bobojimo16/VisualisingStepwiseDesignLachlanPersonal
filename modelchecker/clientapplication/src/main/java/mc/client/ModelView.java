@@ -1035,6 +1035,25 @@ public class ModelView implements Observer {
 
         }
 
+        //Reject place having a different pid than from the new transition, different as need to differntiate between this and inner loops which would have same pid
+
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace") && workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PID")){
+
+
+            if(!workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString()
+                .equals(workingCanvasArea.getNode(seccondNodeClicked.getId()).getAttribute("ui.PID").toString())){
+                Platform.runLater(() ->
+                {
+                    uic.reportError("syncingOnAPetriPlace");
+                });
+                return;
+            }
+
+        }
+
+
+
+
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
         //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)

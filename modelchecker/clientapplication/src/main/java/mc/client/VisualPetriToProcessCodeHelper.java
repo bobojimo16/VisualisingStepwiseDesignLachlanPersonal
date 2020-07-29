@@ -331,7 +331,7 @@ public class VisualPetriToProcessCodeHelper {
                             edgesToRemove.add(edges.get(i));
                         }
 
-                        
+
 
 
                     }
