@@ -1021,6 +1021,20 @@ public class ModelView implements Observer {
             }
         }
 
+        //Reject Transitions having more outgoing edges that incoming
+
+        if(firstNodeType.equals("PetriTransition")){
+            if(workingCanvasArea.getNode(firstNodeClicked.getId()).getOutDegree()+1 > workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree()){
+                Platform.runLater(() ->
+                {
+                    uic.reportError("petriTransitionMoreOutGoingThanIn");
+                });
+                return;
+
+            }
+
+        }
+
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
         //Label the Automata Edge (Irrelavnt for Petri as pertri labels are already defined)

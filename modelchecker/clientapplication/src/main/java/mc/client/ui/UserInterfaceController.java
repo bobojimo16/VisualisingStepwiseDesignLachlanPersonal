@@ -764,6 +764,8 @@ public class UserInterfaceController implements Initializable, FontListener {
                 break;
             case "deletingNonLeaf":
                 a.setContentText("Unable to delete non leaf nodes");
+            case "petriTransitionMoreOutGoingThanIn":
+                a.setContentText("Unable to have transitions with more outgoing edges than incoming edges");
             default:
                 break;
         }

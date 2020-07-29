@@ -331,12 +331,6 @@ public class VisualPetriToProcessCodeHelper {
                             System.out.println("No Branch");
                             edgesToRemove.add(edges.get(i));
 
-
-                        //eif one of these transitions has pids
-                        } else if(edges.get(i).getNode1().hasAttribute("ui.PIDS")
-                            || edges.get(j).getNode1().hasAttribute("ui.PIDS") ){
-                            processIncomplete = true;
-
                         }
                     }
                 }
