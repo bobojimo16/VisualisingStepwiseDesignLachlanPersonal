@@ -715,6 +715,10 @@ public class ModelView implements Observer {
 
             } else {
                 System.out.println("Node not Clicked");
+                if(firstNodeClicked != null) {
+                    firstNodeClicked.addAttribute("ui.class", firstNodeClass);
+                }
+                firstNodeClicked = null;
             }
 
             if (firstNodeClicked != null && seccondNodeClicked != null) {
@@ -1016,6 +1020,39 @@ public class ModelView implements Observer {
 
             }
         }
+
+        //Reject Transitions having more outgoing edges that incoming
+
+        if(firstNodeType.equals("PetriTransition")){
+            if(workingCanvasArea.getNode(firstNodeClicked.getId()).getOutDegree()+1 > workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree()){
+                Platform.runLater(() ->
+                {
+                    uic.reportError("petriTransitionMoreOutGoingThanIn");
+                });
+                return;
+
+            }
+
+        }
+
+        //Reject place having a different pid than from the new transition, different as need to differntiate between this and inner loops which would have same pid
+
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace") && workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PID")){
+
+
+            if(!workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString()
+                .equals(workingCanvasArea.getNode(seccondNodeClicked.getId()).getAttribute("ui.PID").toString())){
+                Platform.runLater(() ->
+                {
+                    uic.reportError("syncingOnAPetriPlace");
+                });
+                return;
+            }
+
+        }
+
+
+
 
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
@@ -1496,7 +1533,9 @@ public class ModelView implements Observer {
 
     private void handleNodeDeletion() {
 
-        if (firstNodeClicked == null) {
+        System.out.println("dodelete");
+
+       /* if (firstNodeClicked == null) {
             return;
         }
 
@@ -1523,7 +1562,7 @@ public class ModelView implements Observer {
         }
 
 
-        firstNodeClicked = null;
+        firstNodeClicked = null;*/
 
 
     }
@@ -1881,6 +1920,14 @@ public class ModelView implements Observer {
 
 
     private String getStyleSheet() {
+
+        Boolean trans = true;
+        String transString = "";
+
+        if(trans){
+            transString = "88";
+        }
+
         return "node {" +
             "text-size: 20;" +
             "text-color: black; " +
@@ -1892,15 +1939,15 @@ public class ModelView implements Observer {
             "shadow-color: #000000, #ffffff;" +
             "}" +
             "node.AutoStart {" +
-            "fill-color: #1F9F06;" +
+            "fill-color: #1F9F06" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoNeutral {" +
-            "fill-color: #b8b4b4;" +
+            "fill-color: #b8b4b4" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoEnd {" +
-            "fill-color: #5c0a04;" +
+            "fill-color: #5c0a04" + transString + ";" +
             "shape: box;" +
             "}" +
             "edge.autoLoop {" +
