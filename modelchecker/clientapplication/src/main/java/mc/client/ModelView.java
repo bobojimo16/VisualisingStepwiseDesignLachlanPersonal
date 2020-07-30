@@ -27,6 +27,7 @@ import mc.compiler.CompilationObservable;
 import mc.compiler.OperationResult;
 import mc.processmodels.*;
 import mc.processmodels.automata.Automaton;
+import mc.processmodels.automata.AutomatonEdge;
 import mc.processmodels.conversion.TokenRule;
 import mc.processmodels.conversion.TokenRulePureFunctions;
 import mc.processmodels.petrinet.Petrinet;
@@ -110,6 +111,8 @@ public class ModelView implements Observer {
     private boolean autoPetriRelationModeEnabled = false;
     private ArrayList<Edge> petriAutoRelations = new ArrayList<>();
     public String interactionType = "create";
+
+    private Petrinet testInitialPetri = null;
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -333,6 +336,7 @@ public class ModelView implements Observer {
         //Connects the node via edges on screen
         automaton.getEdges().forEach(e -> {
 
+
             GraphNode to = nodeMap.get(e.getTo().getId());
 
             GraphNode from = nodeMap.get(e.getFrom().getId());
@@ -368,6 +372,10 @@ public class ModelView implements Observer {
 
 
     private void addPetrinetNew(Petrinet petri) {
+
+        if(testInitialPetri == null){
+            testInitialPetri = petri;
+        }
 
         if (processModelsOnScreenGSType.containsKey(petri.getId())) {
             System.out.println("petri On screen");
@@ -407,6 +415,8 @@ public class ModelView implements Observer {
 
         Multiset<PetriNetPlace> rts = HashMultiset.create(); // .create(rts);
         petri.getPlaces().values().forEach(place -> {
+
+
 
 
             NodeStates nodeTermination = NodeStates.NOMINAL;
@@ -467,6 +477,7 @@ public class ModelView implements Observer {
 
         petri.getTransitions().values().stream().filter(x -> !x.isBlocked())
             .forEach(transition -> {
+
                 String lab = "";
                 if (settings.isShowIds()) lab += transition.getId() + "-";
                 lab += transition.getLabel() + "";
@@ -497,6 +508,8 @@ public class ModelView implements Observer {
             });
 
         for (PetriNetEdge edge : petri.getEdgesNotBlocked().values()) {
+
+
 
             String lab = "";
             if (settings.isShowIds()) lab += edge.getId() + "-";
@@ -1751,6 +1764,20 @@ public class ModelView implements Observer {
         removeLastTokens(null);
         clearPetriTransitionHighlighting();
 
+        /*Automaton a = TokenRule.tokenRule(testInitialPetri);
+
+        List<AutomatonEdge> edges = a.getEdges();
+
+        for(AutomatonEdge e: edges){
+
+            System.out.println("FT: " + e.getFromTran());
+
+        }
+        */
+
+
+
+
         if (interactionType.equals("autopetrirelation")) {
             autoPetriRelationModeEnabled = true;
 
@@ -1813,31 +1840,40 @@ public class ModelView implements Observer {
                 }
 
                 for (Edge e : gsProcessEdges) {
-                    Node autoN = e.getNode1();
+                    Node autoN = e.getNode0();
                     Collection<Node> gsProcessB = processModelsOnScreenGSType.get(p.replaceAll("automata", "petrinet"));
                     Node petriN = null;
 
                     for (Node n : gsProcessB) {
+                        petriN = n;
+
+                        determineIfAutoNodeAndPetriTranIdentical(autoN, petriN);
+
+
+                        /*
                         if (n.hasAttribute("ui.label")) {
                             if (n.getAttribute("ui.label").equals(e.getAttribute("ui.label"))) {
                                 petriN = n;
 
                                 try {
+
+                                    determineIfAutoNodeAndPetriTranIdentical(autoN, petriN);
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
-                                        Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
+                                       *//* Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
                                         eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
                                         petriAutoRelations.add(eRelation);
-                                        setRelatingEdgeWight(null);
+                                        setRelatingEdgeWight(null);*//*
+                                        break;
 
 
                                     }
                                 } catch (IdAlreadyInUseException er) {
-                                    System.out.println("here");
+                                    *//*System.out.println("here");
                                     petriN.removeAttribute("ui.class");
-                                    petriN.addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+                                    petriN.addAttribute("ui.style", "fill-color: rgb(0,100,255);");*//*
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
             }
@@ -1851,6 +1887,52 @@ public class ModelView implements Observer {
             resetAutoPetriRelations();
 
         }
+
+
+    }
+
+    private void determineIfAutoNodeAndPetriTranIdentical(Node autoN, Node petriN) {
+        System.out.println("called");
+
+        if(autoN.hasAttribute("ui.label")){
+            System.out.println(autoN.getAttribute("ui.label").toString());
+        } else {
+            System.out.println("non label");
+        }
+        Iterator<Node> autoSearcher = autoN.getDepthFirstIterator(true);
+
+        Node last = null;
+
+        while(autoSearcher.hasNext()){
+            Node k = autoSearcher.next();
+
+            if(last != null) {
+                Edge e = k.getEdgeBetween(last);
+
+
+
+                if(e.hasAttribute("ui.label")) {
+                    System.out.println(e.getAttribute("ui.label").toString());
+                } else {
+                    System.out.println("No label");
+                }
+            }
+
+
+
+            if(k.getOutDegree() > 0) {
+                last = k;
+            } else {
+                last = autoN;
+            }
+
+        }
+
+
+        Iterator<Node> petriSearcher = petriN.getBreadthFirstIterator(true);
+
+
+
 
 
     }
