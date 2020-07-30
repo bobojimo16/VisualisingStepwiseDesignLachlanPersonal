@@ -788,6 +788,7 @@ public class ModelView implements Observer {
         if (nodeSelected != null) {
 
             for (Node n : createdNodes) {
+                System.out.println(n.getId());
                 if (n.getId().equals(nodeSelected.getId())) {
                     return;
                 }
@@ -1332,7 +1333,11 @@ public class ModelView implements Observer {
                     String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
                     hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
                     ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                    hn.addAttribute("ui.edited", true);
+                    hn.addAttribute("ui.style", "text-background-mode: rounded-box; text-background-color: red;");
+
+
+
+
                 }
             }
 
@@ -1595,11 +1600,20 @@ public class ModelView implements Observer {
         workingCanvasAreaContainer = new JPanel();
         workingCanvasAreaContainer.setLayout(new BorderLayout());
 
+        createdNodes.clear();
+        createdEdges.clear();
+
         if (!isLoaded) {
             workingCanvasArea = new MultiGraph("WorkingCanvasArea"); //field
-            createdNodes.clear();
-            createdEdges.clear();
+        } else {
+            createdNodes.addAll(workingCanvasArea.getNodeSet());
+            createdEdges.addAll(workingCanvasArea.getEdgeSet());
         }
+
+
+
+
+
 
 
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
@@ -1764,17 +1778,6 @@ public class ModelView implements Observer {
         removeLastTokens(null);
         clearPetriTransitionHighlighting();
 
-        /*Automaton a = TokenRule.tokenRule(testInitialPetri);
-
-        List<AutomatonEdge> edges = a.getEdges();
-
-        for(AutomatonEdge e: edges){
-
-            System.out.println("FT: " + e.getFromTran());
-
-        }
-        */
-
 
 
 
@@ -1840,40 +1843,39 @@ public class ModelView implements Observer {
                 }
 
                 for (Edge e : gsProcessEdges) {
-                    Node autoN = e.getNode0();
+                    Node autoN = e.getNode1();
                     Collection<Node> gsProcessB = processModelsOnScreenGSType.get(p.replaceAll("automata", "petrinet"));
                     Node petriN = null;
+
 
                     for (Node n : gsProcessB) {
                         petriN = n;
 
-                        determineIfAutoNodeAndPetriTranIdentical(autoN, petriN);
-
-
-                        /*
                         if (n.hasAttribute("ui.label")) {
                             if (n.getAttribute("ui.label").equals(e.getAttribute("ui.label"))) {
+
+                                //determineIfAutoNodeAndPetriTranIdentical(autoN, petriN);
+
                                 petriN = n;
 
                                 try {
 
-                                    determineIfAutoNodeAndPetriTranIdentical(autoN, petriN);
+
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
-                                       *//* Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
+                                        Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
                                         eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
                                         petriAutoRelations.add(eRelation);
-                                        setRelatingEdgeWight(null);*//*
+                                        setRelatingEdgeWight(null);
                                         break;
 
 
                                     }
                                 } catch (IdAlreadyInUseException er) {
-                                    *//*System.out.println("here");
                                     petriN.removeAttribute("ui.class");
-                                    petriN.addAttribute("ui.style", "fill-color: rgb(0,100,255);");*//*
+                                    petriN.addAttribute("ui.style", "fill-color: rgb(0,100,255);");
                                 }
                             }
-                        }*/
+                        }
                     }
                 }
             }
@@ -1887,52 +1889,6 @@ public class ModelView implements Observer {
             resetAutoPetriRelations();
 
         }
-
-
-    }
-
-    private void determineIfAutoNodeAndPetriTranIdentical(Node autoN, Node petriN) {
-        System.out.println("called");
-
-        if(autoN.hasAttribute("ui.label")){
-            System.out.println(autoN.getAttribute("ui.label").toString());
-        } else {
-            System.out.println("non label");
-        }
-        Iterator<Node> autoSearcher = autoN.getDepthFirstIterator(true);
-
-        Node last = null;
-
-        while(autoSearcher.hasNext()){
-            Node k = autoSearcher.next();
-
-            if(last != null) {
-                Edge e = k.getEdgeBetween(last);
-
-
-
-                if(e.hasAttribute("ui.label")) {
-                    System.out.println(e.getAttribute("ui.label").toString());
-                } else {
-                    System.out.println("No label");
-                }
-            }
-
-
-
-            if(k.getOutDegree() > 0) {
-                last = k;
-            } else {
-                last = autoN;
-            }
-
-        }
-
-
-        Iterator<Node> petriSearcher = petriN.getBreadthFirstIterator(true);
-
-
-
 
 
     }
@@ -2095,6 +2051,7 @@ public class ModelView implements Observer {
             "node.PetriPlaceInnerStart {" +
             "fill-color: red;" +
             "}"
+
 
             ;
 
