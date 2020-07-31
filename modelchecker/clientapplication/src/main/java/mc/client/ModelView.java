@@ -1625,7 +1625,7 @@ public class ModelView implements Observer {
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
         workingLayout = Layouts.newLayoutAlgorithm();
-        workingLayout.setForce(0.05); // 1 by default
+        workingLayout.setForce(1); // 1 by default
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();
@@ -1959,7 +1959,7 @@ public class ModelView implements Observer {
 
     private String getStyleSheet() {
 
-        Boolean trans = true;
+        Boolean trans = false;
         String transString = "";
 
         if(trans){
