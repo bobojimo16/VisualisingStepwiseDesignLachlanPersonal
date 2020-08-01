@@ -143,6 +143,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     private VisualPetriToProcessCodeHelper visualPetriToProcessCodeHelper;
 
     private ChooseProcessController chooseProcessController;
+    private boolean typingInitiated = true;
 
     //@Getter
     //private static UserInterfaceController instance = this;
@@ -344,16 +345,19 @@ public class UserInterfaceController implements Initializable, FontListener {
         userCodeInput.richChanges()
             .filter(ch -> ch.getInserted().getText().length() == 1)
             .subscribe((startedTyping) -> {
-                System.out.println("typing");
-                compilerOutputDisplay.appendText("Compiling..." + "\n");
+                if(typingInitiated) {
+                    compilerOutputDisplay.appendText("Compiling..." + "\n");
+                    typingInitiated = false;
+                }
 
             });
 
         userCodeInput.richChanges().successionEnds(Duration.ofMillis(5000))
 
             .subscribe((finishedTyping) -> {
-                compilerOutputDisplay.appendText("Compiling Completed" + "\n");
+                compilerOutputDisplay.appendText("Recompiling..." + "\n");
                 System.out.println("Recompile");
+                typingInitiated = true;
                 handleCompileRequest();
 
             });
