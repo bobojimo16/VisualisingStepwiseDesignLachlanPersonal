@@ -7,7 +7,7 @@
 <VBox prefHeight="150.0" prefWidth="170.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" >
    <children>
       <Label text="Input Name For New Process:" />
-      <TextField fx:id="NewProcessTextField" prefHeight="72.0" prefWidth="402.0" onKeyPressed="#handleKeyPressed" />
+      <TextField fx:id="NewProcessTextField" prefHeight="72.0" prefWidth="402.0" promptText="input" />
       <Button fx:id="AcceptName" mnemonicParsing="false" text="Button" onAction="#doAcceptName">
          <VBox.margin>
             <Insets left="55.0" top="20.0" />

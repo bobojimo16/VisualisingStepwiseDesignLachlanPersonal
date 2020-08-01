@@ -666,6 +666,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     private void initiateNameNewGraphElementPopup() {
 
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameNewGraphElement.fxml"));
         loader.setController(nameNewGraphElementController); //links to  SettingsController.java
         try {
