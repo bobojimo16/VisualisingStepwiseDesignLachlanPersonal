@@ -26,6 +26,7 @@ import javafx.scene.shape.Shape;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import mc.client.ModelView;
 import mc.client.VisualPetriToProcessCodeHelper;
 import mc.compiler.CompilationObject;
@@ -1444,7 +1445,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             Stage newProcessChooseStage = new Stage();
             newProcessChooseStage.setTitle("Choose Process");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 240, 120);
             newProcessChooseStage.setScene(windowScene);
 
             //settingsController.setWindow(newProcessStage.getScene().getWindow());

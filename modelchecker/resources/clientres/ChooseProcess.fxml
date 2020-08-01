@@ -4,18 +4,24 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox prefHeight="150.0" prefWidth="170.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="120.0" prefWidth="240.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label text="Choose Which Process this Place Belongs to:" />
-      <ComboBox fx:id="SelectBox" prefWidth="150.0" >
+      <ComboBox fx:id="SelectBox" prefWidth="200.0">
+
+          <VBox.margin>
+              <Insets left="15.0" top="25.0" />
+          </VBox.margin>
 
       </ComboBox>
 
 
-      <Button fx:id="AcceptName" mnemonicParsing="false" onAction="#doAcceptProcess" text="Button">
-         <VBox.margin>
-            <Insets left="55.0" top="20.0" />
-         </VBox.margin>
+      <Button fx:id="AcceptName" mnemonicParsing="false" onAction="#doAcceptProcess" text="Choose">
+
+          <VBox.margin>
+              <Insets left="95.0" top="10.0" />
+          </VBox.margin>
+
       </Button>
    </children>
 </VBox>

@@ -12,6 +12,8 @@ import java.util.ResourceBundle;
 
 public class ChooseProcessController implements Initializable {
 
+    private String firstV = "";
+
     @FXML
     public ComboBox SelectBox;
     @Override
@@ -20,6 +22,8 @@ public class ChooseProcessController implements Initializable {
     }
 
     public void setCombo(ArrayList<String> values){
+
+        firstV = values.get(0);
 
         SelectBox.getItems().addAll(values);
 
@@ -32,6 +36,12 @@ public class ChooseProcessController implements Initializable {
     }
 
     public String getProcessValue(){
-        return SelectBox.getValue().toString();
+        if(SelectBox.getValue() == null){
+            return firstV;
+        } else {
+            return SelectBox.getValue().toString();
+        }
     }
+
+
 }

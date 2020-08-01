@@ -461,7 +461,15 @@ public class ModelView implements Observer {
 
 
             if (place.isStart()) {
-                n.addAttribute("ui.label", petri.getId().replace("(petrinet)", "").replace(":*", "") + startToIntValue.get(place));
+
+                String petriCounterV = "";
+
+
+                if(petri.getAllRoots().size() != 1){
+                    petriCounterV = String.valueOf(startToIntValue.get(place));
+                }
+
+                n.addAttribute("ui.label", petri.getId().replace("(petrinet)", "").replace(":*", "") + petriCounterV);
                 n.addAttribute("ui.class", "PetriPlaceStart");
 
 
