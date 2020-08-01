@@ -321,7 +321,7 @@ public class ModelView implements Observer {
             }
 
             if (n.isStartNode()) {
-                cn.addAttribute("ui.label", automaton.getId());
+                cn.addAttribute("ui.label", automaton.getId().replace("(automata)", "").replace(":*", ""));
                 cn.addAttribute("ui.class", "AutoStart");
             } else if (!n.isStartNode() && !n.isSTOP()) {
                 cn.addAttribute("ui.class", "AutoNeutral");
@@ -329,12 +329,22 @@ public class ModelView implements Observer {
                 cn.addAttribute("ui.class", "AutoEnd");
             }
 
+
+
             nodeMapGS.put(n.getId(), cn);
 
         });
 
         //Connects the node via edges on screen
         automaton.getEdges().forEach(e -> {
+
+            System.out.println(e.getLabel());
+
+            Set<String> owners = e.getEdgeOwners();
+
+            for(String s: owners){
+                System.out.println(s);
+            }
 
 
             GraphNode to = nodeMap.get(e.getTo().getId());
@@ -450,7 +460,7 @@ public class ModelView implements Observer {
 
 
             if (place.isStart()) {
-                n.addAttribute("ui.label", petri.getId() + startToIntValue.get(place));
+                n.addAttribute("ui.label", petri.getId().replace("(petrinet)", "").replace(":*", "") + startToIntValue.get(place));
                 n.addAttribute("ui.class", "PetriPlaceStart");
 
 

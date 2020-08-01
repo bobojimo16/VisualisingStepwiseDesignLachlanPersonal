@@ -376,7 +376,7 @@ public class UserInterfaceController implements Initializable, FontListener {
         //newProcessController.initialize();
 
 
-        AddProcessShapesAutoInitial();
+        //AddProcessShapesAutoInitial();
         AddProcessShapesPetriInitial();
 
         visualPetriToProcessCodeHelper = new VisualPetriToProcessCodeHelper();
