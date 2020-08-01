@@ -41,6 +41,7 @@ import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.graphicGraph.GraphicGraph;
 import org.graphstream.ui.layout.Layout;
 import org.graphstream.ui.layout.Layouts;
+import org.graphstream.ui.layout.springbox.implementations.SpringBox;
 import org.graphstream.ui.view.Camera;
 import org.graphstream.ui.view.View;
 import org.graphstream.ui.view.Viewer;
@@ -607,8 +608,6 @@ public class ModelView implements Observer {
             handleAutoPetriRelation();
         }
 
-        Collection<Node> nodes = workingCanvasArea.getNodeSet();
-        Collection<Edge> edges = workingCanvasArea.getEdgeSet();
 
 
     }
@@ -694,6 +693,7 @@ public class ModelView implements Observer {
     }
 
     public void setLatestNodeName(String newProcessNameValue) {
+        workingLayout.compute();
         latestNode.addAttribute("ui.label", newProcessNameValue);
 
         if (latestNode.getAttribute("ui.class").equals("PetriPlaceStart")) {
@@ -1670,6 +1670,24 @@ public class ModelView implements Observer {
                 double y = guClicked.y - (pxCenter.y - e.getY()) / newRatioPx2Gu;
                 cam.setViewCenter(x, y, 0);
 
+                System.out.println(zoom);
+
+                Collection<Node> nodes = workingCanvasArea.getNodeSet();
+                Collection<Edge> edges = workingCanvasArea.getEdgeSet();
+
+                double textZoom = (20-zoom);
+
+                if(textZoom < 1){
+                    textZoom = 1;
+                }
+
+                for(Node n: nodes){
+                    n.addAttribute("ui.style", "text-size: " + textZoom + ";");
+                }
+
+                for(Edge ed: edges){
+                    ed.addAttribute("ui.style", "text-size: " + textZoom + ";");
+                }
 
                 cam.setViewPercent(zoom);
             }
