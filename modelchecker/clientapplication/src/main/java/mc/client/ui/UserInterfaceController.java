@@ -58,6 +58,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public AnchorPane modelDisplayNewContainer;
     public AnchorPane modelDisplayNewController;
+    public Slider weightSlider;
     private boolean holdHighlighting = false; // If there is an compiler issue, highlight the area. Dont keep applying highlighting it wipes it out
     private javafx.stage.Popup autocompleteBox = new javafx.stage.Popup();
     private ExecutorService executor; // Runs the highlighting in separate ctx
@@ -379,6 +380,11 @@ public class UserInterfaceController implements Initializable, FontListener {
         AddProcessShapesPetriInitial();
 
         visualPetriToProcessCodeHelper = new VisualPetriToProcessCodeHelper();
+
+        weightSlider.valueProperty().addListener((arg0, arg1, newVal) -> {
+            Double weight = newVal.doubleValue();
+            ModelView.getInstance().setGraphWeight(weight);
+        });
     }
 
 

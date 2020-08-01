@@ -597,6 +597,9 @@ public class ModelView implements Observer {
             handleAutoPetriRelation();
         }
 
+        Collection<Node> nodes = workingCanvasArea.getNodeSet();
+        Collection<Edge> edges = workingCanvasArea.getEdgeSet();
+
 
     }
 
@@ -1955,6 +1958,12 @@ public class ModelView implements Observer {
         }
     }
 
+    public void setGraphWeight(Double weight) {
+        workingLayout.setForce(weight);
+
+        workingLayout.shake();
+    }
+
 
 
     private String getStyleSheet() {
@@ -2058,6 +2067,7 @@ public class ModelView implements Observer {
 
 
     }
+
 
 
 }
