@@ -8,7 +8,7 @@
    <children>
       <Label text="Input Name For New Process:" />
       <TextField fx:id="NewProcessTextField" prefHeight="72.0" prefWidth="402.0" promptText="input" />
-      <Button fx:id="AcceptName" mnemonicParsing="false" text="Button" onAction="#doAcceptName">
+      <Button fx:id="AcceptName" mnemonicParsing="false" text="Submit" onAction="#doAcceptName">
          <VBox.margin>
             <Insets left="55.0" top="20.0" />
          </VBox.margin>

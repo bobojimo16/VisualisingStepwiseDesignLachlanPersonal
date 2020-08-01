@@ -68,7 +68,6 @@ public class UserInterfaceController implements Initializable, FontListener {
     private SettingsController settingsController;
     private NewProcessController nameNewGraphElementController;
     private LabelEdgeController labelEdgeController;
-    private NameNewParrelelProcessController nameNewParrelelProcessController;
 
 
     @FXML
@@ -377,7 +376,6 @@ public class UserInterfaceController implements Initializable, FontListener {
         nameNewGraphElementController = new NewProcessController();
         chooseProcessController = new ChooseProcessController();
         labelEdgeController = new LabelEdgeController();
-        nameNewParrelelProcessController = new NameNewParrelelProcessController();
         //newProcessController.initialize();
 
 
@@ -678,7 +676,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             Stage newProcessStage = new Stage();
             newProcessStage.setTitle("New Process");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 170, 150);
             newProcessStage.setScene(windowScene);
 
             //settingsController.setWindow(newProcessStage.getScene().getWindow());
@@ -1485,14 +1483,14 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     public String nameParrelelProceses() {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameParrelelProcess.fxml"));
-        loader.setController(nameNewParrelelProcessController); //links to  SettingsController.java
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameNewGraphElement.fxml"));
+        loader.setController(nameNewGraphElementController); //links to  SettingsController.java
         String toReturn = "";
         try {
             Stage nameParrelelProcesesStage = new Stage();
             nameParrelelProcesesStage.setTitle("Label Parrelel Processes");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 150, 170);
             nameParrelelProcesesStage.setScene(windowScene);
 
             //settingsController.setWindow(newProcessStage.getScene().getWindow());
@@ -1501,7 +1499,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             nameParrelelProcesesStage.initModality(Modality.NONE);
             nameParrelelProcesesStage.setResizable(false);
             nameParrelelProcesesStage.showAndWait();
-            toReturn = nameNewParrelelProcessController.getNewProcessNameValue();
+            toReturn = nameNewGraphElementController.getNewProcessNameValue();
 
         } catch (IOException e) {
             Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
