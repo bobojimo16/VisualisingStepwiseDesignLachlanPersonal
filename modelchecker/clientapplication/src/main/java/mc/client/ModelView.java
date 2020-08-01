@@ -672,6 +672,7 @@ public class ModelView implements Observer {
             addingAutoNodeEnd = false;
         } else if (addingPetriPlaceStart) {
             latestNode.addAttribute("ui.class", "PetriPlaceStart");
+            latestNode.addAttribute("ui.style", "text-background-mode: rounded-box; text-background-color: red;");
             addingPetriPlaceStart = false;
         } else if (addingPetriPlaceNeutral) {
             latestNode.addAttribute("ui.class", "PetriPlace");
@@ -1211,10 +1212,6 @@ public class ModelView implements Observer {
                                     String petriType = e.getNode1().getAttribute("ui.class");
                                     workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
 
-                                    String s = doShit(e.getNode1().getId());
-
-                                    System.out.println(s);
-
 
 
 
@@ -1272,11 +1269,6 @@ public class ModelView implements Observer {
 
         unsettingClicked();
 
-    }
-
-    private String doShit(String id) {
-        workingCanvasArea.getNode(id).addAttribute("ui.style", "fill-color: rgb(0,100,255);");
-        return "done";
     }
 
     private String determineParrelCompositionName(Node seccondNodeClicked) {
