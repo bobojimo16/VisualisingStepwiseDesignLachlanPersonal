@@ -1445,6 +1445,7 @@ public class ModelView implements Observer {
      * @param modelLabel The name of the model process to be displayed / added to display.
      */
     public void addDisplayedModel(String modelLabel) {
+        unfreezeAllCurrentlyDisplayedNew();
         assert compiledResult.getProcessMap().containsKey(modelLabel);
         assert modelsInList.contains(modelLabel);
         processesChanged.add(modelLabel);
@@ -1466,6 +1467,7 @@ public class ModelView implements Observer {
     }
 
     public void addAllModels() {
+        unfreezeAllCurrentlyDisplayedNew();
         processModelsToDisplay.clear();
         processesChanged.addAll(compiledResult.getProcessMap().keySet());
 
@@ -1475,6 +1477,7 @@ public class ModelView implements Observer {
     }
 
     public void addAllModelsNew() {
+        unfreezeAllCurrentlyDisplayedNew();
         processModelsToDisplay.clear();
         processesChanged.addAll(compiledResult.getProcessMap().keySet());
 
