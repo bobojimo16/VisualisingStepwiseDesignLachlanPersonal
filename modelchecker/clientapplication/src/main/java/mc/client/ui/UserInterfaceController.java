@@ -966,6 +966,14 @@ public class UserInterfaceController implements Initializable, FontListener {
             saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
             saveFailed.initModality(Modality.APPLICATION_MODAL);
             saveFailed.show();
+        } catch (RuntimeException e) {
+            Alert saveFailed = new Alert(Alert.AlertType.ERROR);
+            saveFailed.setTitle("Error encountered when reading file");
+            saveFailed.setContentText("Error: " + e.getMessage());
+
+            saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            saveFailed.initModality(Modality.APPLICATION_MODAL);
+            saveFailed.show();
         }
 
 
