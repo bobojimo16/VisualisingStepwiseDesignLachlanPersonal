@@ -1690,7 +1690,7 @@ public class ModelView implements Observer {
                 }
 
                 for(Node n: nodes){
-                    n.addAttribute("ui.style", "text-size: " + textZoom + ";");
+                    n.addAttribute("ui.style", "text-size: " + textZoom + ";" + "size: " + textZoom + ";" );
                 }
 
                 for(Edge ed: edges){
@@ -1996,9 +1996,26 @@ public class ModelView implements Observer {
         workingLayout.shake();
     }
 
-    public void handlePanUp() {
+    public void handlePan(String dir) {
         Camera cam = workingCanvasAreaView.getCamera();
-        cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y+2, cam.getViewCenter().z);
+        int shiftVal = 1;
+
+        switch(dir) {
+            case "up":
+                cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y+shiftVal, cam.getViewCenter().z);
+                break;
+            case "right":
+                cam.setViewCenter(cam.getViewCenter().x+shiftVal, cam.getViewCenter().y, cam.getViewCenter().z);
+                break;
+            case "down":
+                cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y-shiftVal, cam.getViewCenter().z);
+                break;
+            case "left":
+                cam.setViewCenter(cam.getViewCenter().x-shiftVal, cam.getViewCenter().y, cam.getViewCenter().z);
+                break;
+            default:
+                break;
+        }
 
 
     }

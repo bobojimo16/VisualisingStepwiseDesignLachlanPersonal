@@ -131,6 +131,12 @@ public class UserInterfaceController implements Initializable, FontListener {
     private Pane shapePane;
     @FXML
     private ImageView upArrow;
+    @FXML
+    private ImageView rightArrow;
+    @FXML
+    private ImageView downArrow;
+    @FXML
+    private ImageView leftArrow;
 
 
     // for keep updating the file that has already been saved.
@@ -395,14 +401,32 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
         upArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanUp);
+        rightArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanRight);
+        downArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanDown);
+        leftArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanLeft);
+
 
 
     }
 
     public void handlePanUp(MouseEvent me) {
-        System.out.println("PanUp");
-        ModelView.getInstance().handlePanUp();
+        ModelView.getInstance().handlePan("up");
     }
+
+    public void handlePanRight(MouseEvent me) {
+        ModelView.getInstance().handlePan("right");
+    }
+
+    public void handlePanDown(MouseEvent me) {
+        ModelView.getInstance().handlePan("down");
+    }
+
+    public void handlePanLeft(MouseEvent me) {
+        ModelView.getInstance().handlePan("left");
+    }
+
+
+
 
 
     private void AddProcessShapesAutoInitial() {

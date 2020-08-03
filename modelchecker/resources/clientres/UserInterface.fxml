@@ -112,7 +112,29 @@
                   <image>
                       <Image url="@UpArrow.jpg" />
                   </image>
+
               </ImageView>
+
+                  <ImageView fx:id="rightArrow" layoutX="775.0" layoutY="100.0" >
+                      <image>
+                          <Image url="@RightArrow.jpg" />
+                      </image>
+
+                  </ImageView>
+
+                  <ImageView fx:id="downArrow" layoutX="750.0" layoutY="125.0" >
+                      <image>
+                          <Image url="@DownArrow.jpg" />
+                      </image>
+
+                  </ImageView>
+
+                  <ImageView fx:id="leftArrow" layoutX="725.0" layoutY="100.0" >
+                      <image>
+                          <Image url="@LeftArrow.jpg" />
+                      </image>
+
+                  </ImageView>
 
                   <!--<ImageView fx:id="arrowUp" disable="false" fitHeight="150.0" fitWidth="200.0" layoutX="800.0" layoutY="246.0" pickOnBounds="true" preserveRatio="true" />-->
 
