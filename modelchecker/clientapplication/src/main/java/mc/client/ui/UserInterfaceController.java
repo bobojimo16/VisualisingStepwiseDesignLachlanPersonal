@@ -6,7 +6,6 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -16,7 +15,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
@@ -29,7 +27,6 @@ import javafx.scene.shape.Shape;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import mc.client.ModelView;
 import mc.client.VisualPetriToProcessCodeHelper;
 import mc.compiler.CompilationObject;
@@ -53,6 +50,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static mc.client.ui.SyntaxHighlighting.computeHighlighting;
@@ -351,17 +349,27 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             });
 
+
+
+        AtomicLong t1 = new AtomicLong();
+
         userCodeInput.richChanges()
             .filter(ch -> ch.getInserted().getText().length() == 1)
             .subscribe((startedTyping) -> {
+
                 if(typingInitiated) {
                     compilerOutputDisplay.appendText("Compiling..." + "\n");
+                    t1.set(System.currentTimeMillis());
                     typingInitiated = false;
+                } else {
+                    long compileTime = Math.round((t1.get()+4000 - System.currentTimeMillis())/1000) * 1000;
+                    System.out.println(compileTime);
+
                 }
 
             });
 
-        userCodeInput.richChanges().successionEnds(Duration.ofMillis(5000))
+        userCodeInput.richChanges().successionEnds(Duration.ofMillis(3000))
 
             .subscribe((finishedTyping) -> {
                 compilerOutputDisplay.appendText("Recompiling..." + "\n");
@@ -400,14 +408,16 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
 
-        upArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanUp);
+        /*upArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanUp);
         rightArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanRight);
         downArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanDown);
-        leftArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanLeft);
+        leftArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanLeft);*/
 
 
 
     }
+
+
 
     public void handlePanUp(MouseEvent me) {
         ModelView.getInstance().handlePan("up");

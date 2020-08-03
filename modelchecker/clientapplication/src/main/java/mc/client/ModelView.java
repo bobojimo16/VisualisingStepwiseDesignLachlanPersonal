@@ -2033,16 +2033,17 @@ public class ModelView implements Observer {
 
         return "node {" +
             "text-size: 20;" +
-            "text-color: black; " +
-            "text-background-color: black;" +
             "text-alignment: above;" +
             "text-style: normal;" +
+            "text-background-mode: plain;" +
             "size: 20px; " +
             "fill-mode: gradient-horizontal;" +
             "shadow-color: #000000, #ffffff;" +
             "}" +
             "node.AutoStart {" +
-            "fill-color: #1F9F06" + transString + ";" +
+            "text-color: black; " +
+            "text-background-color: #ffff00;" +
+            "fill-color: #07fc03" + transString + ";" +
             "shape: box;" +
             "}" +
             "node.AutoNeutral {" +
@@ -2050,7 +2051,7 @@ public class ModelView implements Observer {
             "shape: box;" +
             "}" +
             "node.AutoEnd {" +
-            "fill-color: #5c0a04" + transString + ";" +
+            "fill-color: #ff0000" + transString + ";" +
             "shape: box;" +
             "}" +
             "edge.autoLoop {" +
@@ -2060,6 +2061,7 @@ public class ModelView implements Observer {
             "fill-color: black;" +
             "text-size: 20;" +
             "arrow-shape: arrow;" +
+            "text-alignment: above;" +
             "}" +
             "graph {" +
             "fill-color: white;" +
@@ -2069,10 +2071,12 @@ public class ModelView implements Observer {
             /*"text-visibility-mode: hidden;" +*/
             "}" +
             "node.PetriPlaceStart {" +
-            "fill-color: #0d4503;" +
+            "text-color: black; " +
+            "text-background-color: #ffff00;" +
+            "fill-color: #07fc03;" +
             "}" +
             "node.PetriPlaceEnd {" +
-            "fill-color: red;" +
+            "fill-color: #ff0000;" +
             "text-visibility-mode: hidden;" +
             "}" +
             "node.PetriTransition {" +
@@ -2103,7 +2107,7 @@ public class ModelView implements Observer {
             "shadow-mode: plain;" +
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
-            "shadow-color: #0d4503; " +
+            "shadow-color: #07fc03; " +
             "}" +
             "node.PetriPlaceEndToken {" +
             "fill-color: black;" +
@@ -2111,10 +2115,10 @@ public class ModelView implements Observer {
             "shadow-mode: plain;" +
             "shadow-offset: 0;" +
             "shadow-width: 10;" +
-            "shadow-color: red; " +
+            "shadow-color: #ff0000; " +
             "}" +
             "node.PetriPlaceInnerStart {" +
-            "fill-color: red;" +
+            "fill-color: #028f00;" +
             "}"
 
 
