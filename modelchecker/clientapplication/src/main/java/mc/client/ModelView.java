@@ -1996,6 +1996,13 @@ public class ModelView implements Observer {
         workingLayout.shake();
     }
 
+    public void handlePanUp() {
+        Camera cam = workingCanvasAreaView.getCamera();
+        cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y+2, cam.getViewCenter().z);
+
+
+    }
+
 
 
     private String getStyleSheet() {

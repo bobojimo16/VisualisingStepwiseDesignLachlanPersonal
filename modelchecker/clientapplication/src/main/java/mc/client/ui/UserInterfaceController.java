@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -15,6 +16,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -127,7 +130,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private Pane shapePane;
     @FXML
-    private Button identifyPetriProcesses;
+    private ImageView upArrow;
 
 
     // for keep updating the file that has already been saved.
@@ -388,6 +391,17 @@ public class UserInterfaceController implements Initializable, FontListener {
             Double weight = newVal.doubleValue();
             ModelView.getInstance().setGraphWeight(weight);
         });
+
+
+
+        upArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanUp);
+
+
+    }
+
+    public void handlePanUp(MouseEvent me) {
+        System.out.println("PanUp");
+        ModelView.getInstance().handlePanUp();
     }
 
 

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.embed.swing.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import org.fxmisc.flowless.*?>
 <?import org.fxmisc.richtext.*?>
 
+<?import javafx.embed.swing.SwingNode?>
+<?import javafx.scene.text.Font?>
 <VBox maxHeight="1000.0" maxWidth="1000.0" minHeight="1000.0" minWidth="1000.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mc.client.ui.UserInterfaceController">
     <children>
         <MenuBar VBox.vgrow="NEVER">
@@ -106,6 +107,15 @@
 
                         </RadioButton>
                   </children>
+
+                  <ImageView fx:id="upArrow" layoutX="750.0" layoutY="75.0" >
+                  <image>
+                      <Image url="@UpArrow.jpg" />
+                  </image>
+              </ImageView>
+
+                  <!--<ImageView fx:id="arrowUp" disable="false" fitHeight="150.0" fitWidth="200.0" layoutX="800.0" layoutY="246.0" pickOnBounds="true" preserveRatio="true" />-->
+
               </AnchorPane>
     </children>
 </VBox>
