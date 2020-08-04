@@ -102,7 +102,7 @@ public class VisualPetriToProcessCodeHelper {
             }
 
 
-            cumulativeProcessCode += ".";
+
 
             if(processIncomplete){
                 cumulativeProcessCode += "One of these Processes is Incomplete";

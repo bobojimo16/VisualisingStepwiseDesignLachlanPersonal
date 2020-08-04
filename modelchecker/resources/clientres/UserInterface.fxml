@@ -7,6 +7,8 @@
 <?import org.fxmisc.flowless.*?>
 <?import org.fxmisc.richtext.*?>
 
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 <VBox maxHeight="1000.0" maxWidth="1000.0" minHeight="1000.0" minWidth="1000.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mc.client.ui.UserInterfaceController">
     <children>
         <MenuBar VBox.vgrow="NEVER">
@@ -23,120 +25,147 @@
                         <MenuItem fx:id="saveMenuItemDiagram" mnemonicParsing="false" onAction="#handleSaveDiagram" text="Save Process Diagram" />
                         <MenuItem mnemonicParsing="false" onAction="#handleSaveAs" text="Save As…" />
                         <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleOptions" text="Options" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#handleQuit" text="Quit" />
                     </items>
                 </Menu>
+
+
+
             </menus>
+
         </MenuBar>
-              <AnchorPane fx:id="modelDisplayNewContainer" minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="1000.0">
-                  <children>
-                      <SwingNode fx:id="modelDisplayNew" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="50" />
-                      <AnchorPane fx:id="modelDisplayNewController" layoutY="3.0" prefHeight="47.0" prefWidth="1000.0" style="-fx-background-color: #BFBFBF;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="3.0">
-                          <children>
-                              <Label layoutX="10.0" layoutY="13.0" text="Models:" AnchorPane.leftAnchor="20.0">
-                                  <font>
-                                      <Font size="17.0" />
-                                  </font>
-                              </Label>
-                              <ComboBox fx:id="modelsListNew" layoutX="30.0" layoutY="10.0" prefWidth="150.0" AnchorPane.leftAnchor="100.0" />
-                              <Button fx:id="addBtnNew" layoutX="285.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleAddSelectedModelNew" text="Add" />
-                              <Button fx:id="identifyPetriProcesses" layoutX="330.0" layoutY="10.0" mnemonicParsing="false" onAction="#handlePetriIdentification" text="Convert Petris" />
-                              <!--<Button fx:id="unfrzBtnNew" layoutX="395.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreeze" text="Unfreeze" />-->
-                              <Button fx:id="removeBtnNew" layoutX="428.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearNew" text="Clear" />
-                              <Button layoutX="694.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleAddallModelsNew" text="Add all" />
-                              <Button layoutX="758.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleFreezeAllNew" text="Freeze all" />
-                              <Button layoutX="833.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreezeAllNew" text="Unfreeze all" />
-                              <Button layoutX="927.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
 
-                              <RadioButton fx:id="radioButton" layoutX="529.0" layoutY="-2.0" onAction="#handleCreateToggle" selected="true" text="Visual Construction">
-                                  <toggleGroup>
-                                      <ToggleGroup fx:id="CanvasMode" />
-                                  </toggleGroup>
-                              </RadioButton>
-                              <RadioButton fx:id="radioButton2" layoutX="529.0" layoutY="15.0" onAction="#handleTokenToggle" text="Token Game">
+        <AnchorPane fx:id="modelDisplayNewContainer" minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="1000.0">
+            <children>
+                <SwingNode fx:id="modelDisplayNew" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="50" />
+                <AnchorPane fx:id="modelDisplayNewController" prefHeight="47.0" prefWidth="1000.0" style="-fx-background-color: #BFBFBF;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <children>
 
-                                  <toggleGroup>
-                                      <fx:reference source="CanvasMode" />
-                                  </toggleGroup>
-                              </RadioButton>
+                        <ComboBox fx:id="modelsListNew" layoutX="14.0" layoutY="11.0" prefWidth="150.0" AnchorPane.leftAnchor="14.0" />
+                        <Button fx:id="addBtnNew" layoutX="174.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleAddSelectedModelNew" text="Add" />
 
-                          </children>
+                        <!--<Button fx:id="unfrzBtnNew" layoutX="395.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreeze" text="Unfreeze" />-->
+                        <Button fx:id="removeBtnNew" layoutX="223.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleClearNew" text="Clear" />
+                        <Button layoutX="278.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleAddallModelsNew" text="Add all" />
+                        <Button layoutX="343.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleFreezeAllNew" text="Freeze all" />
+                        <Button layoutX="421.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleUnfreezeAllNew" text="Unfreeze all" />
+                        <Button layoutX="511.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
 
-                      </AnchorPane>
-                      <Pane fx:id="shapePane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="800.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0">
-                                           <!-- <children>
-                                                <Circle fx:id="circle" centerX="100.0" centerY="75.0" fill="BLUE" onMousePressed="#doMousePress" onMouseDragged="#doMouseDrag" radius="50.0" stroke="BLACK" strokeType="INSIDE" />
-                                            </children>-->
-                                        </Pane>
+                        <RadioButton fx:id="radioButton" layoutX="585.0" layoutY="16.0" onAction="#handleCreateToggle" selected="true" text="Visual Construction">
+                            <toggleGroup>
+                                <ToggleGroup fx:id="CanvasMode" />
+                            </toggleGroup>
+                        </RadioButton>
+                        <RadioButton fx:id="radioButton2" layoutX="721.0" layoutY="15.0" onAction="#handleTokenToggle" text="Token Game">
 
-                        <RadioButton fx:id="radioButton3" layoutX="529.0" layoutY="35.0" onAction="#handleAutoPetriRelationToggle" text="Auto/Petri Relation Toggle">
+                            <toggleGroup>
+                                <fx:reference source="CanvasMode" />
+                            </toggleGroup>
+                        </RadioButton>
+
+                        <RadioButton fx:id="radioButton3" layoutX="818.0" layoutY="15.0" onAction="#handleAutoPetriRelationToggle" text="Process Relation">
                             <toggleGroup>
                                 <fx:reference source="CanvasMode" />
                             </toggleGroup>
 
                         </RadioButton>
-                  </children>
 
-                  <!--<ImageView fx:id="upArrow" layoutX="750.0" layoutY="75.0" >
-                  <image>
-                      <Image url="@UpArrow.jpg" />
-                  </image>
+                    </children>
 
-              </ImageView>
+                </AnchorPane>
+                <Pane fx:id="shapePane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="800.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0">
+                    <Label layoutX="25.0" layoutY="15.0" text="Petri-Net Components" AnchorPane.leftAnchor="21.0">
+                        <font>
+                            <Font size="17.0" />
+                        </font>
+                    </Label>
 
-                  <ImageView fx:id="rightArrow" layoutX="775.0" layoutY="100.0" >
-                      <image>
-                          <Image url="@RightArrow.jpg" />
-                      </image>
+                    <Label layoutX="92.0" layoutY="108.0" text="Log" AnchorPane.leftAnchor="92.0">
+                        <font>
+                            <Font size="17.0" />
+                        </font>
+                    </Label>
 
-                  </ImageView>
+                    <TextArea fx:id="compilerOutputDisplay" editable="false" layoutX="14.0" layoutY="144.0" maxHeight="1.7976931348623157E308" minHeight="0.0" prefHeight="433.0" prefWidth="192.0" wrapText="true" AnchorPane.bottomAnchor="-35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="-6.0" AnchorPane.topAnchor="144.0" />
 
-                  <ImageView fx:id="downArrow" layoutX="750.0" layoutY="125.0" >
-                      <image>
-                          <Image url="@DownArrow.jpg" />
-                      </image>
+                </Pane>
 
-                  </ImageView>
 
-                  <ImageView fx:id="leftArrow" layoutX="725.0" layoutY="100.0" >
-                      <image>
-                          <Image url="@LeftArrow.jpg" />
-                      </image>
+            </children>
 
-                  </ImageView>
--->
-                  <!--<ImageView fx:id="arrowUp" disable="false" fitHeight="150.0" fitWidth="200.0" layoutX="800.0" layoutY="246.0" pickOnBounds="true" preserveRatio="true" />-->
+            <ImageView fx:id="upArrow" layoutX="750.0" layoutY="75.0" >
+            <image>
+                <Image url="@UpArrow.jpg" />
+            </image>
 
-              </AnchorPane>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="334.0" prefWidth="1000.0">
-                  <children>
-                      <SplitPane dividerPositions="0.7" layoutX="354.0" layoutY="149.0" prefHeight="431.0" prefWidth="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                          <items>
-                              <AnchorPane prefHeight="584.0" prefWidth="293.0">
-                                  <children>
-                                      <VirtualizedScrollPane fx:id="textscroll" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                          <content>
-                                              <CodeArea fx:id="userCodeInput" prefHeight="528.0" prefWidth="293.0" wrapText="true" />
-                                          </content>
-                                      </VirtualizedScrollPane>
-                                  </children>
-                              </AnchorPane>
-                              <AnchorPane prefHeight="317.0" prefWidth="296.0">
-                                  <children>
-                                      <TextArea fx:id="compilerOutputDisplay" editable="false" layoutX="204.0" layoutY="40.0" maxHeight="1.7976931348623157E308" minHeight="0.0" prefHeight="283.0" prefWidth="296.0" wrapText="true" AnchorPane.bottomAnchor="113.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0" />
-                        <AnchorPane prefHeight="38.0" prefWidth="296.0">
-                           <children>
-                                  <Button mnemonicParsing="false" onAction="#handleOptions" prefHeight="38.0" prefWidth="89.0" text="Options" AnchorPane.rightAnchor="21.0" />
-                                  <Button fx:id="compileButton" mnemonicParsing="false" onAction="#handleCompileRequest" prefHeight="38.0" prefWidth="89.0" text="Compile" AnchorPane.rightAnchor="129.0" />
-                           </children>
+        </ImageView>
+
+            <ImageView fx:id="rightArrow" layoutX="775.0" layoutY="100.0" >
+                <image>
+                    <Image url="@RightArrow.jpg" />
+                </image>
+
+            </ImageView>
+
+            <ImageView fx:id="downArrow" layoutX="750.0" layoutY="125.0" >
+                <image>
+                    <Image url="@DownArrow.jpg" />
+                </image>
+
+            </ImageView>
+
+            <ImageView fx:id="leftArrow" layoutX="725.0" layoutY="100.0" >
+                <image>
+                    <Image url="@LeftArrow.jpg" />
+                </image>
+
+            </ImageView>
+
+
+
+        </AnchorPane>
+        <AnchorPane fx:id="codeHousing" minHeight="0.0" minWidth="0.0" prefHeight="334.0" prefWidth="1000.0">
+            <Label layoutX="5" layoutY="10" text="Process Code Input" >
+                <font>
+                    <Font size="17.0" />
+                </font>
+            </Label>
+            <Button fx:id="compileButton" mnemonicParsing="false" onAction="#handleCompileRequest" text="Compile Now" layoutX="160.0" layoutY="10" />
+            <Label layoutX="630.0" layoutY="10" text="Process Code Output" >
+                <font>
+                    <Font size="17.0" />
+                </font>
+            </Label>
+            <Button fx:id="identifyPetriProcesses" layoutX="800.0" layoutY="10.0" mnemonicParsing="false" onAction="#handlePetriIdentification" text="Identify Created Processes" />
+            <children>
+                <SplitPane dividerPositions="0.5" layoutX="354.0" layoutY="43.0" maxHeight="431.0" prefHeight="290.0" prefWidth="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="43.0">
+                    <items>
+                        <AnchorPane prefHeight="100.0" prefWidth="293.0">
+                            <children>
+                                <VirtualizedScrollPane fx:id="textscroll" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <content>
+                                        <CodeArea fx:id="userCodeInput" maxHeight="-Infinity" prefHeight="300.0" prefWidth="696.0" wrapText="true" />
+                                    </content>
+                                </VirtualizedScrollPane>
+                            </children>
                         </AnchorPane>
-                        <Slider fx:id="weightSlider" layoutX="14.0" layoutY="303.0" majorTickUnit="0.1" max="1.0" minorTickCount="0" showTickLabels="true" showTickMarks="true" value="1.0" />
-                                  </children>
-                              </AnchorPane>
-                          </items>
-                      </SplitPane>
+                        <AnchorPane prefHeight="317.0" prefWidth="296.0">
+                            <children>
 
-                  </children>
-              </AnchorPane>
+                                <VirtualizedScrollPane fx:id="textscroll2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <content>
+                                        <CodeArea fx:id="userCodeOutput" maxHeight="-Infinity" prefHeight="300.0" prefWidth="696.0" wrapText="true" />
+                                    </content>
+                                </VirtualizedScrollPane>
+
+                            </children>
+                        </AnchorPane>
+                    </items>
+                </SplitPane>
+
+            </children>
+        </AnchorPane>
     </children>
 </VBox>
