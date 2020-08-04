@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -49,6 +50,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static mc.client.ui.SyntaxHighlighting.computeHighlighting;
@@ -58,6 +60,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public AnchorPane modelDisplayNewContainer;
     public AnchorPane modelDisplayNewController;
+    public Slider weightSlider;
     private boolean holdHighlighting = false; // If there is an compiler issue, highlight the area. Dont keep applying highlighting it wipes it out
     private javafx.stage.Popup autocompleteBox = new javafx.stage.Popup();
     private ExecutorService executor; // Runs the highlighting in separate ctx
@@ -66,11 +69,12 @@ public class UserInterfaceController implements Initializable, FontListener {
     private SettingsController settingsController;
     private NewProcessController nameNewGraphElementController;
     private LabelEdgeController labelEdgeController;
-    private NameNewParrelelProcessController nameNewParrelelProcessController;
 
 
     @FXML
     private CodeArea userCodeInput;
+    @FXML
+    private CodeArea userCodeOutput;
     @FXML
     private TextArea compilerOutputDisplay;
 
@@ -126,7 +130,13 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private Pane shapePane;
     @FXML
-    private Button identifyPetriProcesses;
+    private ImageView upArrow;
+    @FXML
+    private ImageView rightArrow;
+    @FXML
+    private ImageView downArrow;
+    @FXML
+    private ImageView leftArrow;
 
 
     // for keep updating the file that has already been saved.
@@ -142,6 +152,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     private VisualPetriToProcessCodeHelper visualPetriToProcessCodeHelper;
 
     private ChooseProcessController chooseProcessController;
+    private boolean typingInitiated = true;
 
     //@Getter
     //private static UserInterfaceController instance = this;
@@ -224,8 +235,11 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         //add style sheets
         //userCodeInput.setStyle("-fx-background-color: #32302f;");
-        userCodeInput.setStyle("-fx-background-color: #151515;" + "-fx-font-size: 14px;");
+        userCodeInput.setStyle("-fx-background-color: #2B2B2B;" + "-fx-font-size: 14px;");
         userCodeInput.getStylesheets().add(getClass().getResource("/clientres/automata-keywords.css").toExternalForm());
+
+        userCodeOutput.setStyle("-fx-background-color: #2B2B2B;" + "-fx-font-size: 14px;");
+        userCodeOutput.getStylesheets().add(getClass().getResource("/clientres/automata-keywords.css").toExternalForm());
 
         ListView<String> popupSelection = new ListView<>();
         popupSelection.setStyle(
@@ -255,10 +269,12 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
         userCodeInput.setParagraphGraphicFactory(LineNumberFactory.get(userCodeInput)); // Add line numbers
+        userCodeOutput.setParagraphGraphicFactory(LineNumberFactory.get(userCodeInput)); // Add line numbers
 
         userCodeInput.setOnMouseClicked(event -> { // If the user clicks outside of the autocompletion box they probably dont want it there...
             autocompleteBox.hide();
         });
+
 
         userCodeInput.richChanges() // Set up syntax highlighting in another ctx as regex finding can take a while.
             .filter(ch -> !ch.getInserted().equals(ch.getRemoved()) && !holdHighlighting) // Hold highlighting if we have an issue and have highlighted it, otherwise it gets wiped.
@@ -274,6 +290,21 @@ public class UserInterfaceController implements Initializable, FontListener {
                 }
             })
             .subscribe(this::applyHighlighting);
+
+        userCodeOutput.richChanges() // Set up syntax highlighting in another ctx as regex finding can take a while.
+            .filter(ch -> !ch.getInserted().equals(ch.getRemoved()) && !holdHighlighting) // Hold highlighting if we have an issue and have highlighted it, otherwise it gets wiped.
+            .successionEnds(Duration.ofMillis(20))
+            .supplyTask(this::computeHighlightingAsyncOutput)
+            .awaitLatest(userCodeInput.richChanges())
+            .filterMap(t -> {
+                if (t.isSuccess()) {
+                    return Optional.of(t.get());
+                } else {
+                    t.getFailure().printStackTrace();
+                    return Optional.empty();
+                }
+            })
+            .subscribe(this::applyHighlightingOutput);
 
         userCodeInput.richChanges()
             .filter(ch -> !ch.getInserted().equals(ch.getRemoved()) && ch.getInserted().getStyleOfChar(0).isEmpty())
@@ -340,19 +371,31 @@ public class UserInterfaceController implements Initializable, FontListener {
 
             });
 
+
+        AtomicLong t1 = new AtomicLong();
+
         userCodeInput.richChanges()
             .filter(ch -> ch.getInserted().getText().length() == 1)
             .subscribe((startedTyping) -> {
-                System.out.println("typing");
-                compilerOutputDisplay.appendText("Compiling..." + "\n");
+
+                if (typingInitiated) {
+                    compilerOutputDisplay.appendText("Compiling..." + "\n");
+                    t1.set(System.currentTimeMillis());
+                    typingInitiated = false;
+                } else {
+                    long compileTime = Math.round((t1.get() + 4000 - System.currentTimeMillis()) / 1000) * 1000;
+                    System.out.println(compileTime);
+
+                }
 
             });
 
-        userCodeInput.richChanges().successionEnds(Duration.ofMillis(5000))
+        userCodeInput.richChanges().successionEnds(Duration.ofMillis(3000))
 
             .subscribe((finishedTyping) -> {
-                compilerOutputDisplay.appendText("Compiling Completed" + "\n");
+                compilerOutputDisplay.appendText("Recompiling..." + "\n");
                 System.out.println("Recompile");
+                typingInitiated = true;
                 handleCompileRequest();
 
             });
@@ -371,14 +414,41 @@ public class UserInterfaceController implements Initializable, FontListener {
         nameNewGraphElementController = new NewProcessController();
         chooseProcessController = new ChooseProcessController();
         labelEdgeController = new LabelEdgeController();
-        nameNewParrelelProcessController = new NameNewParrelelProcessController();
         //newProcessController.initialize();
 
 
-        AddProcessShapesAutoInitial();
+        //AddProcessShapesAutoInitial();
         AddProcessShapesPetriInitial();
 
         visualPetriToProcessCodeHelper = new VisualPetriToProcessCodeHelper();
+
+
+
+
+
+        upArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanUp);
+        rightArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanRight);
+        downArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanDown);
+        leftArrow.addEventHandler(MouseEvent.MOUSE_PRESSED, this::handlePanLeft);
+
+
+    }
+
+
+    public void handlePanUp(MouseEvent me) {
+        ModelView.getInstance().handlePan("up");
+    }
+
+    public void handlePanRight(MouseEvent me) {
+        ModelView.getInstance().handlePan("right");
+    }
+
+    public void handlePanDown(MouseEvent me) {
+        ModelView.getInstance().handlePan("down");
+    }
+
+    public void handlePanLeft(MouseEvent me) {
+        ModelView.getInstance().handlePan("left");
     }
 
 
@@ -411,7 +481,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     public void doMouseDragAuto(MouseEvent mouseEvent) {
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
             Rectangle c = (Rectangle) mouseEvent.getSource();
             double xOffset = mouseEvent.getX() - c.getX();
             double yOffset = mouseEvent.getY() - c.getY();
@@ -422,7 +492,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public void doMousePressAuto(MouseEvent mouseEvent) {
 
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
 
             int xTran = 20;
 
@@ -455,7 +525,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
     public void doMouseReleaseAuto(MouseEvent mouseEvent) {
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
 
             Rectangle c = (Rectangle) mouseEvent.getSource();
             if (c.getId().equals("AutoStart")) {
@@ -479,7 +549,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     private void addAutomataToGraph(String nodeType, MouseEvent mouseEvent) {
 
-        if(determineInBounds(mouseEvent)) {
+        if (determineInBounds(mouseEvent)) {
 
             ModelView.getInstance().setNewVisualNodeType(nodeType);
 
@@ -492,10 +562,10 @@ public class UserInterfaceController implements Initializable, FontListener {
     private void AddProcessShapesPetriInitial() {
 
 
-        newPetriPlaceStart = new Circle(60, 220, 20);
-        newPetriPlaceNeutral = new Circle(110, 220, 20);
-        newPetriPlaceEnd = new Circle(160, 220, 20);
-        newPetriTransition = new Rectangle(90, 260, 40, 40);
+        newPetriPlaceStart = new Circle(35, 75, 20);
+        newPetriPlaceNeutral = new Circle(135, 75, 20);
+        newPetriPlaceEnd = new Circle(185, 75, 20);
+        newPetriTransition = new Rectangle(65, 55, 40, 40);
 
         processShapesPetri.add(newPetriPlaceStart);
         processShapesPetri.add(newPetriPlaceNeutral);
@@ -531,7 +601,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     private void doMouseDragPetriPlace(MouseEvent mouseEvent) {
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
             Circle c = (Circle) mouseEvent.getSource();
             double xOffset = mouseEvent.getX() - c.getCenterX();
             double yOffset = mouseEvent.getY() - c.getCenterY();
@@ -541,7 +611,9 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     private void doMousePressPetriPlace(MouseEvent mouseEvent) {
-        if(ModelView.getInstance().interactionType.equals("create")) {
+
+
+        if (ModelView.getInstance().interactionType.equals("create")) {
             //todo add switch
 
             Circle c = (Circle) mouseEvent.getSource();
@@ -549,16 +621,16 @@ public class UserInterfaceController implements Initializable, FontListener {
             System.out.println(c);
 
             if (c.getId().equals("PetriPlaceStart")) {
-                nextPetriPlaceNode = new Circle(60, 220, 20);
+                nextPetriPlaceNode = new Circle(35, 75, 20);
                 nextPetriPlaceNode.setFill(Color.GREEN);
                 nextPetriPlaceNode.setId("PetriPlaceStart");
 
             } else if (c.getId().equals("PetriPlaceNeutral")) {
-                nextPetriPlaceNode = new Circle(110, 220, 20);
+                nextPetriPlaceNode = new Circle(135, 75, 20);
                 nextPetriPlaceNode.setFill(Color.GRAY);
                 nextPetriPlaceNode.setId("PetriPlaceNeutral");
             } else {
-                nextPetriPlaceNode = new Circle(160, 220, 20);
+                nextPetriPlaceNode = new Circle(185, 75, 20);
                 nextPetriPlaceNode.setFill(Color.RED);
                 nextPetriPlaceNode.setId("PetriPlaceEnd");
             }
@@ -574,7 +646,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     public void doMouseReleasePetriPlace(MouseEvent mouseEvent) {
 
 
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
 
             Circle c = (Circle) mouseEvent.getSource();
             if (c.getId().equals("PetriPlaceStart")) {
@@ -595,7 +667,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
     public void doMouseDragPetriTransition(MouseEvent mouseEvent) {
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
             Rectangle r = (Rectangle) mouseEvent.getSource();
             double xOffset = mouseEvent.getX() - r.getX();
             double yOffset = mouseEvent.getY() - r.getY();
@@ -606,8 +678,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public void doMousePressPetriTransition(MouseEvent mouseEvent) {
         //todo add switch
-        if(ModelView.getInstance().interactionType.equals("create")) {
-            nextPetriTransition = new Rectangle(90, 260, 40, 40);
+        if (ModelView.getInstance().interactionType.equals("create")) {
+            nextPetriTransition = new Rectangle(65, 55, 40, 40);
             nextPetriTransition.setFill(Color.GRAY);
             nextPetriTransition.setId("PetriTransition");
 
@@ -621,7 +693,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     public void doMouseReleasePetriTransition(MouseEvent mouseEvent) {
-        if(ModelView.getInstance().interactionType.equals("create")) {
+        if (ModelView.getInstance().interactionType.equals("create")) {
             if (ModelView.getInstance().interactionType.equals("create")) {
                 shapePane.getChildren().remove(newPetriTransition);
                 newPetriTransition = nextPetriTransition;
@@ -632,7 +704,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     private void addPetriPlaceToGraph(String petriPlaceType, MouseEvent mouseEvent) {
 
-        if(determineInBounds(mouseEvent)) {
+        if (determineInBounds(mouseEvent)) {
 
             ModelView.getInstance().setNewVisualNodeType(petriPlaceType);
 
@@ -643,8 +715,8 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     }
 
-    private Boolean determineInBounds(MouseEvent mouseEvent){
-        return mouseEvent.getSceneY() > modelDisplayNewContainer.getLayoutY()+modelDisplayNewController.getHeight()
+    private Boolean determineInBounds(MouseEvent mouseEvent) {
+        return mouseEvent.getSceneY() > modelDisplayNewContainer.getLayoutY() + modelDisplayNewController.getHeight()
             && mouseEvent.getSceneY() < modelDisplayNewContainer.getLayoutY() + modelDisplayNewContainer.getHeight()
             && mouseEvent.getSceneX() > 0
             && mouseEvent.getSceneX() < shapePane.getLayoutX();
@@ -652,7 +724,7 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     private void addPetriTransitionToGraph(MouseEvent mouseEvent) {
 
-        if(determineInBounds(mouseEvent)) {
+        if (determineInBounds(mouseEvent)) {
             ModelView.getInstance().setNewVisualNodeType("petriTransition");
             initiateNameNewGraphElementPopup();
         }
@@ -660,13 +732,14 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     private void initiateNameNewGraphElementPopup() {
 
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameNewGraphElement.fxml"));
         loader.setController(nameNewGraphElementController); //links to  SettingsController.java
         try {
             Stage newProcessStage = new Stage();
             newProcessStage.setTitle("New Process");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 170, 150);
             newProcessStage.setScene(windowScene);
 
             //settingsController.setWindow(newProcessStage.getScene().getWindow());
@@ -826,8 +899,26 @@ public class UserInterfaceController implements Initializable, FontListener {
         return task;
     }
 
+    private Task<StyleSpans<Collection<String>>> computeHighlightingAsyncOutput() {
+        String text = userCodeOutput.getText();
+        Task<StyleSpans<Collection<String>>> task = new Task<StyleSpans<Collection<String>>>() {
+            @Override
+            protected StyleSpans<Collection<String>> call() throws Exception {
+                return computeHighlighting(text);
+            }
+        };
+        executor.execute(task);
+        return task;
+
+    }
+
     private void applyHighlighting(StyleSpans<Collection<String>> highlighting) {
         userCodeInput.setStyleSpans(0, highlighting); // Fires a style event
+    }
+
+    private void applyHighlightingOutput(StyleSpans<Collection<String>> highlighting) {
+        userCodeOutput.setStyleSpans(0, highlighting); // Fires a style event
+
     }
 
 
@@ -953,6 +1044,14 @@ public class UserInterfaceController implements Initializable, FontListener {
 
 
         } catch (IOException e) {
+            Alert saveFailed = new Alert(Alert.AlertType.ERROR);
+            saveFailed.setTitle("Error encountered when reading file");
+            saveFailed.setContentText("Error: " + e.getMessage());
+
+            saveFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
+            saveFailed.initModality(Modality.APPLICATION_MODAL);
+            saveFailed.show();
+        } catch (RuntimeException e) {
             Alert saveFailed = new Alert(Alert.AlertType.ERROR);
             saveFailed.setTitle("Error encountered when reading file");
             saveFailed.setContentText("Error: " + e.getMessage());
@@ -1176,6 +1275,7 @@ public class UserInterfaceController implements Initializable, FontListener {
     @FXML
     private void handleOptions(ActionEvent event) {
 
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/SettingsInterface.fxml"));
 
         loader.setController(settingsController); //links to  SettingsController.java
@@ -1216,7 +1316,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             if (buildThread.isAlive()) {
                 //buildThread.stop();
                 compilerOutputDisplay.appendText("Build cancelled" + "\n");
-                compileButton.setText("Compile");
+                compileButton.setText("Compile Now");
 
             } else {
                 // ModelView.getInstance().cleanData();  // dstr try to fix data buildup 1/11/19
@@ -1301,7 +1401,7 @@ public class UserInterfaceController implements Initializable, FontListener {
                     }
 
                     Platform.runLater(() -> {
-                        compileButton.setText("Compile");
+                        compileButton.setText("Compile Now");
                     });
 
 
@@ -1402,20 +1502,13 @@ public class UserInterfaceController implements Initializable, FontListener {
         String conversionResult = visualPetriToProcessCodeHelper.doConversion(ModelView.getInstance().getVisualCreatedPetris(),
             ModelView.getInstance().getOwnersToPIDMapping());
 
-        System.out.println(conversionResult);
+        userCodeOutput.clear();
 
-        Alert a = new Alert(Alert.AlertType.NONE);
-        a.setAlertType(Alert.AlertType.INFORMATION);
-
-        a.setContentText(conversionResult);
-
-        a.show();
+        userCodeOutput.appendText("processes{ \n" + conversionResult + "\n}");
 
     }
 
     public String doParelelProcessSpecifying(ArrayList<String> processes, String id) {
-
-
 
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/ChooseProcess.fxml"));
@@ -1425,7 +1518,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             Stage newProcessChooseStage = new Stage();
             newProcessChooseStage.setTitle("Choose Process");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 240, 120);
             newProcessChooseStage.setScene(windowScene);
 
             //settingsController.setWindow(newProcessStage.getScene().getWindow());
@@ -1465,14 +1558,14 @@ public class UserInterfaceController implements Initializable, FontListener {
     }
 
     public String nameParrelelProceses() {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameParrelelProcess.fxml"));
-        loader.setController(nameNewParrelelProcessController); //links to  SettingsController.java
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/clientres/NameNewGraphElement.fxml"));
+        loader.setController(nameNewGraphElementController); //links to  SettingsController.java
         String toReturn = "";
         try {
             Stage nameParrelelProcesesStage = new Stage();
             nameParrelelProcesesStage.setTitle("Label Parrelel Processes");
 
-            Scene windowScene = new Scene(loader.load(), 402, 326);
+            Scene windowScene = new Scene(loader.load(), 150, 170);
             nameParrelelProcesesStage.setScene(windowScene);
 
             //settingsController.setWindow(newProcessStage.getScene().getWindow());
@@ -1481,7 +1574,7 @@ public class UserInterfaceController implements Initializable, FontListener {
             nameParrelelProcesesStage.initModality(Modality.NONE);
             nameParrelelProcesesStage.setResizable(false);
             nameParrelelProcesesStage.showAndWait();
-            toReturn = nameNewParrelelProcessController.getNewProcessNameValue();
+            toReturn = nameNewGraphElementController.getNewProcessNameValue();
 
         } catch (IOException e) {
             Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);

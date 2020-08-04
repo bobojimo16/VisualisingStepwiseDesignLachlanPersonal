@@ -41,7 +41,7 @@ public class NewProcessController implements Initializable {
     }
 
     public String getNewProcessNameValue() {
-        String toReturn = newProcessName;
+        String toReturn = NewProcessTextField.getText();
         newProcessName = "";
         return toReturn;
     }
