@@ -133,6 +133,17 @@
                 </font>
             </Label>
             <Button fx:id="compileButton" mnemonicParsing="false" onAction="#handleCompileRequest" text="Compile Now" layoutX="160.0" layoutY="10" />
+
+            <ImageView fx:id="copyArrow" layoutX="450.0" layoutY="10.0" >
+                <image>
+                    <Image url="@CopyArrow.png" />
+                </image>
+
+            </ImageView>
+
+            <Button fx:id="copyButton" mnemonicParsing="false" onAction="#handleCopyRequest" text="Copy" layoutX="475.0" layoutY="10" />
+
+
             <Label layoutX="630.0" layoutY="10" text="Process Code Output" >
                 <font>
                     <Font size="17.0" />

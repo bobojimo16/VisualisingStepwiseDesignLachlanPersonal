@@ -1508,6 +1508,12 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     }
 
+    public void handleCopyRequest(ActionEvent actionEvent){
+        String conversionResult = userCodeOutput.getText();
+
+        userCodeInput.appendText("\n\n" + conversionResult);
+    }
+
     public String doParelelProcessSpecifying(ArrayList<String> processes, String id) {
 
 
