@@ -339,7 +339,7 @@ public class ModelView implements Observer {
         //Connects the node via edges on screen
         automaton.getEdges().forEach(e -> {
 
-            System.out.println(e.getLabel());
+            System.out.println("ft: " + e.getFromTran());
 
             Set<String> owners = e.getEdgeOwners();
 
@@ -2035,12 +2035,13 @@ public class ModelView implements Observer {
             "text-size: 20;" +
             "text-alignment: above;" +
             "text-style: normal;" +
-            "text-background-mode: plain;" +
+
             "size: 20px; " +
             "fill-mode: gradient-horizontal;" +
             "shadow-color: #000000, #ffffff;" +
             "}" +
             "node.AutoStart {" +
+            "text-background-mode: rounded-box;" +
             "text-color: black; " +
             "text-background-color: #ffff00;" +
             "fill-color: #07fc03" + transString + ";" +
@@ -2071,6 +2072,7 @@ public class ModelView implements Observer {
             /*"text-visibility-mode: hidden;" +*/
             "}" +
             "node.PetriPlaceStart {" +
+            "text-background-mode: rounded-box;" +
             "text-color: black; " +
             "text-background-color: #ffff00;" +
             "fill-color: #07fc03;" +

@@ -251,7 +251,7 @@ public class TokenRule {
 
                     } else {
                         ed.setNotMaximalOwnedEdge(false);
-                        ed.setFromTran("");
+                        ed.setFromTran(transitionId);
                     }
                     //System.out.println("Token building " + ed.myString());
 
