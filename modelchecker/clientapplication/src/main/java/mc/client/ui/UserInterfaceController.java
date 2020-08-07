@@ -379,12 +379,13 @@ public class UserInterfaceController implements Initializable, FontListener {
             .subscribe((startedTyping) -> {
 
                 if (typingInitiated) {
+
+                    System.out.println("Typing Initialialised");
                     compilerOutputDisplay.appendText("Compiling..." + "\n");
                     t1.set(System.currentTimeMillis());
                     typingInitiated = false;
                 } else {
                     long compileTime = Math.round((t1.get() + 4000 - System.currentTimeMillis()) / 1000) * 1000;
-                    System.out.println(compileTime);
 
                 }
 
@@ -1392,8 +1393,9 @@ public class UserInterfaceController implements Initializable, FontListener {
                             compilerOutputDisplay.appendText(e.toString());
                             if (e.getLocation() != null) {
                                 compilerOutputDisplay.appendText("\n" + e.getLocation());
-                                if (e.getLocation().getStartIndex() > 0 && e.getLocation().getStartIndex() < userCodeInput.getText().length())
-                                    userCodeInput.setStyleClass(e.getLocation().getStartIndex(), e.getLocation().getEndIndex(), "issue");
+                                if (e.getLocation().getStartIndex() > 0 && e.getLocation().getStartIndex() < userCodeInput.getText().length()) {
+                                    //userCodeInput.setStyleClass(e.getLocation().getStartIndex(), e.getLocation().getEndIndex(), "issue");
+                                }
                             }
                         });
                     } catch (ExecutionException e) {
