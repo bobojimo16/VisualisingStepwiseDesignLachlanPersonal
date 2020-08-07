@@ -56,7 +56,7 @@ import java.util.function.Supplier;
 import static mc.client.ui.SyntaxHighlighting.computeHighlighting;
 
 
-public class UserInterfaceController implements Initializable, FontListener {
+public class UserInterfaceController implements Initializable {
 
     public AnchorPane modelDisplayNewContainer;
     public AnchorPane modelDisplayNewController;
@@ -157,14 +157,6 @@ public class UserInterfaceController implements Initializable, FontListener {
     //@Getter
     //private static UserInterfaceController instance = this;
 
-    @Override
-    public void changeFontSize() {  // Lister Pattern
-        int f = settingsController.getFont();
-        String sfont = "-fx-font-size: " + f + "px;";
-        //System.out.println("UserInterfaceController changeFontSize  "+sfont);
-        userCodeInput.setStyle("-fx-background-color: #151515;" + sfont);
-        compilerOutputDisplay.setStyle(sfont);
-    }
 
 
     /**
@@ -204,7 +196,6 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         settingsController = new SettingsController();
         settingsController.setReferenceToUIC(this);
-        settingsController.addFontListener(this);
 
         ModelView.getInstance().setReferenceToUIC(this);
 
@@ -1295,14 +1286,15 @@ public class UserInterfaceController implements Initializable, FontListener {
             settingsStage.show();
 
         } catch (IOException e) {
-            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            e.printStackTrace();
+            /*Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
             optionsLayoutLoadFailed.setTitle("Error encountered when loading options panel layout");
             optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
 
             optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
 
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
-            optionsLayoutLoadFailed.show();
+            optionsLayoutLoadFailed.show();*/
         }
     }
 
@@ -1371,9 +1363,7 @@ public class UserInterfaceController implements Initializable, FontListener {
                         logThread.setDaemon(true); // Means the ctx doesnt hang the appication on close
                         logThread.start();
 
-                        Supplier<Boolean> getSymb = () -> settingsController.isSymbolic();
-                        //Keep the actual compilition outside the javafx ctx otherwise we get hanging
-                        boolean s = settingsController.isSymbolic();
+                        Supplier<Boolean> getSymb = () -> false;
                         CompilationObject compilerOutput = codeCompiler.compile(finalUserCode, Expression.mkCtx(), messageLog, getSymb);
 
                         Platform.runLater(() -> {
@@ -1608,5 +1598,10 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public void changeRelatingEdgeWeight(double relatingWeight) {
         ModelView.getInstance().setRelatingEdgeWight(relatingWeight);
+    }
+
+    public void changeGlobalEdgeWeight(double globalWeight) {
+        ModelView.getInstance().setGraphWeight(globalWeight);
+
     }
 }

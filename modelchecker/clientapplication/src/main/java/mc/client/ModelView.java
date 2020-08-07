@@ -190,28 +190,15 @@ public class ModelView implements Observer {
         toExpand.stream().map(Map.Entry::getKey).forEach(compiledResult.getProcessMap()::remove);
 
 
-        String dispType = settings.getDisplayType();
 
-        //Stores process models in modelsInList depending on wether current display setting wants it
 
-        if (dispType.equals("All")) {
+
             modelsInList = getProcessMap().entrySet().stream()
                 .filter(e -> e.getValue().getProcessType() != ProcessType.AUTOMATA ||
-                    ((Automaton) e.getValue()).getNodes().size() <= settings.getMaxNodes())
+                    ((Automaton) e.getValue()).getNodes().size() <= 1000)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toCollection(TreeSet::new));
-        } else if (dispType.equals(Constant.AUTOMATA)) {
-            modelsInList = getProcessMap().entrySet().stream()
-                .filter(e -> e.getValue().getProcessType() == ProcessType.AUTOMATA &&
-                    ((Automaton) e.getValue()).getNodes().size() <= settings.getMaxNodes())
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toCollection(TreeSet::new));
-        } else {
-            modelsInList = getProcessMap().entrySet().stream()
-                .filter(e -> e.getValue().getProcessType() != ProcessType.AUTOMATA)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toCollection(TreeSet::new));
-        }
+
         //remove processes marked at skipped and too large models to display
         listOfAutomataUpdater.accept(modelsInList);
 
@@ -361,9 +348,7 @@ public class ModelView implements Observer {
                 bool = "";
                 ass = "";
             }
-            if (settings.isShowOwners()) {
-                label += e.getEdgeOwners();
-            }
+
 
 
             Edge edge = workingCanvasArea.addEdge(from.getNodeId() + "-" + to.getNodeId(), from.getNodeId(), to.getNodeId(), true);
@@ -440,7 +425,7 @@ public class ModelView implements Observer {
             }
 
             String lab = "";
-            if (settings.isShowIds()) lab = place.getId();
+
             // changing the label on the nodes forces the Petri Net to be relayed out.
             GraphNode node = new GraphNode(petri.getId(), place.getId(),
                 nodeTermination, nodeTermination, NodeType.PETRINET_PLACE, lab, place);
@@ -498,7 +483,6 @@ public class ModelView implements Observer {
             .forEach(transition -> {
 
                 String lab = "";
-                if (settings.isShowIds()) lab += transition.getId() + "-";
                 lab += transition.getLabel() + "";
 
                 GraphNode node = new GraphNode(petri.getId(), transition.getId(),
@@ -531,7 +515,7 @@ public class ModelView implements Observer {
 
 
             String lab = "";
-            if (settings.isShowIds()) lab += edge.getId() + "-";
+
             if (edge.getOptional()) {
 
                 lab = "Opt";
@@ -540,17 +524,7 @@ public class ModelView implements Observer {
                     lab = lab + i;
                 }
             }
-            if (settings.isShowOwners()) {
-                PetriNetPlace place;
-                if (edge.getTo() instanceof PetriNetPlace) {
-                    place = (PetriNetPlace) edge.getTo();
-                } else {
-                    place = (PetriNetPlace) edge.getFrom();
-                }
-                for (String o : (place).getOwners()) {
-                    lab += ("." + o);
-                }
-            }
+
 
             String b;
             String a;
@@ -1498,7 +1472,7 @@ public class ModelView implements Observer {
     }
 
     public void unfreezeAllCurrentlyDisplayedNew() {
-        workingCanvasAreaViewer.enableAutoLayout();
+        workingCanvasAreaViewer.enableAutoLayout(workingLayout);
         Iterable<? extends Node> k = workingCanvasArea.getEachNode();
 
         k.forEach(node -> {
@@ -1992,7 +1966,6 @@ public class ModelView implements Observer {
 
     public void setGraphWeight(Double weight) {
         workingLayout.setForce(weight);
-
         workingLayout.shake();
     }
 
