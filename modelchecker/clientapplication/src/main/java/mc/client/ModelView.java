@@ -115,6 +115,8 @@ public class ModelView implements Observer {
 
     private Petrinet testInitialPetri = null;
 
+    private HashMap<String, HashMap<String, String>> petriColourings = new HashMap();
+
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
     }
@@ -202,7 +204,64 @@ public class ModelView implements Observer {
         //remove processes marked at skipped and too large models to display
         listOfAutomataUpdater.accept(modelsInList);
 
+        doPetriTransitionColouring();
 
+
+    }
+
+    private void doPetriTransitionColouring() {
+
+        compiledResult.getProcessMap().keySet().stream()
+            .map(compiledResult.getProcessMap()::get)
+            .filter(Objects::nonNull)
+            .forEach(PM-> {
+
+
+                if(PM.getProcessType().equals(ProcessType.PETRINET)) {
+
+
+                    Petrinet petri = (Petrinet) PM;
+
+                    if (!petriColourings.containsKey(petri.getId())) {
+
+
+                        TreeSet<String> petriOwners = petri.getOwners();
+                        HashMap<String, String> ownerColours = new HashMap<>();
+
+                        int colourTracker = 0;
+                        String colour = "";
+                        for (String o : petriOwners) {
+
+                            if (colourTracker > pathColours.size()) {
+                                colourTracker = 0;
+                            }
+
+                            colour = (String) pathColours.get(colourTracker);
+                            ownerColours.put(o, colour);
+                            colourTracker++;
+                        }
+
+
+                        HashMap<String, String> petriTransitionColouring = new HashMap<>();
+
+                        petri.getTransitions().values().stream().filter(x -> !x.isBlocked())
+                            .forEach(transition -> {
+                                TreeSet<String> owners = transition.getOwners();
+
+                                if (owners.size() == 1) {
+                                    String s = ownerColours.get(owners.first());
+                                    petriTransitionColouring.put(transition.getId(), s);
+
+                                } else {
+                                    petriTransitionColouring.put(transition.getId(), "blue");
+                                }
+
+                            });
+
+                        petriColourings.put(petri.getId(), petriTransitionColouring);
+                    }
+                }
+            });
     }
 
 
@@ -354,6 +413,25 @@ public class ModelView implements Observer {
             Edge edge = workingCanvasArea.addEdge(from.getNodeId() + "-" + to.getNodeId(), from.getNodeId(), to.getNodeId(), true);
             edge.addAttribute("ui.label", label);
 
+            if(determineIfLoop(edge)){
+                edge.addAttribute("ui.class", "eLoop");
+            }
+
+            HashMap<String, String> petriTrans = petriColourings.get(automaton.getId().replace("automata", "petrinet"));
+
+            String colour = "black";
+
+            for(String s: petriTrans.keySet()){
+                if(s.equals(e.getFromTran())){
+                    colour = petriTrans.get(s);
+                    break;
+                }
+            }
+
+            edge.addAttribute("ui.style", "fill-color: " + colour + ";");
+
+
+
 
         });
 
@@ -364,6 +442,20 @@ public class ModelView implements Observer {
         if (interactionType.equals("autopetrirelation")) {
             handleAutoPetriRelation();
         }
+    }
+
+    private Boolean determineIfLoop(Edge edge) {
+        Node first = edge.getNode0();
+
+        Collection<Edge> leavingEdges = edge.getNode1().getLeavingEdgeSet();
+
+        for(Edge e: leavingEdges){
+            if(e.getNode1() == first){
+                return true;
+            }
+        }
+
+        return false;
     }
 
 
@@ -1472,7 +1564,7 @@ public class ModelView implements Observer {
     }
 
     public void unfreezeAllCurrentlyDisplayedNew() {
-        workingCanvasAreaViewer.enableAutoLayout(workingLayout);
+        workingCanvasAreaViewer.enableAutoLayout();
         Iterable<? extends Node> k = workingCanvasArea.getEachNode();
 
         k.forEach(node -> {
@@ -2036,6 +2128,12 @@ public class ModelView implements Observer {
             "text-size: 20;" +
             "arrow-shape: arrow;" +
             "text-alignment: above;" +
+            "}" +
+            "edge.eLoop {" +
+            "text-alignment: under;" +
+            "}" +
+            "edge.noeLoop {" +
+
             "}" +
             "graph {" +
             "fill-color: white;" +
