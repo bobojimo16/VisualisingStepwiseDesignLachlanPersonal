@@ -833,6 +833,10 @@ public class UserInterfaceController implements Initializable {
                 a.setContentText("Unable to have transitions with more outgoing edges than incoming edges");
             case "syncingOnAPetriPlace":
                 a.setContentText("Unable To Sync On a Place");
+            case "moreThanTwoParrelel":
+                a.setContentText("Unable to have more than two processes in parallel");
+
+
             default:
                 break;
         }

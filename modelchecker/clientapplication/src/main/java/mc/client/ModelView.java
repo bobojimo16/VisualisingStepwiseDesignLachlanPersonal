@@ -1131,6 +1131,33 @@ public class ModelView implements Observer {
 
         }
 
+        //Reject more than two processes in parrelel
+
+        if (firstNodeType.equals("PetriPlaceStart")) {
+
+            Iterator<Node> searcher = workingCanvasArea.getNode(seccondNodeClicked.getId()).getBreadthFirstIterator(false);
+            int proccesesCounter = 0;
+
+            while (searcher.hasNext()) {
+                Node current = searcher.next();
+                if (current.getAttribute("ui.class").equals("PetriPlaceStart") ) {
+                    proccesesCounter++;
+                }
+            }
+
+            if(proccesesCounter == 2){
+                Platform.runLater(() ->
+                {
+                    uic.reportError("moreThanTwoParrelel");
+                });
+                return;
+            }
+
+
+        }
+
+
+
 
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
 
