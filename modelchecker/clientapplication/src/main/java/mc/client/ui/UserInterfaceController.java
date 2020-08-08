@@ -1608,4 +1608,8 @@ public class UserInterfaceController implements Initializable {
         ModelView.getInstance().setGraphWeight(globalWeight);
 
     }
+
+    public void handleViewToggle(ActionEvent actionEvent) {
+        ModelView.getInstance().switchInteractionType("view");
+    }
 }

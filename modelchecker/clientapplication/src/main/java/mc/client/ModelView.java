@@ -111,7 +111,7 @@ public class ModelView implements Observer {
     private double zoom;
     private boolean autoPetriRelationModeEnabled = false;
     private ArrayList<Edge> petriAutoRelations = new ArrayList<>();
-    public String interactionType = "create";
+    public String interactionType = "view";
 
     private Petrinet testInitialPetri = null;
 
@@ -855,110 +855,118 @@ public class ModelView implements Observer {
     }
 
     private void handleTokenGame(int x, int y) {
-        //Do Token Game
-        GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
-        Node nodeSelected = (Node) ge;
+
+        try {
 
 
-        if (nodeSelected != null) {
-
-            for (Node n : createdNodes) {
-                System.out.println(n.getId());
-                if (n.getId().equals(nodeSelected.getId())) {
-                    return;
-                }
-            }
+            //Do Token Game
+            GraphicElement ge = workingCanvasAreaView.findNodeOrSpriteAt(x, y);
+            Node nodeSelected = (Node) ge;
 
 
-            String pid = nodeSelected.getAttribute("ui.PID");
-            GraphNode gn = nodeSelected.getAttribute("ui.GraphNode");
-            ProcessModelObject clk = gn.getRepresentedFeature();
+            if (nodeSelected != null) {
 
-
-            if (mappings != null && mappings.containsKey(pid)) {
-                if ((clk instanceof PetriNetTransition)) {
-                    PetriNetTransition pntClicked = ((PetriNetTransition) clk);
-                    if (!pntClicked.getLabel().equals(Constant.DEADLOCK)) {
-                        Multiset<PetriNetPlace> cm = CurrentMarkingsSeen.currentMarkingsSeen.get(pid);
-                        Multiset<PetriNetPlace> newMarking;
-                        List<Multiset<PetriNetPlace>> newMarkings;
-
-                        if (TokenRule.isSatisfied(cm, pntClicked)) {
-                            newMarkings = TokenRulePureFunctions.newMarking(cm, pntClicked);
-                            newMarking = newMarkings.get(0);
-                            CurrentMarkingsSeen.currentMarkingsSeen.put(pid, newMarking);
-
-                        }
+                for (Node n : createdNodes) {
+                    System.out.println(n.getId());
+                    if (n.getId().equals(nodeSelected.getId())) {
+                        return;
                     }
-                    refreshTransitionColour();
-
                 }
-            }
-
-        } else {
-            CurrentMarkingsSeen.setCurrentMarkingsSeen(CurrentMarkingsSeen.getRootMarkings());
-            refreshTransitionColour();
-        }
-
-        //Move Token
-
-        Map<String, Set<String>> pnidToSetPlaceId = new TreeMap<>();
-        for (String pid : CurrentMarkingsSeen.currentMarkingsSeen.keySet()) {
-            Set<String> mk = CurrentMarkingsSeen.getIds(pid);
-            pnidToSetPlaceId.put(pid, mk);
-        }
 
 
-        //Remove Last Tokens:
-        removeLastTokens(nodeSelected);
+                String pid = nodeSelected.getAttribute("ui.PID");
+                GraphNode gn = nodeSelected.getAttribute("ui.GraphNode");
+                ProcessModelObject clk = gn.getRepresentedFeature();
 
-        processModelsOnScreenGSType.asMap().forEach((key, value) -> {
 
-            if (!key.contains("automata")) {
+                if (mappings != null && mappings.containsKey(pid)) {
+                    if ((clk instanceof PetriNetTransition)) {
+                        PetriNetTransition pntClicked = ((PetriNetTransition) clk);
+                        if (!pntClicked.getLabel().equals(Constant.DEADLOCK)) {
+                            Multiset<PetriNetPlace> cm = CurrentMarkingsSeen.currentMarkingsSeen.get(pid);
+                            Multiset<PetriNetPlace> newMarking;
+                            List<Multiset<PetriNetPlace>> newMarkings;
 
-                for (Node vertex : value) {
-                    GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
-                    if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
-                        pnidToSetPlaceId.get(VertexGN.getProcessModelId())
-                            .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
-                        && !createdNodes.contains(vertex)) {
+                            if (TokenRule.isSatisfied(cm, pntClicked)) {
+                                newMarkings = TokenRulePureFunctions.newMarking(cm, pntClicked);
+                                newMarking = newMarkings.get(0);
+                                CurrentMarkingsSeen.currentMarkingsSeen.put(pid, newMarking);
 
-                        String petriHeadConversion = "";
-
-                        if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
-                            System.out.println(VertexGN.getRepresentedFeature().getId());
-                            Node n = (Node) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature());
-                            petriHeadConversion = n.getId();
-                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
-                        } else {
-                            petriHeadConversion = VertexGN.getRepresentedFeature().getId();
+                            }
                         }
-
-                        System.out.println("k: " + key);
-
-                        System.out.println("pnc: " + petriHeadConversion);
-
-                        //Add New Tokens
-                        workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
-
-
-                        System.out.println(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString());
-                        if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
-                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
-                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
-                        } else if (workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlace")) {
-                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
-                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
-                        } else if (workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlaceEnd")) {
-                            workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
-                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceEndToken");
-                        }
+                        refreshTransitionColour();
 
                     }
                 }
 
+            } else {
+                CurrentMarkingsSeen.setCurrentMarkingsSeen(CurrentMarkingsSeen.getRootMarkings());
+                refreshTransitionColour();
             }
-        });
+
+            //Move Token
+
+            Map<String, Set<String>> pnidToSetPlaceId = new TreeMap<>();
+            for (String pid : CurrentMarkingsSeen.currentMarkingsSeen.keySet()) {
+                Set<String> mk = CurrentMarkingsSeen.getIds(pid);
+                pnidToSetPlaceId.put(pid, mk);
+            }
+
+
+            //Remove Last Tokens:
+            removeLastTokens(nodeSelected);
+
+            processModelsOnScreenGSType.asMap().forEach((key, value) -> {
+
+                if (!key.contains("automata")) {
+
+                    for (Node vertex : value) {
+                        GraphNode VertexGN = (GraphNode) vertex.getAttribute("ui.GraphNode");
+                        if (VertexGN.getRepresentedFeature() instanceof PetriNetPlace &&
+                            pnidToSetPlaceId.get(VertexGN.getProcessModelId())
+                                .contains(((PetriNetPlace) VertexGN.getRepresentedFeature()).getId())
+                            && !createdNodes.contains(vertex)) {
+
+                            String petriHeadConversion = "";
+
+                            if (workingCanvasArea.getNode(VertexGN.getRepresentedFeature().getId()) == null) {
+                                System.out.println(VertexGN.getRepresentedFeature().getId());
+                                Node n = (Node) graphNodeToHeadPetri.get(VertexGN.getRepresentedFeature());
+                                petriHeadConversion = n.getId();
+                                workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.petristart");
+                            } else {
+                                petriHeadConversion = VertexGN.getRepresentedFeature().getId();
+                            }
+
+                            System.out.println("k: " + key);
+
+                            System.out.println("pnc: " + petriHeadConversion);
+
+                            //Add New Tokens
+                            workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
+
+
+                            System.out.println(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString());
+                            if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
+                                workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+                                workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
+                            } else if (workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlace")) {
+                                workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+                                workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
+                            } else if (workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlaceEnd")) {
+                                workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
+                                workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceEndToken");
+                            }
+
+                        }
+                    }
+
+                }
+            });
+
+        } catch (Exception e){
+
+        }
 
 
     }
@@ -1822,6 +1830,10 @@ public class ModelView implements Observer {
 
     public void switchInteractionType(String type) {
         switch (type) {
+            case "view":
+                interactionType = "view";
+                unfreezeAllCurrentlyDisplayedNew();
+                break;
             case "create":
                 switchToCreateMode();
                 break;
@@ -1842,10 +1854,12 @@ public class ModelView implements Observer {
         removeLastTokens(null);
         clearPetriTransitionHighlighting();
         resetAutoPetriRelations();
+        freezeAllCurrentlyDisplayedNew();
 
     }
 
     public void switchToTokenMode() {
+        unfreezeAllCurrentlyDisplayedNew();
         interactionType = "token";
         determineIfNodeClicked(Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
         clearPetriTransitionHighlighting();
@@ -1867,6 +1881,7 @@ public class ModelView implements Observer {
         interactionType = "autopetrirelation";
         removeLastTokens(null);
         clearPetriTransitionHighlighting();
+        unfreezeAllCurrentlyDisplayedNew();
 
 
         if (interactionType.equals("autopetrirelation")) {

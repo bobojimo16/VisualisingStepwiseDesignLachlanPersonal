@@ -53,19 +53,25 @@
                         <Button layoutX="421.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleUnfreezeAllNew" text="Unfreeze all" />
                         <Button layoutX="511.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
 
-                        <RadioButton fx:id="radioButton" layoutX="585.0" layoutY="16.0" onAction="#handleCreateToggle" selected="true" text="Visual Construction">
+                        <RadioButton fx:id="radioButton0" layoutX="580.0" layoutY="16.0" onAction="#handleViewToggle" selected="true" text="Viewing">
                             <toggleGroup>
                                 <ToggleGroup fx:id="CanvasMode" />
                             </toggleGroup>
                         </RadioButton>
-                        <RadioButton fx:id="radioButton2" layoutX="721.0" layoutY="15.0" onAction="#handleTokenToggle" text="Token Game">
+
+                        <RadioButton fx:id="radioButton" layoutX="655.0" layoutY="16.0" onAction="#handleCreateToggle" selected="false" text="Visual Construction">
+                            <toggleGroup>
+                                <fx:reference source="CanvasMode" />
+                            </toggleGroup>
+                        </RadioButton>
+                        <RadioButton fx:id="radioButton2" layoutX="790.0" layoutY="15.0" onAction="#handleTokenToggle" text="Token Game">
 
                             <toggleGroup>
                                 <fx:reference source="CanvasMode" />
                             </toggleGroup>
                         </RadioButton>
 
-                        <RadioButton fx:id="radioButton3" layoutX="818.0" layoutY="15.0" onAction="#handleAutoPetriRelationToggle" text="Process Relation">
+                        <RadioButton fx:id="radioButton3" layoutX="890.0" layoutY="15.0" onAction="#handleAutoPetriRelationToggle" text="Process Relation">
                             <toggleGroup>
                                 <fx:reference source="CanvasMode" />
                             </toggleGroup>
