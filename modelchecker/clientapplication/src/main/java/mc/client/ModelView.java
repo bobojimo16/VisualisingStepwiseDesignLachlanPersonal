@@ -192,14 +192,11 @@ public class ModelView implements Observer {
         toExpand.stream().map(Map.Entry::getKey).forEach(compiledResult.getProcessMap()::remove);
 
 
-
-
-
-            modelsInList = getProcessMap().entrySet().stream()
-                .filter(e -> e.getValue().getProcessType() != ProcessType.AUTOMATA ||
-                    ((Automaton) e.getValue()).getNodes().size() <= 1000)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toCollection(TreeSet::new));
+        modelsInList = getProcessMap().entrySet().stream()
+            .filter(e -> e.getValue().getProcessType() != ProcessType.AUTOMATA ||
+                ((Automaton) e.getValue()).getNodes().size() <= 1000)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toCollection(TreeSet::new));
 
         //remove processes marked at skipped and too large models to display
         listOfAutomataUpdater.accept(modelsInList);
@@ -214,10 +211,10 @@ public class ModelView implements Observer {
         compiledResult.getProcessMap().keySet().stream()
             .map(compiledResult.getProcessMap()::get)
             .filter(Objects::nonNull)
-            .forEach(PM-> {
+            .forEach(PM -> {
 
 
-                if(PM.getProcessType().equals(ProcessType.PETRINET)) {
+                if (PM.getProcessType().equals(ProcessType.PETRINET)) {
 
 
                     Petrinet petri = (Petrinet) PM;
@@ -377,7 +374,6 @@ public class ModelView implements Observer {
             }
 
 
-
             nodeMapGS.put(n.getId(), cn);
 
         });
@@ -385,11 +381,10 @@ public class ModelView implements Observer {
         //Connects the node via edges on screen
         automaton.getEdges().forEach(e -> {
 
-            System.out.println("ft: " + e.getFromTran());
 
             Set<String> owners = e.getEdgeOwners();
 
-            for(String s: owners){
+            for (String s : owners) {
                 System.out.println(s);
             }
 
@@ -409,11 +404,10 @@ public class ModelView implements Observer {
             }
 
 
-
             Edge edge = workingCanvasArea.addEdge(from.getNodeId() + "-" + to.getNodeId(), from.getNodeId(), to.getNodeId(), true);
             edge.addAttribute("ui.label", label);
 
-            if(determineIfLoop(edge)){
+            if (determineIfLoop(edge)) {
                 edge.addAttribute("ui.class", "eLoop");
             }
 
@@ -421,16 +415,15 @@ public class ModelView implements Observer {
 
             String colour = "black";
 
-            for(String s: petriTrans.keySet()){
-                if(s.equals(e.getFromTran())){
+            for (String s : petriTrans.keySet()) {
+                if (s.equals(e.getFromTran())) {
                     colour = petriTrans.get(s);
                     break;
                 }
             }
 
             edge.addAttribute("ui.style", "fill-color: " + colour + ";");
-
-
+            edge.addAttribute("ui.transition", e.getFromTran());
 
 
         });
@@ -449,8 +442,8 @@ public class ModelView implements Observer {
 
         Collection<Edge> leavingEdges = edge.getNode1().getLeavingEdgeSet();
 
-        for(Edge e: leavingEdges){
-            if(e.getNode1() == first){
+        for (Edge e : leavingEdges) {
+            if (e.getNode1() == first) {
                 return true;
             }
         }
@@ -461,7 +454,7 @@ public class ModelView implements Observer {
 
     private void addPetrinetNew(Petrinet petri) {
 
-        if(testInitialPetri == null){
+        if (testInitialPetri == null) {
             testInitialPetri = petri;
         }
 
@@ -505,8 +498,6 @@ public class ModelView implements Observer {
         petri.getPlaces().values().forEach(place -> {
 
 
-
-
             NodeStates nodeTermination = NodeStates.NOMINAL;
             if (place.isTerminal()) {
                 nodeTermination = NodeStates.valueOf(place.getTerminal().toUpperCase());
@@ -542,7 +533,7 @@ public class ModelView implements Observer {
                 String petriCounterV = "";
 
 
-                if(petri.getAllRoots().size() != 1){
+                if (petri.getAllRoots().size() != 1) {
                     petriCounterV = String.valueOf(startToIntValue.get(place));
                 }
 
@@ -561,7 +552,6 @@ public class ModelView implements Observer {
             n.addAttribute("ui.GraphNode", node);
             nodeMap.put(place.getId(), node);
             nodeMapGS.put(place.getId(), n);
-
 
 
             n.addAttribute("ui.owners", place.getOwners());
@@ -595,15 +585,13 @@ public class ModelView implements Observer {
                 //This is for reuse of initial parelel process name for parrelel process editing
                 int colonIndex1 = petri.getId().indexOf(":*");
                 String intitialProcessName = petri.getId().substring(0, colonIndex1);
-
-
                 n.addAttribute("ui.initialProcessName", intitialProcessName);
+                n.addAttribute("ui.transition", transition.getId());
                 petriTransitions.add(n);
 
             });
 
         for (PetriNetEdge edge : petri.getEdgesNotBlocked().values()) {
-
 
 
             String lab = "";
@@ -681,7 +669,6 @@ public class ModelView implements Observer {
         if (interactionType.equals("autopetrirelation")) {
             handleAutoPetriRelation();
         }
-
 
 
     }
@@ -816,7 +803,7 @@ public class ModelView implements Observer {
 
             } else {
                 System.out.println("Node not Clicked");
-                if(firstNodeClicked != null) {
+                if (firstNodeClicked != null) {
                     firstNodeClicked.addAttribute("ui.class", firstNodeClass);
                 }
                 firstNodeClicked = null;
@@ -955,19 +942,14 @@ public class ModelView implements Observer {
                         workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.token");
 
 
-
                         System.out.println(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString());
                         if (workingCanvasArea.getNode(petriHeadConversion).hasAttribute("ui.petristart")) {
                             workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceTokenStart");
-                        }
-
-                        else if(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlace")) {
+                        } else if (workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlace")) {
                             workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceToken");
-                        }
-
-                        else if(workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlaceEnd")) {
+                        } else if (workingCanvasArea.getNode(petriHeadConversion).getAttribute("ui.class").toString().equals("PetriPlaceEnd")) {
                             workingCanvasArea.getNode(petriHeadConversion).removeAttribute("ui.class");
                             workingCanvasArea.getNode(petriHeadConversion).addAttribute("ui.class", "PetriPlaceEndToken");
                         }
@@ -996,14 +978,10 @@ public class ModelView implements Observer {
                 if (node.hasAttribute("ui.petristart")) {
                     node.addAttribute("ui.class", "PetriPlaceStart");
                     node.removeAttribute("ui.petristart");
-                }
-
-                else if(node.getAttribute("ui.class").toString().equals("PetriPlaceToken")) {
+                } else if (node.getAttribute("ui.class").toString().equals("PetriPlaceToken")) {
                     node.removeAttribute("ui.class");
                     node.addAttribute("ui.class", "PetriPlace");
-                }
-
-                else if(node.getAttribute("ui.class").toString().equals("PetriPlaceEndToken")) {
+                } else if (node.getAttribute("ui.class").toString().equals("PetriPlaceEndToken")) {
                     node.removeAttribute("ui.class");
                     node.addAttribute("ui.class", "PetriPlaceEnd");
                 }
@@ -1125,8 +1103,8 @@ public class ModelView implements Observer {
 
         //Reject Transitions having more outgoing edges that incoming
 
-        if(firstNodeType.equals("PetriTransition")){
-            if(workingCanvasArea.getNode(firstNodeClicked.getId()).getOutDegree()+1 > workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree()){
+        if (firstNodeType.equals("PetriTransition")) {
+            if (workingCanvasArea.getNode(firstNodeClicked.getId()).getOutDegree() + 1 > workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree()) {
                 Platform.runLater(() ->
                 {
                     uic.reportError("petriTransitionMoreOutGoingThanIn");
@@ -1139,11 +1117,11 @@ public class ModelView implements Observer {
 
         //Reject place having a different pid than from the new transition, different as need to differntiate between this and inner loops which would have same pid
 
-        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace") && workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PID")){
+        if (firstNodeType.equals("PetriTransition") && seccondNodeType.equals("PetriPlace") && workingCanvasArea.getNode(seccondNodeClicked.getId()).hasAttribute("ui.PID")) {
 
 
-            if(!workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString()
-                .equals(workingCanvasArea.getNode(seccondNodeClicked.getId()).getAttribute("ui.PID").toString())){
+            if (!workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString()
+                .equals(workingCanvasArea.getNode(seccondNodeClicked.getId()).getAttribute("ui.PID").toString())) {
                 Platform.runLater(() ->
                 {
                     uic.reportError("syncingOnAPetriPlace");
@@ -1152,8 +1130,6 @@ public class ModelView implements Observer {
             }
 
         }
-
-
 
 
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
@@ -1199,8 +1175,7 @@ public class ModelView implements Observer {
         //Propogate first nodes pid to the seccond nodes pid, multiple attibutes with ui.PID possible to support "PIDS" ? wat
 
 
-
-        if((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class") ).toString().contains("PetriPlace"))
+        if ((workingCanvasArea.getNode(firstNodeClicked.getId()).getInDegree() == 1 || (workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.class")).toString().contains("PetriPlace"))
             || firstNodeClicked.getAttribute("ui.class").equals("PetriPlaceStart")) {
             workingCanvasArea.getNode(seccondNodeClicked.getId()).addAttribute("ui.PID", workingCanvasArea.getNode(firstNodeClicked.getId()).getAttribute("ui.PID").toString());
         }
@@ -1256,7 +1231,7 @@ public class ModelView implements Observer {
 
         for (Node currentNode : createdNodes) {
 
-            if(!currentNode.hasAttribute("processSet")) {
+            if (!currentNode.hasAttribute("processSet")) {
 
                 if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
                     Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
@@ -1285,8 +1260,6 @@ public class ModelView implements Observer {
                                 if (eCounter < pidsSize - 1) {
                                     String petriType = e.getNode1().getAttribute("ui.class");
                                     workingCanvasArea.getNode(e.getNode1().getId()).removeAttribute("ui.class");
-
-
 
 
                                     final CountDownLatch latchToWaitForJavaFx = new CountDownLatch(1);
@@ -1335,7 +1308,7 @@ public class ModelView implements Observer {
         }
 
         for (Node currentNode : createdNodes) {
-            if(currentNode.hasAttribute("processSet")){
+            if (currentNode.hasAttribute("processSet")) {
                 currentNode.removeAttribute("processSet");
             }
         }
@@ -1367,8 +1340,8 @@ public class ModelView implements Observer {
         while (k.hasNext()) {
             Node current = k.next();
 
-            if(current.hasAttribute("ui.label")){
-                if(current.getAttribute("ui.label").toString().contains("[")){
+            if (current.hasAttribute("ui.label")) {
+                if (current.getAttribute("ui.label").toString().contains("[")) {
                     indexed = true;
                 }
             }
@@ -1389,7 +1362,7 @@ public class ModelView implements Observer {
         Iterator<Node> k = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
 
 
-        if(!indexed) {
+        if (!indexed) {
 
             ArrayList<Node> heads = new ArrayList<>();
 
@@ -1415,8 +1388,6 @@ public class ModelView implements Observer {
                     hn.addAttribute("ui.style", "text-background-mode: rounded-box; text-background-color: red;");
 
 
-
-
                 }
             }
 
@@ -1424,7 +1395,6 @@ public class ModelView implements Observer {
             doPIDPropogationOfExistingProcess(heads.get(0));
         }
     }
-
 
 
     private String[] ownersTypeConverter(Object res, Boolean allOwners) {
@@ -1500,7 +1470,6 @@ public class ModelView implements Observer {
                     }
                 }
             }
-
 
 
         }
@@ -1694,11 +1663,6 @@ public class ModelView implements Observer {
         }
 
 
-
-
-
-
-
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
         workingCanvasArea.addAttribute("ui.quality");
         workingCanvasArea.addAttribute("ui.antialias");
@@ -1718,8 +1682,6 @@ public class ModelView implements Observer {
 
         Camera cam = workingCanvasAreaView.getCamera();
         cam.setBounds(0, 0, 0, 1, 1, 0);
-
-
 
 
         ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
@@ -1749,17 +1711,17 @@ public class ModelView implements Observer {
                 Collection<Node> nodes = workingCanvasArea.getNodeSet();
                 Collection<Edge> edges = workingCanvasArea.getEdgeSet();
 
-                double textZoom = (20-zoom);
+                double textZoom = (20 - zoom);
 
-                if(textZoom < 1){
+                if (textZoom < 1) {
                     textZoom = 1;
                 }
 
-                for(Node n: nodes){
-                    n.addAttribute("ui.style", "text-size: " + textZoom + ";" + "size: " + textZoom + ";" );
+                for (Node n : nodes) {
+                    n.addAttribute("ui.style", "text-size: " + textZoom + ";" + "size: " + textZoom + ";");
                 }
 
-                for(Edge ed: edges){
+                for (Edge ed : edges) {
                     ed.addAttribute("ui.style", "text-size: " + textZoom + ";");
                 }
 
@@ -1880,8 +1842,6 @@ public class ModelView implements Observer {
         clearPetriTransitionHighlighting();
 
 
-
-
         if (interactionType.equals("autopetrirelation")) {
             autoPetriRelationModeEnabled = true;
 
@@ -1891,11 +1851,9 @@ public class ModelView implements Observer {
             Set<String> processes = new HashSet<>();
 
 
-
             for (String s : sds.keys()) {
                 processes.add(s);
             }
-
 
 
             int i = 0;
@@ -1933,7 +1891,6 @@ public class ModelView implements Observer {
             }
 
 
-
             for (String p : processesMatches) {
                 Collection<Node> gsProcessA = processModelsOnScreenGSType.get(p);
                 ArrayList<Edge> gsProcessEdges = new ArrayList<>();
@@ -1948,19 +1905,14 @@ public class ModelView implements Observer {
                     Collection<Node> gsProcessB = processModelsOnScreenGSType.get(p.replaceAll("automata", "petrinet"));
                     Node petriN = null;
 
-
                     for (Node n : gsProcessB) {
                         petriN = n;
 
-                        if (n.hasAttribute("ui.label")) {
-                            if (n.getAttribute("ui.label").equals(e.getAttribute("ui.label"))) {
+                        try {
 
-                                //determineIfAutoNodeAndPetriTranIdentical(autoN, petriN);
+                            if(n.hasAttribute("ui.transition")) {
 
-                                petriN = n;
-
-                                try {
-
+                                if (n.getAttribute("ui.transition").toString().contains(e.getAttribute("ui.transition").toString())) {
 
                                     if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
                                         Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
@@ -1971,17 +1923,16 @@ public class ModelView implements Observer {
 
 
                                     }
-                                } catch (IdAlreadyInUseException er) {
-                                    petriN.removeAttribute("ui.class");
-                                    petriN.addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+
                                 }
                             }
+                        } catch (Exception er) {
                         }
+
+
                     }
                 }
             }
-
-
 
 
         } else {
@@ -2065,18 +2016,18 @@ public class ModelView implements Observer {
         Camera cam = workingCanvasAreaView.getCamera();
         int shiftVal = 1;
 
-        switch(dir) {
+        switch (dir) {
             case "up":
-                cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y+shiftVal, cam.getViewCenter().z);
+                cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y + shiftVal, cam.getViewCenter().z);
                 break;
             case "right":
-                cam.setViewCenter(cam.getViewCenter().x+shiftVal, cam.getViewCenter().y, cam.getViewCenter().z);
+                cam.setViewCenter(cam.getViewCenter().x + shiftVal, cam.getViewCenter().y, cam.getViewCenter().z);
                 break;
             case "down":
-                cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y-shiftVal, cam.getViewCenter().z);
+                cam.setViewCenter(cam.getViewCenter().x, cam.getViewCenter().y - shiftVal, cam.getViewCenter().z);
                 break;
             case "left":
-                cam.setViewCenter(cam.getViewCenter().x-shiftVal, cam.getViewCenter().y, cam.getViewCenter().z);
+                cam.setViewCenter(cam.getViewCenter().x - shiftVal, cam.getViewCenter().y, cam.getViewCenter().z);
                 break;
             default:
                 break;
@@ -2086,13 +2037,12 @@ public class ModelView implements Observer {
     }
 
 
-
     private String getStyleSheet() {
 
         Boolean trans = false;
         String transString = "";
 
-        if(trans){
+        if (trans) {
             transString = "88";
         }
 
@@ -2198,9 +2148,7 @@ public class ModelView implements Observer {
             ;
 
 
-
     }
-
 
 
 }
