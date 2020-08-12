@@ -829,12 +829,16 @@ public class UserInterfaceController implements Initializable {
                 break;
             case "deletingNonLeaf":
                 a.setContentText("Unable to delete non leaf nodes");
+                break;
             case "petriTransitionMoreOutGoingThanIn":
                 a.setContentText("Unable to have transitions with more outgoing edges than incoming edges");
+                break;
             case "syncingOnAPetriPlace":
                 a.setContentText("Unable To Sync On a Place");
+                break;
             case "moreThanTwoParrelel":
                 a.setContentText("Unable to have more than two processes in parallel");
+                break;
 
 
             default:

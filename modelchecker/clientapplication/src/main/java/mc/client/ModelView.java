@@ -116,6 +116,7 @@ public class ModelView implements Observer {
     private Petrinet testInitialPetri = null;
 
     private HashMap<String, HashMap<String, String>> petriColourings = new HashMap();
+    private Double globalWeight = 1.0;
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -527,15 +528,15 @@ public class ModelView implements Observer {
                 n = workingCanvasArea.addNode(place.getId());
             }
 
+            String petriCounterV = "";
+
+
+            if (petri.getAllRoots().size() != 1) {
+                petriCounterV = String.valueOf(startToIntValue.get(place));
+            }
+
 
             if (place.isStart()) {
-
-                String petriCounterV = "";
-
-
-                if (petri.getAllRoots().size() != 1) {
-                    petriCounterV = String.valueOf(startToIntValue.get(place));
-                }
 
                 n.addAttribute("ui.label", petri.getId().replace("(petrinet)", "").replace(":*", "") + petriCounterV);
                 n.addAttribute("ui.class", "PetriPlaceStart");
@@ -553,8 +554,14 @@ public class ModelView implements Observer {
             nodeMap.put(place.getId(), node);
             nodeMapGS.put(place.getId(), n);
 
+            TreeSet<String> owners = place.getOwners();
+            TreeSet<String> ownersModified = new TreeSet<>();
 
-            n.addAttribute("ui.owners", place.getOwners());
+            for (String s : owners) {
+                ownersModified.add(s + petri.getId().replace("(petrinet)", "").replace(":*", ""));
+            }
+
+            n.addAttribute("ui.owners", ownersModified);
         });
 
         CurrentMarkingsSeen.currentMarkingsSeen.put(petri.getId(), rts);
@@ -580,7 +587,14 @@ public class ModelView implements Observer {
                 n.addAttribute("ui.GraphNode", node);
                 nodeMapGS.put(transition.getId(), n);
 
-                n.addAttribute("ui.owners", transition.getOwners());
+                TreeSet<String> owners = transition.getOwners();
+                TreeSet<String> ownersModified = new TreeSet<>();
+
+                for (String s : owners) {
+                    ownersModified.add(s + petri.getId().replace("(petrinet)", "").replace(":*", ""));
+                }
+
+                n.addAttribute("ui.owners", ownersModified);
 
                 //This is for reuse of initial parelel process name for parrelel process editing
                 int colonIndex1 = petri.getId().indexOf(":*");
@@ -747,6 +761,8 @@ public class ModelView implements Observer {
             System.out.println("doing nothing");
         }
 
+        latestNode.addAttribute("created", true);
+
         createdNodes.add(latestNode);
         nodeRecentlyPlaced = true;
 
@@ -856,6 +872,10 @@ public class ModelView implements Observer {
 
     private void handleTokenGame(int x, int y) {
 
+        if (interactionType != "token") {
+            return;
+        }
+
         try {
 
 
@@ -964,7 +984,7 @@ public class ModelView implements Observer {
                 }
             });
 
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
 
@@ -1148,12 +1168,12 @@ public class ModelView implements Observer {
 
             while (searcher.hasNext()) {
                 Node current = searcher.next();
-                if (current.getAttribute("ui.class").equals("PetriPlaceStart") ) {
+                if (current.getAttribute("ui.class").equals("PetriPlaceStart")) {
                     proccesesCounter++;
                 }
             }
 
-            if(proccesesCounter == 2){
+            if (proccesesCounter == 2) {
                 Platform.runLater(() ->
                 {
                     uic.reportError("moreThanTwoParrelel");
@@ -1163,8 +1183,6 @@ public class ModelView implements Observer {
 
 
         }
-
-
 
 
         Edge edge = workingCanvasArea.addEdge(firstNodeClicked.getId() + "-" + seccondNodeClicked.getId(), firstNodeClicked.getId(), seccondNodeClicked.getId(), true);
@@ -1187,6 +1205,7 @@ public class ModelView implements Observer {
         }
 
         if (!firstNodeType.contains("Auto")) {
+            edge.addAttribute("created", true);
             createdEdges.add(edge);
             doPostEdgeUpdates(edge);
         }
@@ -1271,7 +1290,16 @@ public class ModelView implements Observer {
                 if (currentNode.getAttribute("ui.class").equals("PetriTransition")) {
                     Collection<Edge> outGoingEdges = currentNode.getLeavingEdgeSet();
                     if (currentNode.hasAttribute("ui.PIDS")) {
-                        ArrayList<String> allPIDS = currentNode.getAttribute("ui.PIDS");
+                        System.out.println(currentNode.getAttribute("ui.PIDS").toString());
+
+                        ArrayList<String> allPIDS;
+
+                        try {
+                            allPIDS = currentNode.getAttribute("ui.PIDS");
+                        } catch (ClassCastException e) {
+                            allPIDS = new ArrayList<String>(Arrays.asList(currentNode.getAttribute("ui.PIDS").toString().replaceAll("\\[", "")
+                                .replaceAll("]", "").split(", ")));
+                        }
                         ArrayList<String> selectedPIDS = new ArrayList<>();
 
                         //add existing pids to selected
@@ -1389,7 +1417,6 @@ public class ModelView implements Observer {
     }
 
     private void handleProcessEditing(Node n) {
-
         Iterator<Node> l = workingCanvasArea.getNode(n.getId()).getBreadthFirstIterator(false);
         Boolean indexed = determineIfIndexedProcess(l);
 
@@ -1405,6 +1432,7 @@ public class ModelView implements Observer {
                 Node current = k.next();
 
                 if (!createdNodes.contains(current)) {
+                    current.addAttribute("created", true);
                     createdNodes.add(current);
                 }
 
@@ -1418,9 +1446,9 @@ public class ModelView implements Observer {
             for (Node hn : heads) {
                 if (!hn.hasAttribute("ui.edited")) {
                     String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
-                    hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                    hn.setAttribute("ui.label", hn.getAttribute("ui.label").toString().replaceAll(" ", "") + "Edited");
                     ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
-                    hn.addAttribute("ui.style", "text-background-mode: rounded-box; text-background-color: red;");
+                    hn.addAttribute("ui.edited");
 
 
                 }
@@ -1434,7 +1462,7 @@ public class ModelView implements Observer {
 
     private String[] ownersTypeConverter(Object res, Boolean allOwners) {
 
-        String[] owners = new String[20];
+        String[] owners = new String[2];
         int actualOwnersSize;
 
         if (!res.getClass().toString().equals("class java.lang.String")) {
@@ -1689,128 +1717,115 @@ public class ModelView implements Observer {
 
         createdNodes.clear();
         createdEdges.clear();
+        ownersToPID.clear();
 
         if (!isLoaded) {
             workingCanvasArea = new MultiGraph("WorkingCanvasArea"); //field
-        } else {
-            createdNodes.addAll(workingCanvasArea.getNodeSet());
-            createdEdges.addAll(workingCanvasArea.getEdgeSet());
-        }
 
+
+        } else {
+
+            for (Node n : workingCanvasArea.getNodeSet()) {
+                if (n.hasAttribute("created")) {
+                    createdNodes.add(n);
+                }
+            }
+
+            for (Edge e : workingCanvasArea.getEdgeSet()) {
+                if (e.hasAttribute("created")) {
+                    createdEdges.add(e);
+                }
+            }
+
+
+
+
+            ArrayList<Node> heads = new ArrayList<>();
+
+            for (Node n : createdNodes) {
+                if (n.getAttribute("ui.class").equals("PetriPlaceStart")) {
+                    heads.add(n);
+                }
+
+            }
+
+            for (Node hn : heads) {
+                System.out.println(hn.getAttribute("ui.label").toString());
+
+                if(hn.hasAttribute("ui.owners")) {
+                    String[] owners = ownersTypeConverter(hn.getAttribute("ui.owners"), false);
+                    ownersToPID.put(owners[0], hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                } else {
+                    ownersToPID.put(hn.getAttribute("ui.label").toString().replaceAll(" ", ""), hn.getAttribute("ui.label").toString().replaceAll(" ", ""));
+                }
+
+            }
+
+
+        }
 
         workingCanvasArea.addAttribute("ui.stylesheet", getStyleSheet());
         workingCanvasArea.addAttribute("ui.quality");
         workingCanvasArea.addAttribute("ui.antialias");
-        //workingCanvasArea.addAttribute("layout.stabilization-limit", 1);
-        //workingCanvasArea.addAttribute("layout.force", 1);
 
         workingCanvasAreaViewer = new Viewer(workingCanvasArea, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 
+
         workingLayout = Layouts.newLayoutAlgorithm();
-        workingLayout.setForce(1); // 1 by default
+        workingLayout.setForce(globalWeight); // 1 by default
         workingCanvasAreaViewer.enableAutoLayout(workingLayout);
+
+
         workingCanvasAreaView = workingCanvasAreaViewer.addDefaultView(false);
         PMM = new ProcessMouseManager();
         workingCanvasAreaView.addMouseListener(PMM);
         workingCanvasAreaView.getCamera().setViewPercent(1);
         workingCanvasAreaView.getCamera().setAutoFitView(true);
 
-        Camera cam = workingCanvasAreaView.getCamera();
-        cam.setBounds(0, 0, 0, 1, 1, 0);
-
-
-        ((Component) workingCanvasAreaView).addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-
-                e.consume();
-                int i = e.getWheelRotation();
-                double factor = Math.pow(1.25, i);
-                Camera cam = workingCanvasAreaView.getCamera();
-
-                zoom = cam.getViewPercent() * factor;
-
-                if (zoom < 0) {
-                    return;
-                }
-
-                Point2 pxCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
-                Point3 guClicked = cam.transformPxToGu(e.getX(), e.getY());
-                double newRatioPx2Gu = cam.getMetrics().ratioPx2Gu / factor;
-                double x = guClicked.x + (pxCenter.x - e.getX()) / newRatioPx2Gu;
-                double y = guClicked.y - (pxCenter.y - e.getY()) / newRatioPx2Gu;
-                cam.setViewCenter(x, y, 0);
-
-                System.out.println(zoom);
-
-                Collection<Node> nodes = workingCanvasArea.getNodeSet();
-                Collection<Edge> edges = workingCanvasArea.getEdgeSet();
-
-                double textZoom = (20 - zoom);
-
-                if (textZoom < 1) {
-                    textZoom = 1;
-                }
-
-                for (Node n : nodes) {
-                    n.addAttribute("ui.style", "text-size: " + textZoom + ";" + "size: " + textZoom + ";");
-                }
-
-                for (Edge ed : edges) {
-                    ed.addAttribute("ui.style", "text-size: " + textZoom + ";");
-                }
-
-                cam.setViewPercent(zoom);
-            }
-        });
-
-        workingCanvasAreaViewer.getDefaultView().setShortcutManager(new ShortcutManager() {
-
-            private View view;
-
-            @Override
-            public void init(GraphicGraph graph, View view) {
-                this.view = view;
-                view.addKeyListener(this);
-            }
-
-            @Override
-            public void release() {
-                view.removeKeyListener(this);
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-                if (keyCode == KeyEvent.VK_DELETE) {
-                    handleNodeDeletion();
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                System.out.println("keyReleased!");
-            }
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-                System.out.println("keyTyped!");
-            }
-        });
-
-
-
-        /*Robot robot = null;
-        try {
-            robot = new Robot();
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-        robot.mousePress(InputEvent.BUTTON1_MASK);
-        robot.mouseRelease(InputEvent.BUTTON1_MASK);*/
-
-
         workingCanvasAreaContainer.add((Component) workingCanvasAreaView, BorderLayout.CENTER);
+
+
+        ((Component) workingCanvasAreaView).addMouseWheelListener(e -> {
+
+            e.consume();
+            int i = e.getWheelRotation();
+            double factor = Math.pow(1.25, i);
+            Camera cam = workingCanvasAreaView.getCamera();
+
+            zoom = cam.getViewPercent() * factor;
+
+            if (zoom < 0) {
+                return;
+            }
+
+            Point2 pxCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
+            Point3 guClicked = cam.transformPxToGu(e.getX(), e.getY());
+            double newRatioPx2Gu = cam.getMetrics().ratioPx2Gu / factor;
+            double x = guClicked.x + (pxCenter.x - e.getX()) / newRatioPx2Gu;
+            double y = guClicked.y - (pxCenter.y - e.getY()) / newRatioPx2Gu;
+            cam.setViewCenter(x, y, 0);
+
+            Collection<Node> nodes = workingCanvasArea.getNodeSet();
+            Collection<Edge> edges = workingCanvasArea.getEdgeSet();
+
+            double textZoom = (20 - zoom);
+
+            if (textZoom < 1) {
+                textZoom = 1;
+            }
+
+            for (Node n : nodes) {
+                n.addAttribute("ui.style", "text-size: " + textZoom + ";" + "size: " + textZoom + ";");
+            }
+
+            for (Edge ed : edges) {
+                ed.addAttribute("ui.style", "text-size: " + textZoom + ";");
+            }
+
+            cam.setViewPercent(zoom);
+        });
+
+
     }
 
     @Getter
@@ -1952,7 +1967,7 @@ public class ModelView implements Observer {
 
                         try {
 
-                            if(n.hasAttribute("ui.transition")) {
+                            if (n.hasAttribute("ui.transition")) {
 
                                 if (n.getAttribute("ui.transition").toString().contains(e.getAttribute("ui.transition").toString())) {
 
@@ -1995,6 +2010,7 @@ public class ModelView implements Observer {
     }
 
     public Graph getGraph() {
+
         return workingCanvasArea;
     }
 
@@ -2051,6 +2067,8 @@ public class ModelView implements Observer {
 
     public void setGraphWeight(Double weight) {
         workingLayout.setForce(weight);
+
+        globalWeight = weight;
         workingLayout.shake();
     }
 
@@ -2102,15 +2120,15 @@ public class ModelView implements Observer {
             "text-color: black; " +
             "text-background-color: #ffff00;" +
             "fill-color: #07fc03" + transString + ";" +
-            "shape: box;" +
+            "shape: diamond;" +
             "}" +
             "node.AutoNeutral {" +
             "fill-color: #b8b4b4" + transString + ";" +
-            "shape: box;" +
+            "shape: diamond;" +
             "}" +
             "node.AutoEnd {" +
             "fill-color: #ff0000" + transString + ";" +
-            "shape: box;" +
+            "shape: diamond;" +
             "}" +
             "edge.autoLoop {" +
             "text-alignment: above;" +

@@ -76,6 +76,16 @@ public class VisualPetriToProcessCodeHelper {
                 c++;
             }
 
+            System.out.println("here");
+
+            for(String s1: ownersToPID.keySet()){
+
+                System.out.println("hersdsf");
+
+                System.out.println(s1 + ":" + ownersToPID.get(s1));
+
+            }
+
             for (String s1 : processesInParelel.keySet()) {
                 cumulativeProcessCode += s1 + " = ";
 
@@ -87,6 +97,13 @@ public class VisualPetriToProcessCodeHelper {
                     if (res == null) {
                         res = s2;
                     }
+
+                    /*if(res.equals("o0")){
+                        res = HeadPetriNodes.get(0).getAttribute("ui.label");
+                    } else if(res.equals("o1")){
+                        res = HeadPetriNodes.get(1).getAttribute("ui.label");
+                    }*/
+
 
                     if (i == 0) {
                         cumulativeProcessCode += res;
@@ -159,18 +176,12 @@ public class VisualPetriToProcessCodeHelper {
 
         if (!n.hasAttribute("ui.PIDS")) {
 
-            if (!n.hasAttribute("ui.PID")) {
-                System.out.println(n.getAttribute("ui.label").toString());
-            }
+
 
             if (n.hasAttribute("ui.PID")) {
 
                 if (!n.getAttribute("ui.PID").toString().trim().equals(currentPetriHead.getAttribute("ui.PID").toString().trim())) {
-                    if (n.hasAttribute("ui.label")) {
-                        System.out.println("PID1: " + n.getAttribute("ui.PID").toString());
-                        System.out.println("PID2: " + currentPetriHead.getAttribute("ui.PID").toString());
-                        System.out.println("Returning: " + n.getAttribute("ui.label").toString());
-                    }
+
                     return;
                 }
             }
@@ -258,8 +269,6 @@ public class VisualPetriToProcessCodeHelper {
                         }
 
                         if (matches == setA.size() && edgesToRemove.size() + 1 < edges.size()) {
-
-                            System.out.println("No Branch");
                             edgesToRemove.add(edges.get(i));
                         }
 
@@ -288,9 +297,6 @@ public class VisualPetriToProcessCodeHelper {
         }
 
 
-        if (n.getAttribute("ui.class").equals("PetriTransition")) {
-            System.out.println(edges.size());
-        }
 
 
         for (int i = 0; i < edges.size(); i++) {
@@ -302,16 +308,12 @@ public class VisualPetriToProcessCodeHelper {
 
             //if node is not a place then get its value
             if (outGoingNode.getAttribute("ui.class").equals("PetriPlaceEnd")) {
-                System.out.println("og: " + outGoingNode.getAttribute("ui.PID").toString());
-                System.out.println("n: " + n.getAttribute("ui.PID").toString());
                 if (outGoingNode.getAttribute("ui.PID").toString().equals(currentPetriHead.getAttribute("ui.PID"))) {
                     String nextValue = doValueEvaluation(outGoingNode);
                     processesText[currentLineForWriting] += nextValue;
                 }
             } else if (!outGoingNode.getAttribute("ui.class").equals("PetriPlace")) {
                 String nextValue = doValueEvaluation(outGoingNode);
-                System.out.println(n.getId());
-                System.out.println(nextValue);
                 processesText[currentLineForWriting] += nextValue;
                 //cumulativeProcessCode += nextValue;
             }
