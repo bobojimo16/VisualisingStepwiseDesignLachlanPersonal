@@ -22,6 +22,7 @@ public class PetriNetTransition extends ProcessModelObject implements Comparable
     @Getter
     @Setter
     private String fromTran = "";
+    private String colour;
 
 
     public Set<PetriNetEdge> copyIncoming() {

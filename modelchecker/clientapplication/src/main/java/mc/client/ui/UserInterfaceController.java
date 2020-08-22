@@ -56,7 +56,7 @@ import java.util.function.Supplier;
 import static mc.client.ui.SyntaxHighlighting.computeHighlighting;
 
 
-public class UserInterfaceController implements Initializable, FontListener {
+public class UserInterfaceController implements Initializable {
 
     public AnchorPane modelDisplayNewContainer;
     public AnchorPane modelDisplayNewController;
@@ -157,14 +157,6 @@ public class UserInterfaceController implements Initializable, FontListener {
     //@Getter
     //private static UserInterfaceController instance = this;
 
-    @Override
-    public void changeFontSize() {  // Lister Pattern
-        int f = settingsController.getFont();
-        String sfont = "-fx-font-size: " + f + "px;";
-        //System.out.println("UserInterfaceController changeFontSize  "+sfont);
-        userCodeInput.setStyle("-fx-background-color: #151515;" + sfont);
-        compilerOutputDisplay.setStyle(sfont);
-    }
 
 
     /**
@@ -204,7 +196,6 @@ public class UserInterfaceController implements Initializable, FontListener {
 
         settingsController = new SettingsController();
         settingsController.setReferenceToUIC(this);
-        settingsController.addFontListener(this);
 
         ModelView.getInstance().setReferenceToUIC(this);
 
@@ -379,12 +370,13 @@ public class UserInterfaceController implements Initializable, FontListener {
             .subscribe((startedTyping) -> {
 
                 if (typingInitiated) {
+
+                    System.out.println("Typing Initialialised");
                     compilerOutputDisplay.appendText("Compiling..." + "\n");
                     t1.set(System.currentTimeMillis());
                     typingInitiated = false;
                 } else {
                     long compileTime = Math.round((t1.get() + 4000 - System.currentTimeMillis()) / 1000) * 1000;
-                    System.out.println(compileTime);
 
                 }
 
@@ -837,10 +829,18 @@ public class UserInterfaceController implements Initializable, FontListener {
                 break;
             case "deletingNonLeaf":
                 a.setContentText("Unable to delete non leaf nodes");
+                break;
             case "petriTransitionMoreOutGoingThanIn":
                 a.setContentText("Unable to have transitions with more outgoing edges than incoming edges");
+                break;
             case "syncingOnAPetriPlace":
                 a.setContentText("Unable To Sync On a Place");
+                break;
+            case "moreThanTwoParrelel":
+                a.setContentText("Unable to have more than two processes in parallel");
+                break;
+
+
             default:
                 break;
         }
@@ -1294,14 +1294,15 @@ public class UserInterfaceController implements Initializable, FontListener {
             settingsStage.show();
 
         } catch (IOException e) {
-            Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
+            e.printStackTrace();
+            /*Alert optionsLayoutLoadFailed = new Alert(Alert.AlertType.ERROR);
             optionsLayoutLoadFailed.setTitle("Error encountered when loading options panel layout");
             optionsLayoutLoadFailed.setContentText("Error: " + e.getMessage());
 
             optionsLayoutLoadFailed.initModality(Modality.APPLICATION_MODAL);
 
             optionsLayoutLoadFailed.getButtonTypes().setAll(new ButtonType("Okay", ButtonBar.ButtonData.CANCEL_CLOSE));
-            optionsLayoutLoadFailed.show();
+            optionsLayoutLoadFailed.show();*/
         }
     }
 
@@ -1370,9 +1371,7 @@ public class UserInterfaceController implements Initializable, FontListener {
                         logThread.setDaemon(true); // Means the ctx doesnt hang the appication on close
                         logThread.start();
 
-                        Supplier<Boolean> getSymb = () -> settingsController.isSymbolic();
-                        //Keep the actual compilition outside the javafx ctx otherwise we get hanging
-                        boolean s = settingsController.isSymbolic();
+                        Supplier<Boolean> getSymb = () -> false;
                         CompilationObject compilerOutput = codeCompiler.compile(finalUserCode, Expression.mkCtx(), messageLog, getSymb);
 
                         Platform.runLater(() -> {
@@ -1392,8 +1391,9 @@ public class UserInterfaceController implements Initializable, FontListener {
                             compilerOutputDisplay.appendText(e.toString());
                             if (e.getLocation() != null) {
                                 compilerOutputDisplay.appendText("\n" + e.getLocation());
-                                if (e.getLocation().getStartIndex() > 0 && e.getLocation().getStartIndex() < userCodeInput.getText().length())
-                                    userCodeInput.setStyleClass(e.getLocation().getStartIndex(), e.getLocation().getEndIndex(), "issue");
+                                if (e.getLocation().getStartIndex() > 0 && e.getLocation().getStartIndex() < userCodeInput.getText().length()) {
+                                    //userCodeInput.setStyleClass(e.getLocation().getStartIndex(), e.getLocation().getEndIndex(), "issue");
+                                }
                             }
                         });
                     } catch (ExecutionException e) {
@@ -1508,6 +1508,12 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     }
 
+    public void handleCopyRequest(ActionEvent actionEvent){
+        String conversionResult = userCodeOutput.getText();
+
+        userCodeInput.appendText("\n\n" + conversionResult);
+    }
+
     public String doParelelProcessSpecifying(ArrayList<String> processes, String id) {
 
 
@@ -1600,5 +1606,14 @@ public class UserInterfaceController implements Initializable, FontListener {
 
     public void changeRelatingEdgeWeight(double relatingWeight) {
         ModelView.getInstance().setRelatingEdgeWight(relatingWeight);
+    }
+
+    public void changeGlobalEdgeWeight(double globalWeight) {
+        ModelView.getInstance().setGraphWeight(globalWeight);
+
+    }
+
+    public void handleViewToggle(ActionEvent actionEvent) {
+        ModelView.getInstance().switchInteractionType("view");
     }
 }
