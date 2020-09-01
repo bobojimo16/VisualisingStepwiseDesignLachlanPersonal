@@ -410,6 +410,7 @@ public class ModelView implements Observer {
 
             if (determineIfLoop(edge)) {
                 edge.addAttribute("ui.class", "eLoop");
+                System.out.println("l: " + label);
             }
 
             HashMap<String, String> petriTrans = petriColourings.get(automaton.getId().replace("automata", "petrinet"));
@@ -463,6 +464,8 @@ public class ModelView implements Observer {
             System.out.println("petri On screen");
             return;
         }
+
+
 
         Set<PetriNetPlace> roots = petri.getAllRoots();
 
@@ -2137,10 +2140,12 @@ public class ModelView implements Observer {
             "fill-color: black;" +
             "text-size: 20;" +
             "arrow-shape: arrow;" +
-            "text-alignment: above;" +
+            "text-alignment: center;" +
+            "text-offset: 0, 10;" +
             "}" +
             "edge.eLoop {" +
-            "text-alignment: under;" +
+            "text-alignment: center;" +
+            "text-offset: 0, 0;" +
             "}" +
             "edge.noeLoop {" +
 
