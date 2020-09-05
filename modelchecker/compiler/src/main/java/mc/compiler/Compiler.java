@@ -145,6 +145,8 @@ public class Compiler {
                    z3Context, messageQueue, alpha);
           }
 
+      System.out.println("AST: " + ast.myString());
+
 
       //System.out.println("Compiler built pn "+ pmf.getProcessMap().size());
     return new CompilationObject(pmf.getProcessMap(), opResults, eqResults.getResults());
