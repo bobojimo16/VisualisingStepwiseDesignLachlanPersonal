@@ -1853,6 +1853,9 @@ public class ModelView implements Observer {
             case "view":
                 interactionType = "view";
                 unfreezeAllCurrentlyDisplayedNew();
+                resetAutoPetriRelations();
+                removeLastTokens(null);
+                clearPetriTransitionHighlighting();
                 break;
             case "create":
                 switchToCreateMode();
@@ -1962,43 +1965,39 @@ public class ModelView implements Observer {
                     gsProcessEdges.addAll(leavingEdges);
                 }
 
-                for (Edge e : gsProcessEdges) {
-                    Node autoN = e.getNode1();
+                System.out.println(gsProcessEdges.size());
+
+                for (Edge autoEdge : gsProcessEdges) {
+                    Node autoN = autoEdge.getNode1();
                     Collection<Node> gsProcessB = processModelsOnScreenGSType.get(p.replaceAll("automata", "petrinet"));
                     Node petriN = null;
 
                     for (Node n : gsProcessB) {
                         petriN = n;
-                        petriN.getLeavingEdgeSet();
 
                         try {
 
 
-                            if (n.hasAttribute("ui.transition") /*&& n.getOutDegree() == 1*/) {
-                                System.out.println("here");
+                            if (petriN.hasAttribute("ui.transition") /*&& n.getOutDegree() == 1*/) {
 
                                 ArrayList<Edge> leavingEdges = new ArrayList<>(petriN.getLeavingEdgeSet());
-                                Node transitionPlace = leavingEdges.get(0).getNode1();
-
-                                System.out.println(transitionPlace == null);
 
 
-                                System.out.println(e.getAttribute("ui.label").toString());
-                                System.out.println(n.getAttribute("ui.label").toString());
-                                System.out.println(e.getAttribute("ui.transition").toString());
-                                System.out.println(n.getAttribute("ui.transition").toString());
+                                if (petriN.getAttribute("ui.transition").toString().contains(autoEdge.getAttribute("ui.transition").toString())) {
 
 
+                                    int edgeOwnerCount = autoEdge.getAttribute("ui.ownersCount");
 
-                                if (n.getAttribute("ui.transition").toString().contains(e.getAttribute("ui.transition").toString())) {
 
-
-                                    int edgeOwnerCount = e.getAttribute("ui.ownersCount");
-
-                                    System.out.println("K: " + edgeOwnerCount);
-
+                                    System.out.println("id: " + autoEdge.getAttribute("ui.label"));
+                                    System.out.println(edgeOwnerCount);
+                                    if(leavingEdges.get(0).getNode1().hasAttribute("ui.label")) {
+                                        System.out.println(leavingEdges.get(0).getNode1().getAttribute("ui.label").toString());
+                                    }
 
                                     for(int k = 0; k < edgeOwnerCount; k++) {
+
+                                        //System.out.println("id: " + autoEdge.getAttribute("ui.label"));
 
 
                                         if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()+k) == null) {
@@ -2011,11 +2010,10 @@ public class ModelView implements Observer {
                                             //break;
 
 
-                                        } else {
-                                            System.out.println("here4");
                                         }
-
                                     }
+
+                                    break;
 
                                 }
                             }
@@ -2042,7 +2040,9 @@ public class ModelView implements Observer {
 
     private void resetAutoPetriRelations() {
         for (Edge e : petriAutoRelations) {
-            workingCanvasArea.removeEdge(e);
+            if(workingCanvasArea.getEdge(e.getId()) != null) {
+                workingCanvasArea.removeEdge(e);
+            }
         }
         petriAutoRelations.clear();
     }
