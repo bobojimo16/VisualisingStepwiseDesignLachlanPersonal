@@ -345,6 +345,7 @@ public class ModelView implements Observer {
         Map<String, Node> nodeMapGS = new HashMap<>();
         //Adds grapth node to display
         automaton.getNodes().forEach(n -> {
+
             NodeStates nodeTermination = NodeStates.NOMINAL;
 
             if (n.isStartNode()) {
@@ -426,6 +427,7 @@ public class ModelView implements Observer {
 
             edge.addAttribute("ui.style", "fill-color: " + colour + ";");
             edge.addAttribute("ui.transition", e.getFromTran());
+            edge.addAttribute("ui.ownersCount", e.getEdgeOwners().size());
 
 
         });
@@ -1967,26 +1969,59 @@ public class ModelView implements Observer {
 
                     for (Node n : gsProcessB) {
                         petriN = n;
+                        petriN.getLeavingEdgeSet();
 
                         try {
 
-                            if (n.hasAttribute("ui.transition")) {
+
+                            if (n.hasAttribute("ui.transition") /*&& n.getOutDegree() == 1*/) {
+                                System.out.println("here");
+
+                                ArrayList<Edge> leavingEdges = new ArrayList<>(petriN.getLeavingEdgeSet());
+                                Node transitionPlace = leavingEdges.get(0).getNode1();
+
+                                System.out.println(transitionPlace == null);
+
+
+                                System.out.println(e.getAttribute("ui.label").toString());
+                                System.out.println(n.getAttribute("ui.label").toString());
+                                System.out.println(e.getAttribute("ui.transition").toString());
+                                System.out.println(n.getAttribute("ui.transition").toString());
+
+
 
                                 if (n.getAttribute("ui.transition").toString().contains(e.getAttribute("ui.transition").toString())) {
 
-                                    if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()) == null) {
-                                        Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId(), autoN, petriN, false);
-                                        eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
-                                        petriAutoRelations.add(eRelation);
-                                        setRelatingEdgeWight(null);
-                                        break;
 
+                                    int edgeOwnerCount = e.getAttribute("ui.ownersCount");
+
+                                    System.out.println("K: " + edgeOwnerCount);
+
+
+                                    for(int k = 0; k < edgeOwnerCount; k++) {
+
+
+                                        if (workingCanvasArea.getEdge(autoN.getId() + "-" + petriN.getId()+k) == null) {
+
+                                            Edge eRelation = workingCanvasArea.addEdge(autoN.getId() + "-" + petriN.getId()+k, autoN, leavingEdges.get(k).getNode1(),
+                                            false);
+                                            eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(230,0,255);");
+                                            petriAutoRelations.add(eRelation);
+                                            setRelatingEdgeWight(null);
+                                            //break;
+
+
+                                        } else {
+                                            System.out.println("here4");
+                                        }
 
                                     }
 
                                 }
                             }
                         } catch (Exception er) {
+                            er.printStackTrace();
+
                         }
 
 

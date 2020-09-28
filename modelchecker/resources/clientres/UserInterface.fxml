@@ -23,7 +23,7 @@
                         <MenuItem mnemonicParsing="false" onAction="#handleFileClose" text="Close" />
                         <MenuItem fx:id="saveMenuItem" mnemonicParsing="false" onAction="#handleSave" text="Save Process Code" />
                         <MenuItem fx:id="saveMenuItemDiagram" mnemonicParsing="false" onAction="#handleSaveDiagram" text="Save Process Diagram" />
-                        <MenuItem mnemonicParsing="false" onAction="#handleSaveAs" text="Save As…" />
+<!--                        <MenuItem mnemonicParsing="false" onAction="#handleSaveAs" text="Save As…" />-->
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#handleOptions" text="Options" />
                         <SeparatorMenuItem mnemonicParsing="false" />
@@ -47,11 +47,12 @@
                         <Button fx:id="addBtnNew" layoutX="174.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleAddSelectedModelNew" text="Add" />
 
                         <!--<Button fx:id="unfrzBtnNew" layoutX="395.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleUnfreeze" text="Unfreeze" />-->
-                        <Button fx:id="removeBtnNew" layoutX="223.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleClearNew" text="Clear" />
+                        <Button fx:id="removeBtnNew" layoutX="223.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearNew" text="Clear" />
                         <Button layoutX="278.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleAddallModelsNew" text="Add all" />
-                        <Button layoutX="343.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleFreezeAllNew" text="Freeze all" />
-                        <Button layoutX="421.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleUnfreezeAllNew" text="Unfreeze all" />
-                        <Button layoutX="511.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
+<!--                        <Button layoutX="343.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleFreezeAllNew" text="Freeze all" />-->
+<!--                        <Button layoutX="421.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleUnfreezeAllNew" text="Unfreeze all" />-->
+                        <Button layoutX="343.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
+                        <CheckBox fx:id="freezeToggle" text="Freeze-All" layoutX="421.0" layoutY="15" selected="false" onAction="#handleFreezeToggle" />
 
                         <RadioButton fx:id="radioButton0" layoutX="580.0" layoutY="16.0" onAction="#handleViewToggle" selected="true" text="Viewing">
                             <toggleGroup>
@@ -59,7 +60,7 @@
                             </toggleGroup>
                         </RadioButton>
 
-                        <RadioButton fx:id="radioButton" layoutX="655.0" layoutY="16.0" onAction="#handleCreateToggle" selected="false" text="Visual Construction">
+                        <RadioButton fx:id="createToggle" layoutX="655.0" layoutY="16.0" onAction="#handleCreateToggle" selected="false" text="Visual Construction">
                             <toggleGroup>
                                 <fx:reference source="CanvasMode" />
                             </toggleGroup>
@@ -139,6 +140,8 @@
                 </font>
             </Label>
             <Button fx:id="compileButton" mnemonicParsing="false" onAction="#handleCompileRequest" text="Compile Now" layoutX="160.0" layoutY="10" />
+
+            <CheckBox fx:id="checkBox1" text="Auto-Compile" layoutX="280.0" layoutY="13" selected="true" onAction="#handleAutoCompileRequest" />
 
             <ImageView fx:id="copyArrow" layoutX="450.0" layoutY="10.0" >
                 <image>
