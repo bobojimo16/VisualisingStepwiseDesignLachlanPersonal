@@ -28,12 +28,14 @@ import mc.compiler.OperationResult;
 import mc.processmodels.*;
 import mc.processmodels.automata.Automaton;
 import mc.processmodels.automata.AutomatonEdge;
+import mc.processmodels.automata.AutomatonNode;
 import mc.processmodels.conversion.TokenRule;
 import mc.processmodels.conversion.TokenRulePureFunctions;
 import mc.processmodels.petrinet.Petrinet;
 import mc.processmodels.petrinet.components.PetriNetEdge;
 import mc.processmodels.petrinet.components.PetriNetPlace;
 import mc.processmodels.petrinet.components.PetriNetTransition;
+import mc.util.PrintQueue;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
@@ -68,7 +70,8 @@ public class ModelView implements Observer {
     private SortedSet<String> modelsInList; // Processes that are in the modelsList combox
     private Multimap<String, GraphNode> processModelsOnScreenGraphNodeType; //process on the screen
     private Multimap<String, Node> processModelsOnScreenGSType; //process on the screen
-    private HashMap<String, Automaton> pmTest = new HashMap<>(); //process on the screen
+    private HashMap<String, Automaton> autos = new HashMap<>(); //process on the screen
+    private HashMap<String, Petrinet> petris = new HashMap<>(); //process on the screen
     private List<String> processesChanged = new ArrayList<>();
     private Map<String, GraphNode> placeId2GraphNode = new TreeMap<>();
     private CompilationObject compiledResult;
@@ -117,6 +120,7 @@ public class ModelView implements Observer {
 
     private HashMap<String, HashMap<String, String>> petriColourings = new HashMap();
     private Double globalWeight = 1.0;
+    private HashMap GNtoGSNMap = new HashMap<GraphNode, Node>();;
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -348,12 +352,14 @@ public class ModelView implements Observer {
 
             NodeStates nodeTermination = NodeStates.NOMINAL;
 
+            GraphNode node;
+
             if (n.isStartNode()) {
-                GraphNode node = new GraphNode(automaton.getId(), automaton.getId(), nodeTermination, nodeTermination,
+                node = new GraphNode(automaton.getId(), automaton.getId(), nodeTermination, nodeTermination,
                     NodeType.AUTOMATA_NODE, "" + n.getLabelNumber(), n);
                 nodeMap.put(n.getId(), node);
             } else {
-                GraphNode node = new GraphNode(automaton.getId(), n.getId(), nodeTermination, nodeTermination,
+                node = new GraphNode(automaton.getId(), n.getId(), nodeTermination, nodeTermination,
                     NodeType.AUTOMATA_NODE, "" + n.getLabelNumber(), n);
                 nodeMap.put(n.getId(), node);
             }
@@ -377,6 +383,8 @@ public class ModelView implements Observer {
 
 
             nodeMapGS.put(n.getId(), cn);
+
+            GNtoGSNMap.put(node, cn);
 
         });
 
@@ -432,7 +440,7 @@ public class ModelView implements Observer {
 
         });
 
-        this.pmTest.put(automaton.getId(), automaton);
+        this.autos.put(automaton.getId(), automaton);
         this.processModelsOnScreenGraphNodeType.replaceValues(automaton.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
 
@@ -681,7 +689,7 @@ public class ModelView implements Observer {
 
         setSyningEdgeWight(null);
 
-
+        this.petris.put(petri.getId(), petri);
         this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(petri.getId(), nodeMapGS.values());
 
@@ -1901,6 +1909,8 @@ public class ModelView implements Observer {
 
     public void handleAutoPetriRelation() {
 
+
+
         interactionType = "autopetrirelation";
         removeLastTokens(null);
         clearPetriTransitionHighlighting();
@@ -1946,7 +1956,7 @@ public class ModelView implements Observer {
             ArrayList<String> toRemove = new ArrayList<>();
 
             for (String s : processesMatches) {
-                if (s.contains("petrinet")) {
+                if (s.contains("automata")) {
                     toRemove.add(s);
                 }
             }
@@ -1955,8 +1965,25 @@ public class ModelView implements Observer {
                 processesMatches.remove(s);
             }
 
-
             for (String p : processesMatches) {
+                Collection<GraphNode> gsProcessA = processModelsOnScreenGraphNodeType.get(p);
+
+                Map<Multiset<PetriNetPlace>, AutomatonNode> pnm = autos.get(p.replaceAll("petrinet", "automata")).getPetriNodeMap();
+
+
+                for(GraphNode n: gsProcessA){
+                    System.out.println(n.getNodeId());
+                }
+
+                for (Map.Entry<Multiset<PetriNetPlace>,AutomatonNode> entry : pnm.entrySet()) {
+                    System.out.println("Key = " + entry.getKey() +
+                        ", Value = " + entry.getValue().getId());
+                }
+
+            }
+
+
+            /*for (String p : processesMatches) {
                 Collection<Node> gsProcessA = processModelsOnScreenGSType.get(p);
                 ArrayList<Edge> gsProcessEdges = new ArrayList<>();
 
@@ -1978,7 +2005,7 @@ public class ModelView implements Observer {
                         try {
 
 
-                            if (petriN.hasAttribute("ui.transition") /*&& n.getOutDegree() == 1*/) {
+                            if (petriN.hasAttribute("ui.transition") *//*&& n.getOutDegree() == 1*//*) {
 
                                 ArrayList<Edge> leavingEdges = new ArrayList<>(petriN.getLeavingEdgeSet());
 
@@ -2025,7 +2052,7 @@ public class ModelView implements Observer {
 
                     }
                 }
-            }
+            }*/
 
 
         } else {
