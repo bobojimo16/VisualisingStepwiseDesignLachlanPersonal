@@ -71,7 +71,6 @@ public class ModelView implements Observer {
     private Multimap<String, GraphNode> processModelsOnScreenGraphNodeType; //process on the screen
     private Multimap<String, Node> processModelsOnScreenGSType; //process on the screen
     private HashMap<String, Automaton> autos = new HashMap<>(); //process on the screen
-    private HashMap<String, Petrinet> petris = new HashMap<>(); //process on the screen
     private List<String> processesChanged = new ArrayList<>();
     private Map<String, GraphNode> placeId2GraphNode = new TreeMap<>();
     private CompilationObject compiledResult;
@@ -101,7 +100,7 @@ public class ModelView implements Observer {
     private HashMap<String, String> ownersToPID = new HashMap();
     private Set<Node> petriTransitions = new HashSet<>();
     private double syncingTransitionWeightValue = 1;
-    private double relatingWeightValue = 1;
+    private double relatingWeightValue = 5;
 
     @Setter
     private SettingsController settings; // Contains linkage length and max nodes
@@ -120,7 +119,7 @@ public class ModelView implements Observer {
 
     private HashMap<String, HashMap<String, String>> petriColourings = new HashMap();
     private Double globalWeight = 1.0;
-    private HashMap GNtoGSNMap = new HashMap<GraphNode, Node>();;
+    private HashMap<String, Node> GNtoGSNMap = new HashMap();
 
     public ProcessModel getProcess(String id) {
         return compiledResult.getProcessMap().get(id);
@@ -383,8 +382,8 @@ public class ModelView implements Observer {
 
 
             nodeMapGS.put(n.getId(), cn);
+            GNtoGSNMap.put(n.getId(), cn);
 
-            GNtoGSNMap.put(node, cn);
 
         });
 
@@ -440,7 +439,9 @@ public class ModelView implements Observer {
 
         });
 
-        this.autos.put(automaton.getId(), automaton);
+        if(!autos.containsKey(automaton.getId())) {
+            this.autos.put(automaton.getId(), automaton);
+        }
         this.processModelsOnScreenGraphNodeType.replaceValues(automaton.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(automaton.getId(), nodeMapGS.values());
 
@@ -523,6 +524,7 @@ public class ModelView implements Observer {
 
             String lab = "";
 
+
             // changing the label on the nodes forces the Petri Net to be relayed out.
             GraphNode node = new GraphNode(petri.getId(), place.getId(),
                 nodeTermination, nodeTermination, NodeType.PETRINET_PLACE, lab, place);
@@ -564,6 +566,8 @@ public class ModelView implements Observer {
 
             n.addAttribute("ui.PID", petri.getId()); // why the fuck is this here? - base PID gets updated later if need be
             n.addAttribute("ui.GraphNode", node);
+
+
             nodeMap.put(place.getId(), node);
             nodeMapGS.put(place.getId(), n);
 
@@ -573,6 +577,14 @@ public class ModelView implements Observer {
             for (String s : owners) {
                 ownersModified.add(s + petri.getId().replace("(petrinet)", "").replace(":*", ""));
             }
+
+
+           /* System.out.println(petri.getId());
+            System.out.println(node.getNodeId());*/
+
+            System.out.println(node.getNodeId().replace(petri.getId(), ""));
+
+            GNtoGSNMap.put(node.getNodeId().replace(petri.getId(), ""), n);
 
             n.addAttribute("ui.owners", ownersModified);
         });
@@ -689,7 +701,6 @@ public class ModelView implements Observer {
 
         setSyningEdgeWight(null);
 
-        this.petris.put(petri.getId(), petri);
         this.processModelsOnScreenGraphNodeType.replaceValues(petri.getId(), nodeMap.values());
         this.processModelsOnScreenGSType.replaceValues(petri.getId(), nodeMapGS.values());
 
@@ -1717,6 +1728,7 @@ public class ModelView implements Observer {
      * Resets all graph varaibles and re-adds default blank state.
      */
     private void initalise(Boolean isLoaded) {
+        System.out.println("initialise");
         processModelsToDisplay = new HashSet<>();
         processModelsOnScreenGSType = MultimapBuilder.hashKeys().hashSetValues().build();
         processModelsOnScreenGraphNodeType = MultimapBuilder.hashKeys().hashSetValues().build();
@@ -1731,6 +1743,8 @@ public class ModelView implements Observer {
         createdNodes.clear();
         createdEdges.clear();
         ownersToPID.clear();
+        GNtoGSNMap.clear();
+        autos.clear();
 
         if (!isLoaded) {
             workingCanvasArea = new MultiGraph("WorkingCanvasArea"); //field
@@ -1860,7 +1874,7 @@ public class ModelView implements Observer {
         switch (type) {
             case "view":
                 interactionType = "view";
-                unfreezeAllCurrentlyDisplayedNew();
+                //unfreezeAllCurrentlyDisplayedNew();
                 resetAutoPetriRelations();
                 removeLastTokens(null);
                 clearPetriTransitionHighlighting();
@@ -1970,15 +1984,29 @@ public class ModelView implements Observer {
 
                 Map<Multiset<PetriNetPlace>, AutomatonNode> pnm = autos.get(p.replaceAll("petrinet", "automata")).getPetriNodeMap();
 
-
-                for(GraphNode n: gsProcessA){
-                    System.out.println(n.getNodeId());
+                for(String s: GNtoGSNMap.keySet()){
+                    System.out.println("key: " + s);
+                    System.out.println("value: " + GNtoGSNMap.get(s));
                 }
 
                 for (Map.Entry<Multiset<PetriNetPlace>,AutomatonNode> entry : pnm.entrySet()) {
-                    System.out.println("Key = " + entry.getKey() +
-                        ", Value = " + entry.getValue().getId());
+                    Multiset<PetriNetPlace> places = entry.getKey();
+                    for(PetriNetPlace pnp: places){
+                        Node cn = (Node) GNtoGSNMap.get(pnp.getId());
+
+                        Edge eRelation = workingCanvasArea.addEdge(String.valueOf(Math.random()*4), cn, (Node)GNtoGSNMap.get(entry.getValue().getId()),
+                            false);
+
+
+                        petriAutoRelations.add(eRelation);
+                        setRelatingEdgeWight(null);
+                    }
                 }
+
+
+
+
+
 
             }
 
@@ -2127,6 +2155,15 @@ public class ModelView implements Observer {
         for (Edge eRelation : petriAutoRelations) {
             eRelation.addAttribute("layout.weight", relatingWeightValue);
 
+            int colourValue1 = (int) (230+relatingWeightValue*4);
+            int colourValue2 = (int) (0+relatingWeightValue*40);
+
+            System.out.println(colourValue1);
+            System.out.println(colourValue2);
+
+            System.out.println("shape: blob; fill-color: rgb(" + colourValue1 + "," + colourValue2 + ",255);");
+
+            eRelation.addAttribute("ui.style", "shape: blob; fill-color: rgb(" + colourValue1 + "," + colourValue2 + ",255);");
         }
     }
 
@@ -2188,7 +2225,7 @@ public class ModelView implements Observer {
             "shape: diamond;" +
             "}" +
             "node.AutoNeutral {" +
-            "fill-color: #b8b4b4" + transString + ";" +
+            "fill-color: #000000" + transString + ";" +
             "shape: diamond;" +
             "}" +
             "node.AutoEnd {" +

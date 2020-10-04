@@ -47,6 +47,7 @@ public class MappingNdMarking {
             Iterator<PetriNetPlace> it = map.nodeToMarking.get(anode).iterator();
             while (it.hasNext()) {
                 PetriNetPlace pl = it.next();
+                System.out.println(tag);
                 pl.setId(pl.getId() + tag);
                 mset.add(pl);
             }

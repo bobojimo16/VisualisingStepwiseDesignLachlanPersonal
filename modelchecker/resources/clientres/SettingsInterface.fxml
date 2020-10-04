@@ -9,7 +9,7 @@
          <children>
              <Slider fx:id="syncingEdgeSlider" blockIncrement="0.0" layoutX="154.0" layoutY="60.0" majorTickUnit="0.1" max="1.0" minorTickCount="0" showTickLabels="true" showTickMarks="true" value="1.0" />
              <Label layoutX="23.0" layoutY="57.0" prefHeight="38.0" prefWidth="109.0" text="Syncing Transition &#13;Weight Slider" />
-             <Slider fx:id="processRelatingSlider" blockIncrement="0.0" layoutX="154.0" layoutY="110.0" majorTickUnit="0.1" max="1.0" minorTickCount="0" showTickLabels="true" showTickMarks="true" value="1.0" />
+             <Slider fx:id="processRelatingSlider" blockIncrement="0.0" layoutX="154.0" layoutY="110.0" majorTickUnit="0.1" max="5.0" minorTickCount="0" showTickLabels="true" showTickMarks="true" value="5.0" />
              <Label layoutX="23.0" layoutY="109.0" prefHeight="0.0" prefWidth="100" text="Process Relating&#13;Weight Slider" />
             <Label layoutX="23.0" layoutY="19.0" prefHeight="17.0" prefWidth="140.0" text="Global Weight Slider" />
              <Slider fx:id="globalSlider" blockIncrement="0.0" layoutX="154.0" layoutY="20.0" majorTickUnit="0.1" max="1.0" minorTickCount="0" showTickLabels="true" showTickMarks="true" value="1.0" />

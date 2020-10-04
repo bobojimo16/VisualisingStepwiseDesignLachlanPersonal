@@ -54,7 +54,7 @@
                         <Button layoutX="343.0" layoutY="11.0" mnemonicParsing="false" onAction="#handleClearGraphNew" text="Clear all" />
                         <CheckBox fx:id="freezeToggle" text="Freeze-All" layoutX="421.0" layoutY="15" selected="false" onAction="#handleFreezeToggle" />
 
-                        <RadioButton fx:id="radioButton0" layoutX="580.0" layoutY="16.0" onAction="#handleViewToggle" selected="true" text="Viewing">
+                        <RadioButton fx:id="viewToggle" layoutX="580.0" layoutY="16.0" onAction="#handleViewToggle" selected="true" text="Viewing">
                             <toggleGroup>
                                 <ToggleGroup fx:id="CanvasMode" />
                             </toggleGroup>

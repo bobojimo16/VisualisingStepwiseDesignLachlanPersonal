@@ -141,6 +141,8 @@ public class UserInterfaceController implements Initializable {
     private CheckBox freezeToggle;
     @FXML
     private RadioButton createToggle;
+    @FXML
+    private RadioButton viewToggle;
 
 
     // for keep updating the file that has already been saved.
@@ -1234,13 +1236,13 @@ public class UserInterfaceController implements Initializable {
     private void handleAddSelectedModelNew(ActionEvent event) {
         //New Tab
 
-        if(createToggle.isSelected()){
+        if(!viewToggle.isSelected()){
             return;
         }
 
         if (modelsListNew.getSelectionModel().getSelectedItem() != null && modelsListNew.getSelectionModel().getSelectedItem() instanceof String) {
 
-
+            setToUnfreeze();
             ModelView.getInstance().addDisplayedModel(modelsListNew.getSelectionModel().getSelectedItem());
             SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
 
@@ -1254,10 +1256,11 @@ public class UserInterfaceController implements Initializable {
 
     @FXML
     private void handleAddallModelsNew(ActionEvent event) {
-        if(createToggle.isSelected()){
+        if(!viewToggle.isSelected()){
             return;
         }
 
+        setToUnfreeze();
         ModelView.getInstance().addAllModelsNew();
         SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
     }
@@ -1567,10 +1570,12 @@ public class UserInterfaceController implements Initializable {
     }
 
     public void handleTokenToggle(ActionEvent actionEvent) {
+        setToUnfreeze();
         ModelView.getInstance().switchInteractionType("token");
     }
 
     public void handleAutoPetriRelationToggle(ActionEvent actionEvent) {
+        setToUnfreeze();
         ModelView.getInstance().switchInteractionType("autopetrirelation");
     }
 
@@ -1650,6 +1655,11 @@ public class UserInterfaceController implements Initializable {
             ModelView.getInstance().freezeAllCurrentlyDisplayedNew();
         }
 
+    }
+
+    public void setToUnfreeze(){
+        freezeToggle.setSelected(false);
+        freezeSelected = false;
     }
 
 
