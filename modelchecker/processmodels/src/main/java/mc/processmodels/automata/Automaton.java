@@ -2,6 +2,7 @@ package mc.processmodels.automata;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.microsoft.z3.Context;
 
 import java.util.*;
@@ -19,6 +20,7 @@ import mc.exceptions.CompilationException;
 import mc.processmodels.ProcessModel;
 import mc.processmodels.ProcessModelObject;
 import mc.processmodels.ProcessType;
+import mc.processmodels.petrinet.components.PetriNetPlace;
 import mc.util.Location;
 import mc.util.expr.Expression;
 
@@ -53,7 +55,9 @@ public class Automaton extends ProcessModelObject implements ProcessModel {
   @Setter
 
   private boolean sequential = false;
-  public boolean isSequential(){return sequential;}
+    private Map<Multiset<PetriNetPlace>, AutomatonNode> petriNodeMap;
+
+    public boolean isSequential(){return sequential;}
   // abstraction can muck up concurrancy hence set this flag
   @Getter
   @Setter
@@ -1456,6 +1460,19 @@ public class Automaton extends ProcessModelObject implements ProcessModel {
     }
     return sb.toString();
   }
+
+
+  public void setPetriNodeMap(Map<Multiset<PetriNetPlace>, AutomatonNode> markingToNodeMap) {
+      System.out.println("setPetriPlaces");
+      petriNodeMap = markingToNodeMap;
+  }
+
+  public Map<Multiset<PetriNetPlace>, AutomatonNode> getPetriNodeMap(){
+      return petriNodeMap;
+
+  }
+
+
 }
 
 

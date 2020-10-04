@@ -312,6 +312,7 @@ public class TokenRule {
         // assert outputAutomaton.validateAutomaton():"Token Rule Failure";
         //System.out.println("Token Rule END " + convertFrom.myString());
         //System.out.println("Token Rule END " + outputAutomaton.myString());
+        outputAutomaton.setPetriNodeMap(markingToNodeMap);
         return outputAutomaton;
 
     }

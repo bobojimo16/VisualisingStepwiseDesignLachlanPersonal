@@ -137,6 +137,12 @@ public class UserInterfaceController implements Initializable {
     private ImageView downArrow;
     @FXML
     private ImageView leftArrow;
+    @FXML
+    private CheckBox freezeToggle;
+    @FXML
+    private RadioButton createToggle;
+    @FXML
+    private RadioButton viewToggle;
 
 
     // for keep updating the file that has already been saved.
@@ -153,6 +159,8 @@ public class UserInterfaceController implements Initializable {
 
     private ChooseProcessController chooseProcessController;
     private boolean typingInitiated = true;
+    private boolean autoCompile = true;
+    private boolean freezeSelected;
 
     //@Getter
     //private static UserInterfaceController instance = this;
@@ -369,14 +377,18 @@ public class UserInterfaceController implements Initializable {
             .filter(ch -> ch.getInserted().getText().length() == 1)
             .subscribe((startedTyping) -> {
 
-                if (typingInitiated) {
+                if(autoCompile) {
 
-                    System.out.println("Typing Initialialised");
-                    compilerOutputDisplay.appendText("Compiling..." + "\n");
-                    t1.set(System.currentTimeMillis());
-                    typingInitiated = false;
-                } else {
-                    long compileTime = Math.round((t1.get() + 4000 - System.currentTimeMillis()) / 1000) * 1000;
+                    if (typingInitiated) {
+
+                        System.out.println("Typing Initialialised");
+                        compilerOutputDisplay.appendText("\n" + "Compiling..." + "\n");
+                        t1.set(System.currentTimeMillis());
+                        typingInitiated = false;
+                    } else {
+                        long compileTime = Math.round((t1.get() + 4000 - System.currentTimeMillis()) / 1000) * 1000;
+
+                    }
 
                 }
 
@@ -385,10 +397,12 @@ public class UserInterfaceController implements Initializable {
         userCodeInput.richChanges().successionEnds(Duration.ofMillis(3000))
 
             .subscribe((finishedTyping) -> {
-                compilerOutputDisplay.appendText("Recompiling..." + "\n");
-                System.out.println("Recompile");
-                typingInitiated = true;
-                handleCompileRequest();
+                if(autoCompile) {
+                    compilerOutputDisplay.appendText("Recompiling..." + "\n");
+                    System.out.println("Recompile");
+                    typingInitiated = true;
+                    handleCompileRequest();
+                }
 
             });
 
@@ -1222,9 +1236,13 @@ public class UserInterfaceController implements Initializable {
     private void handleAddSelectedModelNew(ActionEvent event) {
         //New Tab
 
+        if(!viewToggle.isSelected()){
+            return;
+        }
+
         if (modelsListNew.getSelectionModel().getSelectedItem() != null && modelsListNew.getSelectionModel().getSelectedItem() instanceof String) {
 
-
+            setToUnfreeze();
             ModelView.getInstance().addDisplayedModel(modelsListNew.getSelectionModel().getSelectedItem());
             SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
 
@@ -1238,6 +1256,11 @@ public class UserInterfaceController implements Initializable {
 
     @FXML
     private void handleAddallModelsNew(ActionEvent event) {
+        if(!viewToggle.isSelected()){
+            return;
+        }
+
+        setToUnfreeze();
         ModelView.getInstance().addAllModelsNew();
         SwingUtilities.invokeLater(() -> modelDisplayNew.setContent(ModelView.getInstance().updateGraphNew()));
     }
@@ -1252,17 +1275,6 @@ public class UserInterfaceController implements Initializable {
         }
         //   SwingUtilities.invokeLater(() -> modelDisplay.setContent(ModelView.getInstance().updateGraph(modelDisplay)));
 
-    }
-
-
-    @FXML
-    private void handleFreezeAllNew(ActionEvent event) {
-        ModelView.getInstance().freezeAllCurrentlyDisplayedNew();
-    }
-
-    @FXML
-    private void handleUnfreezeAllNew(ActionEvent event) {
-        ModelView.getInstance().unfreezeAllCurrentlyDisplayedNew();
     }
 
     @FXML
@@ -1553,13 +1565,17 @@ public class UserInterfaceController implements Initializable {
 
     public void handleCreateToggle(ActionEvent actionEvent) {
         ModelView.getInstance().switchInteractionType("create");
+        freezeToggle.setSelected(true);
+        freezeSelected = true;
     }
 
     public void handleTokenToggle(ActionEvent actionEvent) {
+        setToUnfreeze();
         ModelView.getInstance().switchInteractionType("token");
     }
 
     public void handleAutoPetriRelationToggle(ActionEvent actionEvent) {
+        setToUnfreeze();
         ModelView.getInstance().switchInteractionType("autopetrirelation");
     }
 
@@ -1616,4 +1632,36 @@ public class UserInterfaceController implements Initializable {
     public void handleViewToggle(ActionEvent actionEvent) {
         ModelView.getInstance().switchInteractionType("view");
     }
+
+    public void handleAutoCompileRequest(ActionEvent actionEvent) {
+        if(autoCompile) {
+            autoCompile = false;
+        } else {
+            autoCompile = true;
+        }
+    }
+
+    public void handleFreezeToggle(ActionEvent actionEvent){
+
+        if(freezeSelected){
+            if(createToggle.isSelected()){
+                freezeToggle.setSelected(true);
+                return;
+            }
+            freezeSelected = false;
+            ModelView.getInstance().unfreezeAllCurrentlyDisplayedNew();
+        } else {
+            freezeSelected = true;
+            ModelView.getInstance().freezeAllCurrentlyDisplayedNew();
+        }
+
+    }
+
+    public void setToUnfreeze(){
+        freezeToggle.setSelected(false);
+        freezeSelected = false;
+    }
+
+
+
 }
